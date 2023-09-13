@@ -1,4 +1,4 @@
-module gitlab.itestor.com/helei/utils
+module gitlab.itestor.com/helei/utils.git
 
 go 1.21.1
 
