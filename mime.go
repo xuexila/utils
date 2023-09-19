@@ -1,6 +1,6 @@
-package common
+package utils
 
-// 文件后缀 mime 类型
+// MimeMap 文件后缀 mime 类型
 var MimeMap = map[string]string{
 	"html":  "text/html; charset=utf-8",
 	"htm":   "text/html; charset=utf-8",

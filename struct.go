@@ -1,4 +1,4 @@
-package common
+package utils
 
 import (
 	"golang.org/x/net/websocket"

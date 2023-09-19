@@ -1,4 +1,4 @@
-package common
+package utils
 
 import (
 	"crypto/cipher"
@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 )
 
-////////////////////////////////Rsa加解密算法/////////////////////
+// //////////////////////////////Rsa加解密算法/////////////////////
 func RsaEncrypt(origData []byte, filePth string) ([]byte, error) {
 	PublicKey, err := ioutil.ReadFile(filePth)
 	Checkerr(err)
@@ -40,7 +40,7 @@ func RsaDecrypt(ciphertext []byte, filePth string) ([]byte, error) {
 	return rsa.DecryptPKCS1v15(rand.Reader, priv, ciphertext)
 }
 
-//////////////////////////提供3Des加解密的方法/////////////////////////////////
+// ////////////////////////提供3Des加解密的方法/////////////////////////////////
 func ThriDESDeCrypt(crypted, key []byte) []byte {
 
 	block, _ := des.NewTripleDESCipher(key[:24])
@@ -55,7 +55,7 @@ func ThriDESDeCrypt(crypted, key []byte) []byte {
 	return context
 }
 
-//加密
+// 加密
 func ThriDESEnCrypt(origData, key []byte) []byte {
 	//获取block块
 	block, err := des.NewTripleDESCipher(key[:24])
