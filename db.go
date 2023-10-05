@@ -43,7 +43,10 @@ func Paginate(r *http.Request, pageField, pageSizeField string, pageSize int) fu
 		if limit < 1 {
 			limit = pageSize
 		}
-		tx := db.Offset((page - 1) * limit).Limit(limit)
+		tx := db
+		if r.URL.Query().Get("rall") != "1" {
+			tx.Offset((page - 1) * limit).Limit(limit)
+		}
 		_sort := r.URL.Query().Get("sort")
 		if _sort != "" && !specialChartPreg.MatchString(_sort) {
 			if _sort[0] == '-' {
