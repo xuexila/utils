@@ -200,6 +200,12 @@ func Error(i ...interface{}) {
 	log.Println(i...)
 }
 
+func ReqError(r *http.Request, i ...any) {
+	log.SetPrefix("[" + r.RemoteAddr + "]")
+	log.SetOutput(os.Stderr)
+	log.Println(i...)
+}
+
 // 捕获系统异常
 func Recover() {
 	if r := recover(); r != nil {
