@@ -642,11 +642,28 @@ func NumberEmptyString(s string) string {
 	return s
 }
 
-// 在切片中判断某个值是否存在
+// Searchslice 在切片中判断某个值是否存在
 func Searchslice(s string, o []string) bool {
 	s = strings.TrimSpace(s)
 	for _, i := range o {
 		i = strings.TrimSpace(i)
+		if i == s {
+			return true
+		}
+	}
+	return false
+}
+
+func SearchIntSlice(s int, arr []int) bool {
+	for _, i := range arr {
+		if i == s {
+			return true
+		}
+	}
+	return false
+}
+func SearchInt64Slice(s int64, arr []int64) bool {
+	for _, i := range arr {
 		if i == s {
 			return true
 		}
