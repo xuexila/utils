@@ -58,3 +58,17 @@ func Paginate(r *http.Request, pageField, pageSizeField string, pageSize int) fu
 		return tx
 	}
 }
+
+// FilterWhereString 过滤string 条件
+func FilterWhereString(r *http.Request, query string, field string, like bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		value := r.URL.Query().Get(field)
+		if value == "" {
+			return db
+		}
+		if like {
+			return db.Where(query, "%"+field+"%")
+		}
+		return db.Where(query, field)
+	}
+}
