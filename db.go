@@ -67,8 +67,27 @@ func FilterWhereString(r *http.Request, query string, field string, like bool) f
 			return db
 		}
 		if like {
-			return db.Where(query, "%"+field+"%")
+			return db.Where(query, "%"+value+"%")
 		}
-		return db.Where(query, field)
+		return db.Where(query, value)
+	}
+}
+
+// QueryDateTimeRange 时间区间查询
+func QueryDateTimeRange(r *http.Request, filed ...string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		sTime := r.URL.Query().Get("begin_time")
+		eTime := r.URL.Query().Get("end_time")
+		sField := "create_time"
+		if len(filed) > 0 {
+			sField = filed[0]
+		}
+		if sTime != "" {
+			db.Where(sField+" > ?", sTime)
+		}
+		if eTime != "" {
+			db.Where(sField+" <= ?", eTime)
+		}
+		return db
 	}
 }
