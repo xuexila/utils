@@ -925,6 +925,12 @@ func Closews(conn *websocket.Conn) {
 	}
 }
 
+func CloseMultipartFile(f multipart.File) {
+	if f != nil {
+		_ = f.Close()
+	}
+}
+
 // Getip 获取客户端IP
 func Getip(r *http.Request) string {
 	remoteAddr := r.RemoteAddr
