@@ -957,9 +957,10 @@ func RandomString(n int, allowedChars ...[]rune) string {
 	} else {
 		letters = allowedChars[0]
 	}
+	rd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[rd.Intn(len(letters))]
 	}
 	return string(b)
 }
