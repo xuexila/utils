@@ -201,7 +201,8 @@ func Error(i ...interface{}) {
 }
 
 func ReqError(r *http.Request, i ...any) {
-	log.SetPrefix("[" + r.RemoteAddr + "]")
+
+	log.SetPrefix("[" + Getip(r) + "] ")
 	log.SetOutput(os.Stderr)
 	log.Println(i...)
 }
