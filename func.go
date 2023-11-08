@@ -172,12 +172,12 @@ func Md5(s []byte) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// 给字符串Md5
+// Md5string 给字符串Md5
 func Md5string(s string) string {
 	return Md5([]byte(s))
 }
 
-// 计算文件的Md5
+// Md5file 计算文件的Md5
 func Md5file(path string) string {
 	byt, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -191,7 +191,7 @@ func ErrorReturn(i ...interface{}) bool {
 	return false
 }
 
-// 打印错误信息
+// Error 打印错误信息
 func Error(i ...interface{}) {
 	log.SetPrefix("")
 	log.SetOutput(os.Stderr)
@@ -201,20 +201,19 @@ func Error(i ...interface{}) {
 }
 
 func ReqError(r *http.Request, i ...any) {
-
 	log.SetPrefix("[" + Getip(r) + "] ")
 	log.SetOutput(os.Stderr)
 	log.Println(i...)
 }
 
-// 捕获系统异常
+// Recover 捕获系统异常
 func Recover() {
 	if r := recover(); r != nil {
 		Error("系统异常，捕获结果", r)
 	}
 }
 
-// 打印正确日志。
+// Log 打印正确日志。
 func Log(i ...interface{}) {
 	// log.SetPrefix("[用户日志]")
 	log.SetOutput(os.Stdout)
@@ -227,7 +226,7 @@ func Debug(i ...interface{}) {
 	}
 }
 
-// 检查错误
+// Checkerr 检查错误
 func Checkerr(err error, i ...interface{}) {
 	if err == nil {
 		return
@@ -235,7 +234,7 @@ func Checkerr(err error, i ...interface{}) {
 	Error(i, err)
 }
 
-// 检查错误，打印并输出错误信息
+// DieCheckerr 检查错误，打印并输出错误信息
 func DieCheckerr(err error, i ...interface{}) {
 	if err == nil {
 		return
@@ -244,7 +243,7 @@ func DieCheckerr(err error, i ...interface{}) {
 	os.Exit(1)
 }
 
-// 检查错误，有异常就返回false
+// ReturnCheckerr 检查错误，有异常就返回false
 func ReturnCheckerr(err error, i ...interface{}) bool {
 	if err == nil {
 		return true
@@ -259,7 +258,7 @@ func Pfunc(a ...interface{}) {
 	log.Println(a...)
 }
 
-// 执行 shell语句
+// ExecShell 执行 shell语句
 func ExecShell(name string, s ...string) (string, error) {
 	cmd := exec.Command(name, s...)
 	var (
@@ -755,7 +754,16 @@ func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
 		"code": code,
 		"msg":  msg,
 		"data": data,
-	}), "SetReturn")
+	}), "SetReturnData")
+}
+
+func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
+	ReqError(r, append([]any{err}, msg...)...)
+	w.Header().Set("Content-Type", "application/json")
+	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+		"code": code,
+		"msg":  msg,
+	}), "SetReturnError")
 }
 
 // MachineCode 利用硬件信息 生成token
