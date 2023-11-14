@@ -38,6 +38,20 @@ import (
 	"time"
 )
 
+type CustomTime struct {
+	time.Time
+}
+
+func (this *CustomTime) UnmarshalJSON(b []byte) (err error) {
+	s := strings.Trim(string(b), "\"")
+	if s == "null" {
+		this.Time = time.Time{}
+		return nil
+	}
+	this.Time, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.FixedZone("CST", 8*3600))
+	return err
+}
+
 func JsonEncode(j any) ([]byte, error) {
 	bf := bytes.NewBuffer([]byte{})
 	jsonEncoder := json.NewEncoder(bf)
