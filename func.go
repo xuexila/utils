@@ -48,7 +48,8 @@ func (this *CustomTime) UnmarshalJSON(b []byte) (err error) {
 		this.Time = time.Time{}
 		return nil
 	}
-	this.Time, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.FixedZone("CST", 8*3600))
+	this.Time, err = time.Parse("2006-01-02 15:04:05", s)
+	//this.Time, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.FixedZone("CST", 8*3600))
 	return err
 }
 
