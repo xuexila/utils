@@ -36,7 +36,7 @@ func (date *CustomTime) GobDecode(b []byte) error {
 }
 
 func (date CustomTime) MarshalJSON() ([]byte, error) {
-	return date.Time.MarshalJSON()
+	return []byte(date.Time.Format("2006-01-02 15:04:05")), nil
 }
 func (this *CustomTime) UnmarshalJSON(b []byte) (err error) {
 	s := strings.Trim(string(b), "\"")
