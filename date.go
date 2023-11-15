@@ -11,32 +11,35 @@ type CustomTime struct {
 	time.Time
 }
 
-func (date *CustomTime) Scan(value interface{}) (err error) {
+func (this *CustomTime) Scan(value interface{}) (err error) {
 	nullTime := &sql.NullTime{}
 	err = nullTime.Scan(value)
-	date.Time = nullTime.Time
+	this.Time = nullTime.Time
 	return
 }
 
-func (date CustomTime) Value() (driver.Value, error) {
-	return date.Time, nil
+func (this CustomTime) Value() (driver.Value, error) {
+	return this.Time, nil
 }
 
 // GormDataType gorm common data type
-func (date CustomTime) GormDataType() string {
+func (this CustomTime) GormDataType() string {
 	return "date"
 }
 
-func (date CustomTime) GobEncode() ([]byte, error) {
-	return time.Time(date.Time).GobEncode()
+func (this CustomTime) GobEncode() ([]byte, error) {
+	return time.Time(this.Time).GobEncode()
 }
 
-func (date *CustomTime) GobDecode(b []byte) error {
-	return (date.Time).GobDecode(b)
+func (this *CustomTime) GobDecode(b []byte) error {
+	return (this.Time).GobDecode(b)
 }
 
-func (date CustomTime) MarshalJSON() ([]byte, error) {
-	return []byte(date.Time.Format("2006-01-02 15:04:05")), nil
+func (this CustomTime) MarshalJSON() ([]byte, error) {
+	b := []byte{'"'}
+	b = append(b, []byte(this.Time.Format(time.DateTime))...)
+	b = append(b, '"')
+	return b, nil
 }
 func (this *CustomTime) UnmarshalJSON(b []byte) (err error) {
 	s := strings.Trim(string(b), "\"")
