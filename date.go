@@ -22,13 +22,12 @@ func (this CustomTime) Value() (driver.Value, error) {
 	return this.Time, nil
 }
 
-// GormDataType gorm common data type
 func (this CustomTime) GormDataType() string {
-	return "date"
+	return "time"
 }
 
 func (this CustomTime) GobEncode() ([]byte, error) {
-	return time.Time(this.Time).GobEncode()
+	return this.Time.GobEncode()
 }
 
 func (this *CustomTime) GobDecode(b []byte) error {
@@ -47,6 +46,6 @@ func (this *CustomTime) UnmarshalJSON(b []byte) (err error) {
 		this.Time = time.Time{}
 		return nil
 	}
-	this.Time, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.FixedZone("CST", 8*3600))
+	this.Time, err = time.ParseInLocation(time.DateTime, s, time.FixedZone("CST", 8*3600))
 	return err
 }
