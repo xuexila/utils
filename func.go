@@ -15,6 +15,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
+	rds "github.com/redis/go-redis/v9"
 	"golang.org/x/net/websocket"
 	"gopkg.in/mgo.v2/bson"
 	"io"
@@ -873,6 +874,12 @@ func CloseSftp(conn *sftp.Client) {
 
 // github.com/garyburd/redigo/redis
 func CloseRedisConn(conn redis.Conn) {
+	if conn != nil {
+		_ = conn.Close()
+	}
+}
+
+func CloseRdsConn(conn *rds.Conn) {
 	if conn != nil {
 		_ = conn.Close()
 	}

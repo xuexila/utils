@@ -88,13 +88,14 @@ func (h *HttpServer) HttpServerStart() {
 func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.ResponseWriter, r *http.Request)) {
 	mux.Handle(u, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer CloseReq(r)
-
+		Debug("请求地址", r.URL.String(), "IP", Getip(r))
 		// add header
 		w.Header().Set("server", "vs/1.0")
 		w.Header().Set("connection", "keep-alive")
 		// 白名单验证
 		if len(h.Allowip) > 0 {
-			// 存在白名单，只允许白名单中存在的访问
+			// 存在白名单，只允许白
+			//名单中存在的访问
 			addr := r.RemoteAddr
 			al := strings.Index(addr, ":")
 			if al < 0 {
