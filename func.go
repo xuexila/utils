@@ -16,6 +16,7 @@ import (
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
 	rds "github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/websocket"
 	"gopkg.in/mgo.v2/bson"
 	"io"
@@ -869,6 +870,12 @@ func CloseConn(conn net.Conn) {
 	}
 }
 func CloseUdpConn(conn *net.UDPConn) {
+	if conn != nil {
+		_ = conn.Close()
+	}
+}
+
+func CloseSsh(conn *ssh.Client) {
 	if conn != nil {
 		_ = conn.Close()
 	}
