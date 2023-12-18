@@ -742,11 +742,18 @@ func RespJson(w http.ResponseWriter) {
 }
 
 // SetReturn 设置 返回函数Play
-func SetReturn(w http.ResponseWriter, code int, msg interface{}) {
+func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 	w.Header().Set("Content-Type", "application/json")
-	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+	if len(msg) < 1 {
+		if code == 0 {
+			msg = []any{"成功"}
+		} else {
+			msg = []any{"失败"}
+		}
+	}
+	Checkerr(json.NewEncoder(w).Encode(map[string]any{
 		"code": code,
-		"msg":  msg,
+		"msg":  msg[0],
 	}), "SetReturn")
 }
 
