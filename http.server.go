@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"io/ioutil"
@@ -77,12 +78,14 @@ func (h *HttpServer) HttpServerStart() {
 	}
 	go h.hotUpdate(server)
 	if err := server.ListenAndServe(); err != nil {
-		if err != http.ErrServerClosed {
+		if !errors.Is(err, http.ErrServerClosed) {
 			Error("HTTP Service 启动失败", server.Addr, err)
 			os.Exit(1)
 		}
 	}
-	h.HttpServerStart()
+	if h.Hotupdate {
+		h.HttpServerStart()
+	}
 }
 
 func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.ResponseWriter, r *http.Request)) {
