@@ -19,6 +19,20 @@ func RespJson(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
+func SetReturnCode(w http.ResponseWriter, code int, msg any, data ...any) {
+	w.Header().Set("Content-Type", "application/json")
+	if code == 0 {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(code)
+	}
+	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+		"code": code,
+		"msg":  msg,
+		"data": data,
+	}), "SetReturnData")
+}
+
 // SetReturn 设置 返回函数Play
 func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 	w.Header().Set("Content-Type", "application/json")
