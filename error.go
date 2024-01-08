@@ -19,9 +19,9 @@ func Log(i ...interface{}) {
 	log.Println(i...)
 }
 
-func Debug(i ...interface{}) {
+func Debug(i ...any) {
 	if Dbg {
-		Log("[debug]", i)
+		Log(append([]any{"[debug]"}, i...)...)
 	}
 }
 
@@ -30,15 +30,15 @@ func Checkerr(err error, i ...interface{}) {
 	if err == nil {
 		return
 	}
-	Error(i, err)
+	Error(append([]any{err}, i...)...)
 }
 
 // DieCheckerr 检查错误，打印并输出错误信息
-func DieCheckerr(err error, i ...interface{}) {
+func DieCheckerr(err error, i ...any) {
 	if err == nil {
 		return
 	}
-	Error(i, err)
+	Error(append([]any{err}, i...)...)
 	os.Exit(1)
 }
 
@@ -47,7 +47,7 @@ func ReturnCheckerr(err error, i ...interface{}) bool {
 	if err == nil {
 		return true
 	}
-	Error(i, err)
+	Error(append([]any{err}, i...)...)
 	return false
 }
 

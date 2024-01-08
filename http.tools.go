@@ -152,9 +152,10 @@ func NotFound(w http.ResponseWriter, msg string) {
 }
 
 func ReqError(r *http.Request, i ...any) {
-	log.SetPrefix("[" + Getip(r) + "] ")
+	log.SetPrefix("[" + Getip(r) + "] [" + r.URL.Path + "] ")
 	log.SetOutput(os.Stderr)
-	log.Println(i...)
+	var msg = []any{r.URL.String()}
+	log.Println(append(msg, i...)...)
 }
 
 // Play 公共函数文件
