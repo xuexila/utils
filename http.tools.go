@@ -19,13 +19,19 @@ func RespJson(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-func SetReturnCode(w http.ResponseWriter, code int, msg any, data ...any) {
+func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
 	w.Header().Set("Content-Type", "application/json")
-	if code == 0 {
+	if code == 0 || code == 200 {
 		w.WriteHeader(200)
 	} else {
 		w.WriteHeader(code)
+		ReqError(r, code, msg)
 	}
+
+	if _, ok := msg.(error); ok {
+		msg = msg.(error).Error()
+	}
+
 	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
 		"code": code,
 		"msg":  msg,
