@@ -31,12 +31,14 @@ func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, da
 	if _, ok := msg.(error); ok {
 		msg = msg.(error).Error()
 	}
-
-	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+	resp := map[string]interface{}{
 		"code": code,
 		"msg":  msg,
-		"data": data,
-	}), "SetReturnData")
+	}
+	if len(data) > 0 {
+		resp["data"] = data
+	}
+	Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
 }
 
 // SetReturn 设置 返回函数Play
