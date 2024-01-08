@@ -4,32 +4,15 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/md5"
-	"database/sql"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"github.com/IBM/sarama"
-	"github.com/colinmarc/hdfs"
-	"github.com/garyburd/redigo/redis"
-	"github.com/jlaffaye/ftp"
-	"github.com/pkg/sftp"
-	rds "github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/net/websocket"
 	"gopkg.in/mgo.v2/bson"
-	"io"
 	"io/ioutil"
-	"log"
 	"math"
 	"math/rand"
-	"mime/multipart"
-	"net"
-	"net/http"
 	url2 "net/url"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"regexp"
@@ -60,98 +43,6 @@ func SignalHandle() {
 	os.Exit(0)
 }
 
-// Play 公共函数文件
-func Play(path string, w http.ResponseWriter, r *http.Request) {
-	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
-	defer func() {
-		if f != nil {
-			_ = f.Close()
-		}
-	}()
-	if err != nil {
-		Error("视频不存在", path)
-		http.NotFound(w, r)
-		return
-	}
-
-	ranges := int64(0)
-	rangeEnd := int(0)
-	rangeSwap := strings.TrimSpace(r.Header.Get("Range"))
-	if rangeSwap != "" {
-		rangeSwap = rangeSwap[6:]
-		rangListSwap := strings.Split(rangeSwap, "-")
-		if len(rangeSwap) >= 1 {
-			if num, err := strconv.Atoi(rangListSwap[0]); err == nil {
-				ranges = int64(num)
-			}
-			if len(rangeSwap) > 1 {
-				if num, err := strconv.Atoi(rangListSwap[1]); err == nil {
-					rangeEnd = int(num)
-				}
-			}
-		}
-	}
-
-	var (
-		fileSize int
-		//tmpF     []byte
-	)
-	fType := strings.ToLower(filepath.Ext(path)[1:])
-	fInfo, err := f.Stat()
-	if err != nil {
-		Forbidden(w, "403 Forbidden!")
-		return
-	}
-
-	//if fType=="mp4" {
-	//	tmpF = GetMP4Duration(f)
-	//	fileSize= len(tmpF)
-	//	if rangeSwap!="" && ranges>0 {
-	//		tmpF=tmpF[ranges:]
-	//	}
-	//}else{
-	//
-	//	if rangeSwap!="" && ranges>0 {
-	//		_, _ = f.Seek(ranges, 0)
-	//	}
-	//	fileSize=int(fInfo.Size())
-	//}
-	//GetMP4Duration(f)
-	if rangeSwap != "" && ranges > 0 {
-		_, _ = f.Seek(ranges, 0)
-	}
-	fileSize = int(fInfo.Size())
-
-	totalSize := fileSize
-	if rangeSwap != "" && rangeEnd > 0 {
-		totalSize = rangeEnd
-	}
-	total := strconv.Itoa(fileSize)
-
-	mime := MimeMap[fType]
-	if mime == "" {
-		mime = "text/html;charset=utf-8"
-	}
-	w.Header().Set("Content-Type", mime)
-	w.Header().Set("Content-Length", strconv.Itoa(totalSize-int(ranges)))
-	w.Header().Set("Last-Modified", fInfo.ModTime().Format(time.RFC822))
-	w.Header().Set("Accept-Ranges", "bytes")
-	w.Header().Set("Connection", "close")
-	w.Header().Set("Etag", `W/"`+strconv.FormatInt(fInfo.ModTime().Unix(), 16)+`-`+strconv.FormatInt(fInfo.Size(), 16)+`"`)
-	if rangeSwap != "" {
-		w.Header().Set("Content-Range", "bytes "+strconv.Itoa(int(ranges))+"-"+strconv.Itoa(totalSize-1)+"/"+total)
-		w.WriteHeader(206)
-	} else {
-		w.WriteHeader(200)
-	}
-	if fType == "mp4" {
-		_byt, _ := ioutil.ReadAll(f)
-		_, _ = w.Write(_byt)
-		return
-	}
-	_, _ = io.Copy(w, f)
-}
-
 // DeleteStrarr 删除字符串切片的某一个元素
 func DeleteStrarr(arr []string, val string) []string {
 	for index, _id := range arr {
@@ -167,7 +58,7 @@ func NewId() string {
 	return bson.NewObjectId().Hex()
 }
 
-// md5 函数
+// Md5 md5 函数
 func Md5(s []byte) string {
 	h := md5.New()
 	h.Write(s)
@@ -188,157 +79,7 @@ func Md5file(path string) string {
 	return Md5(byt)
 }
 
-func ErrorReturn(i ...interface{}) bool {
-	Error(i...)
-	return false
-}
-
-// Error 打印错误信息
-func Error(i ...interface{}) {
-	log.SetPrefix("")
-	log.SetOutput(os.Stderr)
-	//_lst:=i[len(i)-1]
-	//fmt.Println("ss",_lst==nil)
-	log.Println(i...)
-}
-
-func ReqError(r *http.Request, i ...any) {
-	log.SetPrefix("[" + Getip(r) + "] ")
-	log.SetOutput(os.Stderr)
-	log.Println(i...)
-}
-
-// Recover 捕获系统异常
-func Recover() {
-	if r := recover(); r != nil {
-		Error("系统异常，捕获结果", r)
-	}
-}
-
-// Log 打印正确日志。
-func Log(i ...interface{}) {
-	// log.SetPrefix("[用户日志]")
-	log.SetOutput(os.Stdout)
-	log.Println(i...)
-}
-
-func Debug(i ...interface{}) {
-	if Dbg {
-		Log("[debug]", i)
-	}
-}
-
-// Checkerr 检查错误
-func Checkerr(err error, i ...interface{}) {
-	if err == nil {
-		return
-	}
-	Error(i, err)
-}
-
-// DieCheckerr 检查错误，打印并输出错误信息
-func DieCheckerr(err error, i ...interface{}) {
-	if err == nil {
-		return
-	}
-	Error(i, err)
-	os.Exit(1)
-}
-
-// ReturnCheckerr 检查错误，有异常就返回false
-func ReturnCheckerr(err error, i ...interface{}) bool {
-	if err == nil {
-		return true
-	}
-	Error(i, err)
-	return false
-}
-
-func Pfunc(a ...interface{}) {
-	// log.SetPrefix("[用户异常]")
-	log.SetOutput(os.Stdout)
-	log.Println(a...)
-}
-
-// ExecShell 执行 shell语句
-func ExecShell(name string, s ...string) (string, error) {
-	cmd := exec.Command(name, s...)
-	var (
-		out = new(bytes.Buffer)
-		w   = bytes.NewBuffer(nil)
-	)
-	cmd.Stdout = out
-	cmd.Stderr = w
-	Log("shell 执行命令", cmd.String())
-
-	if err := cmd.Run(); err != nil {
-		return out.String(), errors.New(err.Error() + "，" + w.String())
-	}
-	return out.String(), nil
-}
-
-func ExecShellQuit(name string, s ...string) (string, error) {
-	cmd := exec.Command(name, s...)
-	var (
-		out = new(bytes.Buffer)
-		w   = bytes.NewBuffer(nil)
-	)
-	cmd.Stdout = out
-	cmd.Stderr = w
-	if err := cmd.Run(); err != nil {
-		return out.String(), errors.New(err.Error() + "，" + w.String())
-	}
-	return out.String(), nil
-}
-
-// 可手动结束的 shell命令
-func ExecCtlShell(stop chan byte, name string, s ...string) (string, error) {
-	cmd := exec.Command(name, s...)
-	var (
-		out = new(bytes.Buffer)
-		w   = new(bytes.Buffer)
-		end = make(chan byte)
-	)
-	cmd.Stdout = out
-	cmd.Stderr = w
-	Log("shell 执行命令", cmd.String())
-	go func(cmd *exec.Cmd, stop, end chan byte) {
-		for {
-			select {
-			case <-stop:
-				if cmd == nil {
-					Error("分析EXEC 不存在", cmd.String())
-					continue
-				}
-				if cmd.Process == nil {
-					Error("分析 Process不存在", cmd.String())
-					continue
-				}
-				if err := cmd.Process.Kill(); err != nil {
-					Error("手动结束进程失败", err)
-				} else {
-					Log("手动结束命令", cmd.String())
-				}
-
-			case <-end:
-				Log("shell 执行完成", cmd.String())
-				return
-			}
-		}
-	}(cmd, stop, end)
-	defer func() {
-		go func() {
-			end <- 1
-		}()
-
-	}()
-	if err := cmd.Run(); err != nil {
-		return out.String(), errors.New(err.Error() + "，" + w.String())
-	}
-	return out.String(), nil
-}
-
-// 快速简易写文件
+// FilePutContents 快速简易写文件
 func FilePutContents(path, content string) error {
 	if err := Mkdir(filepath.Dir(path)); err != nil {
 		return err
@@ -673,106 +414,12 @@ func SearchInt64Slice(s int64, arr []int64) bool {
 	return false
 }
 
-// 设置系统返回403
-func Forbidden(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusForbidden)
-	_html := `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>403 Forbidden!</title></head><body><h3 style="text-align:center">` + msg + `</h3></body></html>`
-	_, _ = fmt.Fprintln(w, _html)
-	return
-}
-
-// 设置返回 404
-func NotFound(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusNotFound)
-	_html := `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>404 Not Found!</title></head><body><h3 style="text-align:center">` + msg + `</h3></body></html>`
-	_, _ = fmt.Fprintln(w, _html)
-	return
-}
-
-// 设置返回 405
-func MethodNotAllowed(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
-	_, _ = fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
-}
-
-func Closeresponse(resp *http.Response) {
-	if resp == nil || resp.Body == nil {
-		return
-	}
-	_ = resp.Body.Close()
-}
-
-// 生成文件的绝对路径
+// Fileabs 生成文件的绝对路径
 func Fileabs(cpath string) string {
 	if filepath.IsAbs(cpath) {
 		return cpath
 	}
 	return filepath.Join(Appath, cpath)
-}
-
-// http统一验证 中间件
-func HttpServerMiddleware(next http.Handler, callback func(w http.ResponseWriter, r *http.Request) bool) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if r != nil && r.Body != nil {
-				_ = r.Body.Close()
-			}
-		}()
-		w.Header().Set("Connection", "keep-alive")
-		w.Header().Set("server", "vs/1.0")
-		if callback != nil && !callback(w, r) {
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-func RespJson(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-}
-
-// SetReturn 设置 返回函数Play
-func SetReturn(w http.ResponseWriter, code int, msg ...any) {
-	w.Header().Set("Content-Type", "application/json")
-	if len(msg) < 1 {
-		if code == 0 {
-			msg = []any{"成功"}
-		} else {
-			msg = []any{"失败"}
-		}
-	}
-	Checkerr(json.NewEncoder(w).Encode(map[string]any{
-		"code": code,
-		"msg":  msg[0],
-	}), "SetReturn")
-}
-
-func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
-		"code": code,
-		"msg":  msg,
-		"data": data,
-	}), "SetReturnData")
-}
-
-func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
-	ReqError(r, append([]any{err}, msg...)...)
-	w.Header().Set("Content-Type", "application/json")
-	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
-		"code": code,
-		"msg":  msg,
-	}), "SetReturnError")
 }
 
 // MachineCode 利用硬件信息 生成token
@@ -831,160 +478,6 @@ func MachineCode() string {
 	}
 	Debug("机器码", machineCode)
 	return machineCode
-}
-
-// 检查请求是否post
-func CheckReqPost(w http.ResponseWriter, r *http.Request) bool {
-	if r.Method != "POST" {
-		Forbidden(w, "Forbidden")
-		return false
-	}
-	return true
-}
-
-// CloseFtpClient ftp连接退出关闭
-func CloseFtpClient(conn *ftp.ServerConn) {
-	if conn != nil {
-		_ = conn.Logout()
-		_ = conn.Quit()
-	}
-}
-
-func CloseFtpResponse(raw *ftp.Response) {
-	if raw != nil {
-		_ = raw.Close()
-	}
-}
-
-func CloseResp(resp *http.Response) {
-	if resp == nil || resp.Body == nil {
-		return
-	}
-	_, _ = io.Copy(ioutil.Discard, resp.Body)
-	_ = resp.Close
-}
-
-func CloseReq(resp *http.Request) {
-	if resp == nil || resp.Body == nil {
-		return
-	}
-	_ = resp.Body.Close()
-}
-
-func CloseConn(conn net.Conn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-func CloseUdpConn(conn *net.UDPConn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseSsh(conn *ssh.Client) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseSftp(conn *sftp.Client) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-// github.com/garyburd/redigo/redis
-func CloseRedisConn(conn redis.Conn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseRdsConn(conn *rds.Conn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseKafkaPartition(partition sarama.PartitionConsumer) {
-	if partition == nil {
-		return
-	}
-	Checkerr(partition.Close(), "CloseKafkaPartition")
-}
-
-func CloseFile(file *os.File) {
-	if file != nil {
-		_ = file.Close()
-	}
-}
-
-func CloseHdfsFile(f *hdfs.FileWriter) {
-	if f != nil {
-		_ = f.Close()
-	}
-}
-
-func CloseMultipartWriter(w *multipart.Writer) {
-	if w != nil {
-		_ = w.Close()
-	}
-}
-
-func CloseSftpFile(file *sftp.File) {
-	if file != nil {
-		_ = file.Close()
-	}
-}
-
-func CloseMysqlRows(rows *sql.Rows) {
-
-	if rows != nil {
-		_ = rows.Close()
-	}
-}
-
-func CloseMysql(conn *sql.DB) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseStmt(stmt *sql.Stmt) {
-	if stmt != nil {
-		_ = stmt.Close()
-	}
-}
-
-func Closews(conn *websocket.Conn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseMultipartFile(f multipart.File) {
-	if f != nil {
-		_ = f.Close()
-	}
-}
-
-// Getip 获取客户端IP
-func Getip(r *http.Request) string {
-	remoteAddr := r.RemoteAddr
-	if ip := r.Header.Get("HTTP_CLIENT_IP"); ip != "" {
-		remoteAddr = ip
-	} else if ip := r.Header.Get("HTTP_X_FORWARDED_FOR"); ip != "" {
-		remoteAddr = ip
-	} else if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		remoteAddr = ip
-	} else {
-		remoteAddr, _, _ = net.SplitHostPort(remoteAddr)
-	}
-	if remoteAddr == "::1" {
-		remoteAddr = "127.0.0.1"
-	}
-	return remoteAddr
 }
 
 // RandomString 伪随机字符串
