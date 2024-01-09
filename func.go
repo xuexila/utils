@@ -36,7 +36,7 @@ func JsonEncode(j any) ([]byte, error) {
 }
 
 // SignalHandle 系统信号
-// funds 结束服务前，需要执行的操作
+// @var funds 结束服务前，需要执行的操作
 func SignalHandle(funds ...func()) {
 	exitsin := make(chan os.Signal)
 	signal.Notify(exitsin, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // 注意，syscall.SIGKILL 不能被捕获
