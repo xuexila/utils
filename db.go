@@ -3,7 +3,9 @@ package utils
 import (
 	"gorm.io/gorm"
 	"net/http"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 //
@@ -34,6 +36,12 @@ import (
 
 // Paginate 分页通用部分
 func Paginate(r *http.Request, pageField, pageSizeField string, pageSize int) func(db *gorm.DB) *gorm.DB {
+	if pageField == "" {
+		pageField = "pageNo"
+	}
+	if pageSizeField == "" {
+		pageSizeField = "pageSize"
+	}
 	return func(db *gorm.DB) *gorm.DB {
 		page, _ := strconv.Atoi(r.URL.Query().Get(pageField))
 		if page < 1 {
@@ -71,6 +79,55 @@ func FilterWhereString(r *http.Request, query string, field string, like bool) f
 		}
 		return db.Where(query, value)
 	}
+}
+
+// FilterWhereStruct 通过结构体 自动映射查询字段
+func FilterWhereStruct(s any, r *http.Request, likes ...map[string]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		t := reflect.TypeOf(s)
+		if t.Kind() != reflect.Struct {
+			return db
+		}
+		query := r.URL.Query()
+		for i := 0; i < t.NumField(); i++ {
+			if t.Field(i).Type.String() != "int" && t.Field(i).Type.String() != "string" {
+				continue
+			}
+			tagName := t.Field(i).Tag.Get("json")
+			if tagName == "" {
+				continue
+			}
+			val := query.Get(strings.Split(tagName, ",")[0])
+			if val == "" {
+				continue
+			}
+			if t.Field(i).Type.String() == "int" {
+				db.Where(tagName+"=?", val)
+			} else {
+				lastVal := val
+				if t.Field(i).Tag.Get("dblike") == "%" {
+					lastVal = "%" + val + "%"
+				}
+				if len(likes) > 0 {
+					if custom, ok := likes[0][tagName]; ok {
+						switch custom {
+						case "%%":
+							lastVal = "%" + val + "%"
+						case "-%":
+							lastVal = val + "%"
+						case "%-":
+							lastVal = "%" + val
+						default:
+							lastVal = val
+						}
+					}
+				}
+				db.Where(tagName+" like ?", lastVal)
+			}
+		}
+		return db
+	}
+
 }
 
 // QueryDateTimeRange 时间区间查询
