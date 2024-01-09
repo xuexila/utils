@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"golang.org/x/net/websocket"
 	"io/ioutil"
 	"net/http"
@@ -77,13 +76,15 @@ func (h *HttpServer) HttpServerStart() {
 		return
 	}
 	go h.hotUpdate(server)
+	var isQuit bool
+	go h.stopServer(server, &isQuit)
 	if err := server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			Error("HTTP Service 启动失败", server.Addr, err)
 			os.Exit(1)
 		}
 	}
-	if h.Hotupdate {
+	if h.Hotupdate && !isQuit {
 		h.HttpServerStart()
 	}
 }
@@ -191,15 +192,6 @@ func SetRequestDefaultPage(defaultPage, path string) ([]*os.File, []string, bool
 	return swapList, swapPaths, status
 }
 
-// MethodNotAllow 405
-func MethodNotAllow(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
-	_, _ = fmt.Fprint(w, `
-<h1 style="text-align:center;">400 Error!</h1>
-<p style="text-align:center;">`+http.StatusText(http.StatusMethodNotAllowed)+`</p>
-`)
-}
-
 // Closehttpserver 关闭http server
 func Closehttpserver(s *http.Server) {
 	if s != nil {
@@ -237,4 +229,13 @@ func (this HttpServer) hash() string {
 		this.SocketTimeout.String(),
 	}, append(this.Allowip, this.Denyip...)...)
 	return Md5string(strings.Join(strArr, ""))
+}
+
+func (this HttpServer) stopServer(server *http.Server, isQuit *bool) {
+	enableHttpserver = true
+	_ = <-closeHttpserverSig
+	*isQuit = true
+	Log("http server已关闭")
+	Closehttpserver(server)
+	closeHttpserverSig <- 1
 }

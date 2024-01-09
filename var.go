@@ -25,6 +25,8 @@ var (
 	PublicKeyByt  []byte // 公钥
 	PrivateKeyByt []byte // 私钥
 
-	defaultLetters   = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	specialChartPreg = regexp.MustCompile(`[\s;!@#$%^&*()\[\]\:\"\']`)
+	defaultLetters     = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	specialChartPreg   = regexp.MustCompile(`[\s;!@#$%^&*()\[\]\:\"\']`)
+	enableHttpserver   bool
+	closeHttpserverSig = make(chan byte, 1)
 )

@@ -10,6 +10,7 @@ require (
 	github.com/pkg/sftp v1.13.6
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/tjfoc/gmsm v1.4.1
+	golang.org/x/crypto v0.13.0
 	golang.org/x/net v0.15.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
@@ -41,7 +42,6 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	google.golang.org/protobuf v1.23.0 // indirect
 )

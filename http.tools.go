@@ -252,3 +252,12 @@ func Play(path string, w http.ResponseWriter, r *http.Request) {
 	}
 	_, _ = io.Copy(w, f)
 }
+
+// MethodNotAllow 405
+func MethodNotAllow(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+	_, _ = fmt.Fprint(w, `
+<h1 style="text-align:center;">400 Error!</h1>
+<p style="text-align:center;">`+http.StatusText(http.StatusMethodNotAllowed)+`</p>
+`)
+}

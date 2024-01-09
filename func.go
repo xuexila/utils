@@ -45,6 +45,10 @@ func SignalHandle(funds ...func()) {
 		f()
 	}
 	Log("各个组件关闭完成，系统即将自动关闭", os.Getpid())
+	if enableHttpserver {
+		closeHttpserverSig <- 1
+		_ = <-closeHttpserverSig
+	}
 	os.Exit(0)
 }
 
