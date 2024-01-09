@@ -36,10 +36,14 @@ func JsonEncode(j any) ([]byte, error) {
 }
 
 // SignalHandle 系统信号
-func SignalHandle() {
+func SignalHandle(funds ...func()) {
 	exitsin := make(chan os.Signal)
 	signal.Notify(exitsin, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // 注意，syscall.SIGKILL 不能被捕获
 	Log("退出信号", <-exitsin)                                                                   // 日志记录
+	for _, f := range funds {
+		f()
+	}
+	Log("各个组件关闭完成，系统即将自动关闭", os.Getpid())
 	os.Exit(0)
 }
 

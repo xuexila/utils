@@ -37,6 +37,9 @@ func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, da
 	}
 	if len(data) > 0 {
 		resp["data"] = data
+		if len(data) == 1 {
+			resp["data"] = data[0]
+		}
 	}
 	Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
 }
