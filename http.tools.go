@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -29,7 +30,11 @@ func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, da
 	}
 
 	if _, ok := msg.(error); ok {
-		msg = msg.(error).Error()
+		if len(data) > 0 && reflect.TypeOf(data[0]).String() == "bool" && data[0].(bool) {
+			msg = msg.(error).Error()
+		} else {
+			msg = "系统处理失败"
+		}
 	}
 	resp := map[string]interface{}{
 		"code": code,

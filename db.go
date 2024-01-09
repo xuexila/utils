@@ -101,6 +101,7 @@ func FilterWhereStruct(s any, r *http.Request, likes ...map[string]string) func(
 			if val == "" {
 				continue
 			}
+			// todo 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
 			if t.Field(i).Type.String() == "int" {
 				db.Where(tagName+"=?", val)
 			} else {
