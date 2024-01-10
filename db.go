@@ -101,16 +101,17 @@ func FilterWhereStruct(s any, r *http.Request, likes ...map[string]string) func(
 			if val == "" {
 				continue
 			}
-			// todo 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
+			// 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
+			fieldName := SnakeString(t.Field(i).Name)
 			if t.Field(i).Type.String() == "int" {
-				db.Where(tagName+"=?", val)
+				db.Where(fieldName+"=?", val)
 			} else {
 				lastVal := val
 				if t.Field(i).Tag.Get("dblike") == "%" {
 					lastVal = "%" + val + "%"
 				}
 				if len(likes) > 0 {
-					if custom, ok := likes[0][tagName]; ok {
+					if custom, ok := likes[0][fieldName]; ok {
 						switch custom {
 						case "%%":
 							lastVal = "%" + val + "%"
@@ -123,7 +124,7 @@ func FilterWhereStruct(s any, r *http.Request, likes ...map[string]string) func(
 						}
 					}
 				}
-				db.Where(tagName+" like ?", lastVal)
+				db.Where(fieldName+" like ?", lastVal)
 			}
 		}
 		return db
