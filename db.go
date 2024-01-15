@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"net/http"
 	"reflect"
@@ -148,5 +149,38 @@ func QueryDateTimeRange(r *http.Request, filed ...string) func(db *gorm.DB) *gor
 			db.Where(sField+" <= ?", eTime)
 		}
 		return db
+	}
+}
+
+// AutoCreateTableWithStruct 根据结构体判断是否需要创建表
+func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
+	t := reflect.TypeOf(tb)
+	if t.Kind() != reflect.Struct {
+		return
+	}
+	if !db.Migrator().HasTable(tb) {
+		DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
+	}
+	// 如果表存在，在判断结构体中是否有新增字段，如果有，就自动改变表
+	for i := 0; i < t.NumField(); i++ {
+		tag := t.Field(i).Tag.Get("gorm")
+		if tag == "" {
+			continue
+		}
+		if tag == "-:all" || tag == "-:migration" {
+			fmt.Println(tag)
+			continue
+		}
+		column := SnakeString(t.Field(i).Name)
+		for _, item := range strings.Split(tag, ";") {
+			if !strings.HasPrefix(item, "column") {
+				continue
+			}
+			column = item[7:]
+		}
+		if !db.Migrator().HasColumn(tb, column) {
+			DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
+			break // 创建一次就行了
+		}
 	}
 }
