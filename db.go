@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"gorm.io/gorm"
 	"net/http"
 	"reflect"
@@ -168,7 +167,6 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 			continue
 		}
 		if tag == "-:all" || tag == "-:migration" {
-			fmt.Println(tag)
 			continue
 		}
 		column := SnakeString(t.Field(i).Name)
