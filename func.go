@@ -547,3 +547,22 @@ func RandomString(n int, allowedChars ...[]rune) string {
 	}
 	return string(b)
 }
+
+// MinMaxAvgSum 获取数组中最大值最小值平均值和求和
+func MinMaxAvgSum(nums []int) (min int, max int, avg float64, sum int) {
+	if len(nums) == 0 {
+		return 0, 0, 0, 0
+	}
+	min, max, sum = nums[0], nums[0], nums[0]
+	for _, num := range nums[1:] {
+		if num < min {
+			min = num
+		}
+		if num > max {
+			max = num
+		}
+		sum += num
+	}
+	avg = float64(sum) / float64(len(nums))
+	return
+}

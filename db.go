@@ -99,7 +99,11 @@ func FilterWhereStruct(s any, r *http.Request, likes ...map[string]string) func(
 			}
 			val := query.Get(strings.Split(tagName, ",")[0])
 			if val == "" {
-				continue
+				// 如果没有传值，判断是否有默认值
+				val = t.Field(i).Tag.Get("default")
+				if val == "" {
+					continue
+				}
 			}
 			// 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
 			fieldName := SnakeString(t.Field(i).Name)
