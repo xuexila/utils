@@ -7,6 +7,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/colinmarc/hdfs"
+	"github.com/redis/go-redis/v9"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"math"
@@ -565,4 +567,16 @@ func MinMaxAvgSum(nums []int) (min int, max int, avg float64, sum int) {
 	}
 	avg = float64(sum) / float64(len(nums))
 	return
+}
+
+func CloseHdfs(conn *hdfs.Client) {
+	if conn != nil {
+		_ = conn.Close()
+	}
+}
+
+func CloseRedisUniversalClient(rdb redis.UniversalClient) {
+	if rdb != nil {
+		_ = rdb.Close()
+	}
 }
