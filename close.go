@@ -3,7 +3,7 @@ package utils
 import (
 	"database/sql"
 	"github.com/IBM/sarama"
-	"github.com/colinmarc/hdfs"
+	"github.com/colinmarc/hdfs/v2"
 	"github.com/garyburd/redigo/redis"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"

@@ -7,7 +7,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/colinmarc/hdfs"
+	"github.com/colinmarc/hdfs/v2"
 	"github.com/redis/go-redis/v9"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -578,5 +578,11 @@ func CloseHdfs(conn *hdfs.Client) {
 func CloseRedisUniversalClient(rdb redis.UniversalClient) {
 	if rdb != nil {
 		_ = rdb.Close()
+	}
+}
+
+func CloseHdfsFileReader(file *hdfs.FileReader) {
+	if file != nil {
+		_ = file.Close()
 	}
 }
