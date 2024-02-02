@@ -160,9 +160,9 @@ func NotFound(w http.ResponseWriter, msg string) {
 }
 
 func ReqError(r *http.Request, i ...any) {
-	log.SetPrefix("[" + Getip(r) + "] [" + r.URL.Path + "] ")
+	log.SetPrefix("")
 	log.SetOutput(os.Stderr)
-	var msg = []any{r.URL.String()}
+	var msg = []any{Getip(r), r.URL.String()}
 	log.Println(append(msg, i...)...)
 }
 
