@@ -16,7 +16,11 @@ func init() {
 	}
 }
 
-// 解析启动参数
+var (
+	EnableParseParamsLog = true
+)
+
+// Parseparams 解析启动参数
 func Parseparams(f func()) {
 	// 解析参数
 	var (
@@ -38,7 +42,10 @@ func Parseparams(f func()) {
 		flag.Usage()
 		os.Exit(0)
 	}
-	Log("运行参数解析完成...")
+	if EnableParseParamsLog {
+		Log("运行参数解析完成...")
+	}
+
 }
 
 func LoadIni(i interface{}) {
