@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/websocket"
 	"io/ioutil"
 	"net/http"
+	"net/http/pprof"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -17,6 +18,13 @@ import (
 // HttpServerStart 公功 http server 启动函数
 func (h *HttpServer) HttpServerStart() {
 	mux := http.NewServeMux()
+	if Dbg {
+		h.Route["/debug/pprof/"] = pprof.Index
+		h.Route["/debug/pprof/cmdline"] = pprof.Cmdline
+		h.Route["/debug/pprof/profile"] = pprof.Profile
+		h.Route["/debug/pprof/symbol"] = pprof.Symbol
+		h.Route["/debug/pprof/trace"] = pprof.Trace
+	}
 	if h.Route != nil {
 		for u, funcName := range h.Route {
 			h.middleware(mux, u, funcName)
