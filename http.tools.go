@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -167,19 +166,14 @@ func ReqError(r *http.Request, i ...any) {
 }
 
 // Play 公共函数文件
-func Play(path string, w http.ResponseWriter, r *http.Request) {
+func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
-	defer func() {
-		if f != nil {
-			_ = f.Close()
-		}
-	}()
+	defer CloseFile(f)
 	if err != nil {
-		Error("视频不存在", path)
+		Error("文件不存在", path)
 		http.NotFound(w, r)
 		return
 	}
-
 	ranges := int64(0)
 	rangeEnd := int(0)
 	rangeSwap := strings.TrimSpace(r.Header.Get("Range"))
@@ -244,17 +238,24 @@ func Play(path string, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("Connection", "close")
 	w.Header().Set("Etag", `W/"`+strconv.FormatInt(fInfo.ModTime().Unix(), 16)+`-`+strconv.FormatInt(fInfo.Size(), 16)+`"`)
+	if len(args) > 0 {
+		if args[0] == "downloader" {
+			w.Header().Del("Accept-Ranges")
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filepath.Base(path)))
+		}
+	}
 	if rangeSwap != "" {
 		w.Header().Set("Content-Range", "bytes "+strconv.Itoa(int(ranges))+"-"+strconv.Itoa(totalSize-1)+"/"+total)
 		w.WriteHeader(206)
 	} else {
 		w.WriteHeader(200)
 	}
-	if fType == "mp4" {
-		_byt, _ := ioutil.ReadAll(f)
-		_, _ = w.Write(_byt)
-		return
-	}
+
+	//if fType == "mp4" {
+	//	_byt, _ := io.ReadAll(f)
+	//	_, _ = w.Write(_byt)
+	//	return
+	//}
 	_, _ = io.Copy(w, f)
 }
 

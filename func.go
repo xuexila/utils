@@ -10,6 +10,7 @@ import (
 	"github.com/colinmarc/hdfs/v2"
 	"github.com/redis/go-redis/v9"
 	"gopkg.in/mgo.v2/bson"
+	"io"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -416,7 +417,7 @@ func ParseGzip(data []byte) ([]byte, error) {
 		defer func() {
 			_ = r.Close()
 		}()
-		undatas, err := ioutil.ReadAll(r)
+		undatas, err := io.ReadAll(r)
 		if err != nil {
 			return nil, err
 		}
