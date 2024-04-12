@@ -81,3 +81,58 @@ func CloseZipWriter(f *zip.Writer) {
 		_ = f.Close()
 	}
 }
+
+// UnCompressZip 解压zip包
+func UnCompressZip(zipFilePath string, targetDir string) error {
+	reader, err := zip.OpenReader(zipFilePath)
+	defer CloseZipReader(reader)
+	if err != nil {
+		return fmt.Errorf("failed to open ZIP file: %w", err)
+	}
+	// 遍历zip文件中的所有条目
+	for _, file := range reader.File {
+		err := func(file *zip.File) error {
+			// 获取条目的相对路径
+			filePath := filepath.Join(targetDir, file.Name)
+			// 如果是目录，则创建它
+			if file.FileInfo().IsDir() {
+				if err = os.MkdirAll(filePath, os.ModePerm); err != nil {
+					return err
+				}
+				return nil
+			}
+			// 创建目标文件
+			outputFile, err := os.Create(filePath)
+			defer CloseFile(outputFile)
+			if err != nil {
+				return err
+			}
+			// 从zip文件中打开条目的读取流
+			zipFile, err := file.Open()
+			defer CloseIoReader(zipFile)
+			if err != nil {
+				return err
+			}
+			// 将条目内容复制到目标文件
+			_, err = io.Copy(outputFile, zipFile)
+			return err
+		}(file)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func CloseZipReader(f *zip.ReadCloser) {
+	if f != nil {
+		_ = f.Close()
+	}
+}
+
+// 关闭IoReader
+func CloseIoReader(f io.ReadCloser) {
+	if f != nil {
+		_ = f.Close()
+	}
+}
