@@ -76,7 +76,7 @@ func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
 func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
 	ReqError(r, append([]any{err}, msg...)...)
 	if len(msg) < 1 {
-		msg[0] = err.Error()
+		msg = []any{err.Error()}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
