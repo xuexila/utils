@@ -77,13 +77,13 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 	ReqError(r, append([]any{err}, msg...)...)
 	if len(msg) < 1 {
 		msg = []any{err.Error()}
-	}else{
-		msg=append(msg,"", err.Error())
+	} else {
+		msg = append(msg, "", err.Error())
 	}
 	w.Header().Set("Content-Type", "application/json")
 	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
 		"code": code,
-		"msg":  msg,
+		"msg":  AnySlice2Str(msg),
 	}), "SetReturnError")
 }
 
