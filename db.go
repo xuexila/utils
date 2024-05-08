@@ -116,7 +116,12 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 			// 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
 			fieldName := tableName + "." + SnakeString(t.Field(i).Name)
 			if t.Field(i).Type.String() == "int" {
-				db.Where(fieldName+"=?", val)
+				valList := strings.Split(val, ",")
+				if len(valList) > 1 {
+					db.Where(fieldName+" in ?", valList)
+				} else {
+					db.Where(fieldName+" = ?", val)
+				}
 			} else {
 				lastVal := val
 				if t.Field(i).Tag.Get("dblike") == "%" {
