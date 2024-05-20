@@ -1,4 +1,4 @@
-package utils
+package rsa
 
 import (
 	"crypto"
@@ -9,19 +9,21 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"gitlab.itestor.com/helei/utils.git"
+	"gitlab.itestor.com/helei/utils.git/crypto/sha256"
 )
 
-// 签名验证，用公钥进行验证
+// RsaVerify 签名验证，用公钥进行验证
 // msg 源实内容
 // 签名
 func RsaVerify(msg string, _sign string) error {
 	// 数据hash
-	msgHashbyt, err := Sha256(msg)
+	msgHashbyt, err := sha256.Sha256(msg)
 	if err != nil {
 		return err
 	}
 	// key
-	block, _ := pem.Decode(PublicKeyByt)
+	block, _ := pem.Decode(utils.PublicKeyByt)
 	if block == nil {
 		return errors.New("public key error")
 	}
@@ -38,11 +40,11 @@ func RsaVerify(msg string, _sign string) error {
 
 // 内容签名，用私钥签名
 func RsaSign(msg string) (string, error) {
-	msgHashByt, err := Sha256(msg)
+	msgHashByt, err := sha256.Sha256(msg)
 	if err != nil {
 		return "", errors.New("Sha256(msg)---->" + err.Error())
 	}
-	block, _ := pem.Decode(PrivateKeyByt)
+	block, _ := pem.Decode(utils.PrivateKeyByt)
 	if block == nil {
 		return "", errors.New("Private key error")
 	}

@@ -2,13 +2,6 @@ package utils
 
 import (
 	"database/sql"
-	"github.com/IBM/sarama"
-	"github.com/colinmarc/hdfs/v2"
-	"github.com/garyburd/redigo/redis"
-	"github.com/jlaffaye/ftp"
-	"github.com/pkg/sftp"
-	rds "github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/websocket"
 	"io"
 	"io/ioutil"
@@ -33,20 +26,6 @@ func CloseReq(resp *http.Request) {
 	_ = resp.Body.Close()
 }
 
-// CloseFtpClient ftp连接退出关闭
-func CloseFtpClient(conn *ftp.ServerConn) {
-	if conn != nil {
-		_ = conn.Logout()
-		_ = conn.Quit()
-	}
-}
-
-func CloseFtpResponse(raw *ftp.Response) {
-	if raw != nil {
-		_ = raw.Close()
-	}
-}
-
 func CloseConn(conn net.Conn) {
 	if conn != nil {
 		_ = conn.Close()
@@ -58,59 +37,15 @@ func CloseUdpConn(conn *net.UDPConn) {
 	}
 }
 
-func CloseSsh(conn *ssh.Client) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseSftp(conn *sftp.Client) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-// CloseRedisConn github.com/garyburd/redigo/redis
-func CloseRedisConn(conn redis.Conn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseRdsConn(conn *rds.Conn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseKafkaPartition(partition sarama.PartitionConsumer) {
-	if partition == nil {
-		return
-	}
-	Checkerr(partition.Close(), "CloseKafkaPartition")
-}
-
 func CloseFile(file *os.File) {
 	if file != nil {
 		_ = file.Close()
 	}
 }
 
-func CloseHdfsFile(f *hdfs.FileWriter) {
-	if f != nil {
-		_ = f.Close()
-	}
-}
-
 func CloseMultipartWriter(w *multipart.Writer) {
 	if w != nil {
 		_ = w.Close()
-	}
-}
-
-func CloseSftpFile(file *sftp.File) {
-	if file != nil {
-		_ = file.Close()
 	}
 }
 

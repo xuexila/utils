@@ -1,8 +1,9 @@
-package utils
+package compress
 
 import (
 	"archive/zip"
 	"fmt"
+	"gitlab.itestor.com/helei/utils.git"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ func CompressDirectoryToZip(dirPath string, zipFilePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create ZIP file: %w", err)
 	}
-	defer CloseFile(f)
+	defer utils.CloseFile(f)
 
 	zw := zip.NewWriter(f)
 	defer CloseZipWriter(zw)
@@ -59,7 +60,7 @@ func CompressDirectoryToZip(dirPath string, zipFilePath string) error {
 			if err != nil {
 				return fmt.Errorf("failed to open file %s: %w", path, err)
 			}
-			defer CloseFile(file)
+			defer utils.CloseFile(file)
 
 			_, err = io.Copy(writer, file)
 			if err != nil {
@@ -103,7 +104,7 @@ func UnCompressZip(zipFilePath string, targetDir string) error {
 			}
 			// 创建目标文件
 			outputFile, err := os.Create(filePath)
-			defer CloseFile(outputFile)
+			defer utils.CloseFile(outputFile)
 			if err != nil {
 				return err
 			}

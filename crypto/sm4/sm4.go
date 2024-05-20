@@ -1,4 +1,4 @@
-package utils
+package sm4
 
 import (
 	"bytes"

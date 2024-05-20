@@ -8,8 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/colinmarc/hdfs/v2"
-	"github.com/redis/go-redis/v9"
 	"gopkg.in/mgo.v2/bson"
 	"io"
 	"io/ioutil"
@@ -569,24 +567,6 @@ func MinMaxAvgSum(nums []int) (min int, max int, avg float64, sum int) {
 	}
 	avg = float64(sum) / float64(len(nums))
 	return
-}
-
-func CloseHdfs(conn *hdfs.Client) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseRedisUniversalClient(rdb redis.UniversalClient) {
-	if rdb != nil {
-		_ = rdb.Close()
-	}
-}
-
-func CloseHdfsFileReader(file *hdfs.FileReader) {
-	if file != nil {
-		_ = file.Close()
-	}
 }
 
 // AnySlice2Str 将任意切片转成字符串

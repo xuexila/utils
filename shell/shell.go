@@ -1,8 +1,9 @@
-package utils
+package shell
 
 import (
 	"bytes"
 	"errors"
+	"gitlab.itestor.com/helei/utils.git"
 	"os/exec"
 )
 
@@ -15,7 +16,7 @@ func ExecShell(name string, s ...string) (string, error) {
 	)
 	cmd.Stdout = out
 	cmd.Stderr = w
-	Log("shell 执行命令", cmd.String())
+	utils.Log("shell 执行命令", cmd.String())
 
 	if err := cmd.Run(); err != nil {
 		return out.String(), errors.New(err.Error() + "，" + w.String())
@@ -47,27 +48,27 @@ func ExecCtlShell(stop chan byte, name string, s ...string) (string, error) {
 	)
 	cmd.Stdout = out
 	cmd.Stderr = w
-	Log("shell 执行命令", cmd.String())
+	utils.Log("shell 执行命令", cmd.String())
 	go func(cmd *exec.Cmd, stop, end chan byte) {
 		for {
 			select {
 			case <-stop:
 				if cmd == nil {
-					Error("分析EXEC 不存在", cmd.String())
+					utils.Error("分析EXEC 不存在", cmd.String())
 					continue
 				}
 				if cmd.Process == nil {
-					Error("分析 Process不存在", cmd.String())
+					utils.Error("分析 Process不存在", cmd.String())
 					continue
 				}
 				if err := cmd.Process.Kill(); err != nil {
-					Error("手动结束进程失败", err)
+					utils.Error("手动结束进程失败", err)
 				} else {
-					Log("手动结束命令", cmd.String())
+					utils.Log("手动结束命令", cmd.String())
 				}
 
 			case <-end:
-				Log("shell 执行完成", cmd.String())
+				utils.Log("shell 执行完成", cmd.String())
 				return
 			}
 		}

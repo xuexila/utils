@@ -1,4 +1,4 @@
-package utils
+package rsa
 
 import (
 	"crypto/cipher"
@@ -8,19 +8,20 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"gitlab.itestor.com/helei/utils.git"
 	"io/ioutil"
 )
 
 // //////////////////////////////Rsa加解密算法/////////////////////
 func RsaEncrypt(origData []byte, filePth string) ([]byte, error) {
 	PublicKey, err := ioutil.ReadFile(filePth)
-	Checkerr(err)
+	utils.Checkerr(err)
 	block, _ := pem.Decode(PublicKey)
 	if block == nil {
 		return []byte{}, errors.New("public key empty")
 	}
 	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
-	Checkerr(err)
+	utils.Checkerr(err)
 	pub := pubInterface.(*rsa.PublicKey)
 	//print(pub.Size())
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, origData)
@@ -51,17 +52,17 @@ func ThriDESDeCrypt(crypted, key []byte) []byte {
 	//解密密文到数组
 	blockMode.CryptBlocks(context, crypted)
 	//去补码
-	context = Pkcs5UnPadding(context)
+	context = utils.Pkcs5UnPadding(context)
 	return context
 }
 
-// 加密
+// ThriDESEnCrypt 加密
 func ThriDESEnCrypt(origData, key []byte) []byte {
 	//获取block块
 	block, err := des.NewTripleDESCipher(key[:24])
 	//补码
-	Checkerr(err)
-	origData = Pkcs5Padding(origData, block.BlockSize())
+	utils.Checkerr(err)
+	origData = utils.Pkcs5Padding(origData, block.BlockSize())
 	//设置加密方式为 3DES  使用3条56位的密钥对数据进行三次加密
 
 	blockMode := cipher.NewCBCEncrypter(block, key[24:])
