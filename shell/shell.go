@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"gitlab.itestor.com/helei/utils.git"
+	"os"
 	"os/exec"
+	"regexp"
+	"runtime"
+	"strings"
 )
 
 // ExecShell 执行 shell语句
@@ -83,4 +87,63 @@ func ExecCtlShell(stop chan byte, name string, s ...string) (string, error) {
 		return out.String(), errors.New(err.Error() + "，" + w.String())
 	}
 	return out.String(), nil
+}
+
+// MachineCode 利用硬件信息 生成token
+func MachineCode() string {
+	_os := strings.ToLower(runtime.GOOS)
+	_arch := strings.ToLower(runtime.GOARCH)
+	utils.Log("系统版本", _os, "平台", _arch, "读取设备信息...")
+	var (
+		err         error
+		info        string
+		_macode     string
+		machineCode string
+	)
+	switch _os {
+	case "linux":
+		info, err = ExecShell("dmidecode")
+		if err != nil {
+			_macode, err = ExecShell("/bin/bash", "-c", `"/sbin/ip link" | grep link | /usr/bin/sort | /usr/bin/uniq | /usr/bin/sha256sum`)
+			if err != nil {
+				utils.Error("机器码生成失败", err)
+				os.Exit(1)
+			}
+		}
+	case "darwin":
+		var tmp []byte
+		tmp, err = utils.FileGetContents("/Users/helay/go/src/company/vis-device/startUp/vis.agent/run/info")
+		if err != nil {
+			utils.Error("机器码生成失败", err)
+			os.Exit(1)
+		}
+		info = string(tmp)
+	default:
+		os.Exit(1)
+	}
+	if _macode != "" {
+		machineCode = utils.Md5string(_macode)
+	} else {
+		cpuPreg := regexp.MustCompile(`Processor[\s\S]+?ID.+?((?:[A-Z0-9]{2} ?){8})`)
+
+		tmp := cpuPreg.FindStringSubmatch(info)
+		if len(tmp) != 2 {
+			utils.Error("系统信息获取失败")
+			os.Exit(0)
+		}
+		cpuid := strings.TrimSpace(tmp[1])
+
+		boardPreg := regexp.MustCompile(`Base Board[\s\S]+?Serial Number.+?([A-Z0-9]+)`)
+
+		tmp = boardPreg.FindStringSubmatch(info)
+		if len(tmp) != 2 {
+			utils.Error("系统信息获取失败")
+			os.Exit(0)
+		}
+		boardid := tmp[1]
+		// 生成机器码
+		machineCode = utils.Md5string(cpuid + utils.Salt + boardid)
+	}
+	utils.Debug("机器码", machineCode)
+	return machineCode
 }
