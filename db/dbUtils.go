@@ -45,3 +45,9 @@ func GetRawSql(f func(tx *gorm.DB) *gorm.DB, dbTypes ...string) (string, []any) 
 	query := f(db).Statement
 	return query.SQL.String(), query.Vars
 }
+
+// GetRawSqlByDb 生成sql的通用函数,db为数据库连接
+func GetRawSqlByDb(f func(tx *gorm.DB) *gorm.DB, db *gorm.DB) (string, []any) {
+	query := f(db).Statement
+	return query.SQL.String(), query.Vars
+}
