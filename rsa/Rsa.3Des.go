@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"gitlab.itestor.com/helei/utils.git"
+	"gitlab.itestor.com/helei/utils.git/crypto/sm4"
 	"io/ioutil"
 )
 
@@ -52,7 +53,8 @@ func ThriDESDeCrypt(crypted, key []byte) []byte {
 	//解密密文到数组
 	blockMode.CryptBlocks(context, crypted)
 	//去补码
-	context = utils.Pkcs5UnPadding(context)
+
+	context = sm4.Pkcs5UnPadding(context)
 	return context
 }
 
@@ -62,7 +64,7 @@ func ThriDESEnCrypt(origData, key []byte) []byte {
 	block, err := des.NewTripleDESCipher(key[:24])
 	//补码
 	utils.Checkerr(err)
-	origData = utils.Pkcs5Padding(origData, block.BlockSize())
+	origData = sm4.Pkcs5Padding(origData, block.BlockSize())
 	//设置加密方式为 3DES  使用3条56位的密钥对数据进行三次加密
 
 	blockMode := cipher.NewCBCEncrypter(block, key[24:])
