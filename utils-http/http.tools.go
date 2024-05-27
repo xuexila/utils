@@ -1,8 +1,9 @@
-package utils
+package utils_http
 
 import (
 	"encoding/json"
 	"fmt"
+	"gitlab.itestor.com/helei/utils.git"
 	"io"
 	"log"
 	"net"
@@ -45,7 +46,7 @@ func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, da
 			resp["data"] = data[0]
 		}
 	}
-	Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
+	utils.Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
 }
 
 // SetReturn 设置 返回函数Play
@@ -58,7 +59,7 @@ func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 			msg = []any{"失败"}
 		}
 	}
-	Checkerr(json.NewEncoder(w).Encode(map[string]any{
+	utils.Checkerr(json.NewEncoder(w).Encode(map[string]any{
 		"code": code,
 		"msg":  msg[0],
 	}), "SetReturn")
@@ -66,7 +67,7 @@ func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 
 func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
 	w.Header().Set("Content-Type", "application/json")
-	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+	utils.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
 		"code": code,
 		"msg":  msg,
 		"data": data,
@@ -81,9 +82,9 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 		msg = append(msg, "", err.Error())
 	}
 	w.Header().Set("Content-Type", "application/json")
-	Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+	utils.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
 		"code": code,
-		"msg":  AnySlice2Str(msg),
+		"msg":  utils.AnySlice2Str(msg),
 	}), "SetReturnError")
 }
 
@@ -173,9 +174,9 @@ func ReqError(r *http.Request, i ...any) {
 // Play 公共函数文件
 func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
-	defer CloseFile(f)
+	defer utils.CloseFile(f)
 	if err != nil {
-		Error("文件不存在", path)
+		utils.Error("文件不存在", path)
 		http.NotFound(w, r)
 		return
 	}
@@ -233,7 +234,7 @@ func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 	}
 	total := strconv.Itoa(fileSize)
 
-	mime := MimeMap[fType]
+	mime := utils.MimeMap[fType]
 	if mime == "" {
 		mime = "text/html;charset=utf-8"
 	}

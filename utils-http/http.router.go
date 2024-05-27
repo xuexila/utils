@@ -1,8 +1,9 @@
-package utils
+package utils_http
 
 import (
 	"bytes"
 	"fmt"
+	"gitlab.itestor.com/helei/utils.git"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -28,14 +29,14 @@ func (ro Router) Index(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-		CloseReq(r)
+		utils.CloseReq(r)
 	}()
 	var rmime string
 	if len(path) < 1 {
 		rmime = "text/html; charset=utf-8"
 	} else {
 		if len(filepath.Ext(path[0])) > 0 {
-			rmime = MimeMap[strings.ToLower(filepath.Ext(path[0])[1:])]
+			rmime = utils.MimeMap[strings.ToLower(filepath.Ext(path[0])[1:])]
 		}
 		if rmime == "" {
 			rmime = "text/html; charset=utf-8"

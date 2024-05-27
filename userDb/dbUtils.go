@@ -1,4 +1,4 @@
-package db
+package userDb
 
 import (
 	"gorm.io/driver/mysql"

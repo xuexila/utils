@@ -1,6 +1,7 @@
-package utils
+package userDb
 
 import (
+	"gitlab.itestor.com/helei/utils.git"
 	"gorm.io/gorm"
 	"net/http"
 	"reflect"
@@ -56,7 +57,7 @@ func Paginate(r *http.Request, pageField, pageSizeField string, pageSize int) fu
 			tx.Offset((page - 1) * limit).Limit(limit)
 		}
 		_sort := r.URL.Query().Get("sort")
-		if _sort != "" && !specialChartPreg.MatchString(_sort) {
+		if _sort != "" && !utils.SpecialChartPreg.MatchString(_sort) {
 			if _sort[0] == '-' {
 				tx.Order(_sort[1:] + " desc")
 			} else {
@@ -111,10 +112,10 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 
 			tableName := alias
 			if tableName == "" {
-				tableName = SnakeString(t.Name())
+				tableName = utils.SnakeString(t.Name())
 			}
 			// 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
-			fieldName := tableName + "." + SnakeString(t.Field(i).Name)
+			fieldName := tableName + "." + utils.SnakeString(t.Field(i).Name)
 			if t.Field(i).Type.String() == "int" {
 				valList := strings.Split(val, ",")
 				if len(valList) > 1 {
@@ -175,7 +176,7 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 		return
 	}
 	if !db.Migrator().HasTable(tb) {
-		DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
+		utils.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
 	}
 	// 如果表存在，在判断结构体中是否有新增字段，如果有，就自动改变表
 	for i := 0; i < t.NumField(); i++ {
@@ -186,7 +187,7 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 		if tag == "-:all" || tag == "-:migration" {
 			continue
 		}
-		column := SnakeString(t.Field(i).Name)
+		column := utils.SnakeString(t.Field(i).Name)
 		for _, item := range strings.Split(tag, ";") {
 			if !strings.HasPrefix(item, "column") {
 				continue
@@ -194,7 +195,7 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 			column = item[7:]
 		}
 		if !db.Migrator().HasColumn(tb, column) {
-			DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
+			utils.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
 			break // 创建一次就行了
 		}
 	}

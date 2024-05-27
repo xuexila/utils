@@ -3,9 +3,7 @@ package utils
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/md5"
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/mgo.v2/bson"
@@ -88,9 +86,9 @@ func SignalHandle(funds ...func()) {
 		f()
 	}
 	Log("各个组件关闭完成，系统即将自动关闭", os.Getpid())
-	if enableHttpserver {
-		closeHttpserverSig <- 1
-		_ = <-closeHttpserverSig
+	if EnableHttpserver {
+		CloseHttpserverSig <- 1
+		_ = <-CloseHttpserverSig
 	}
 	os.Exit(0)
 }
@@ -108,27 +106,6 @@ func DeleteStrarr(arr []string, val string) []string {
 
 func NewId() string {
 	return bson.NewObjectId().Hex()
-}
-
-// Md5 md5 函数
-func Md5(s []byte) string {
-	h := md5.New()
-	h.Write(s)
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-// Md5string 给字符串Md5
-func Md5string(s string) string {
-	return Md5([]byte(s))
-}
-
-// Md5file 计算文件的Md5
-func Md5file(path string) string {
-	byt, err := ioutil.ReadFile(path)
-	if err != nil {
-		return ""
-	}
-	return Md5(byt)
 }
 
 // FilePutContents 快速简易写文件

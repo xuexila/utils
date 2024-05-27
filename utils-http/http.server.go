@@ -1,9 +1,11 @@
-package utils
+package utils_http
 
 import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"gitlab.itestor.com/helei/utils.git"
+	"gitlab.itestor.com/helei/utils.git/crypto/md5"
 	"golang.org/x/net/websocket"
 	"io/ioutil"
 	"net/http"
@@ -15,10 +17,12 @@ import (
 	"time"
 )
 
+var err error
+
 // HttpServerStart 公功 http server 启动函数
 func (h *HttpServer) HttpServerStart() {
 	mux := http.NewServeMux()
-	if Dbg {
+	if utils.Dbg {
 		h.Route["/debug/pprof/"] = pprof.Index
 		h.Route["/debug/pprof/cmdline"] = pprof.Cmdline
 		h.Route["/debug/pprof/profile"] = pprof.Profile
@@ -53,7 +57,7 @@ func (h *HttpServer) HttpServerStart() {
 	}
 	defer Closehttpserver(server)
 
-	Log("启动Http(s) Server", h.ListenAddr)
+	utils.Log("启动Http(s) Server", h.ListenAddr)
 	if h.Ssl {
 		server.TLSConfig = &tls.Config{
 			CipherSuites: []uint16{
@@ -67,9 +71,9 @@ func (h *HttpServer) HttpServerStart() {
 		}
 		// 如果包含ca证书，就需要做强制双向https 验证
 		if h.Ca != "" {
-			caCrt, err := ioutil.ReadFile(Fileabs(h.Ca))
+			caCrt, err := ioutil.ReadFile(utils.Fileabs(h.Ca))
 			if err != nil {
-				Error("HTTPS Service Load Ca error", err)
+				utils.Error("HTTPS Service Load Ca error", err)
 				os.Exit(1)
 			}
 			pool := x509.NewCertPool()
@@ -77,8 +81,8 @@ func (h *HttpServer) HttpServerStart() {
 			server.TLSConfig.ClientCAs = pool
 			server.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
 		}
-		if err = server.ListenAndServeTLS(Fileabs(h.Crt), Fileabs(h.Key)); err != nil {
-			Error("HTTPS Service 服务启动失败", server.Addr, err)
+		if err = server.ListenAndServeTLS(utils.Fileabs(h.Crt), utils.Fileabs(h.Key)); err != nil {
+			utils.Error("HTTPS Service 服务启动失败", server.Addr, err)
 			os.Exit(1)
 		}
 		return
@@ -88,7 +92,7 @@ func (h *HttpServer) HttpServerStart() {
 	go h.stopServer(server, &isQuit)
 	if err := server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
-			Error("HTTP Service 启动失败", server.Addr, err)
+			utils.Error("HTTP Service 启动失败", server.Addr, err)
 			os.Exit(1)
 		}
 	}
@@ -99,8 +103,8 @@ func (h *HttpServer) HttpServerStart() {
 
 func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.ResponseWriter, r *http.Request)) {
 	mux.Handle(u, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer CloseReq(r)
-		Debug("请求地址", r.URL.String(), "IP", Getip(r))
+		defer utils.CloseReq(r)
+		utils.Debug("请求地址", r.URL.String(), "IP", Getip(r))
 		// add header
 		w.Header().Set("server", "vs/1.0")
 		w.Header().Set("connection", "keep-alive")
@@ -115,7 +119,7 @@ func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.Resp
 				return
 			}
 			addr = addr[0:al]
-			if Searchslice(addr, h.Allowip) == false {
+			if utils.Searchslice(addr, h.Allowip) == false {
 				Forbidden(w, "")
 				return
 			}
@@ -128,7 +132,7 @@ func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.Resp
 				return
 			}
 			addr = addr[0:al]
-			if Searchslice(addr, h.Denyip) == true {
+			if utils.Searchslice(addr, h.Denyip) == true {
 				Forbidden(w, "")
 				return
 			}
@@ -150,7 +154,7 @@ func SetRequestDefaultPage(defaultPage, path string) ([]*os.File, []string, bool
 	if len(sarr) == 1 {
 		swapUrl, err := url.Parse(path)
 		if err != nil {
-			Error("url 异常", err)
+			utils.Error("url 异常", err)
 			return nil, nil, false
 		}
 		path = swapUrl.Path
@@ -230,20 +234,20 @@ func (this HttpServer) hash() string {
 	strArr := append([]string{
 		this.ListenAddr,
 		this.Auth,
-		Booltostring(this.Ssl),
+		utils.Booltostring(this.Ssl),
 		this.Ca,
 		this.Crt,
 		this.Key,
 		this.SocketTimeout.String(),
 	}, append(this.Allowip, this.Denyip...)...)
-	return Md5string(strings.Join(strArr, ""))
+	return md5.Md5string(strings.Join(strArr, ""))
 }
 
 func (this HttpServer) stopServer(server *http.Server, isQuit *bool) {
-	enableHttpserver = true
-	_ = <-closeHttpserverSig
+	utils.EnableHttpserver = true
+	_ = <-utils.CloseHttpserverSig
 	*isQuit = true
-	Log("http server已关闭")
+	utils.Log("http server已关闭")
 	Closehttpserver(server)
-	closeHttpserverSig <- 1
+	utils.CloseHttpserverSig <- 1
 }
