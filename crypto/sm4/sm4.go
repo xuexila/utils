@@ -60,5 +60,8 @@ func Pkcs5UnPadding(src []byte) []byte {
 		return nil
 	}
 	unpadding := int(src[length-1])
+	if unpadding > length || unpadding == 0 {
+		return src // 增加无效填充的检查
+	}
 	return src[:(length - unpadding)]
 }
