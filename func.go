@@ -497,6 +497,9 @@ func AnySlice2Str(slice []any, _sep ...string) string {
 	for index, elem := range slice {
 		// 使用 fmt.Sprint 将任何类型转换为字符串形式
 		strElem := fmt.Sprint(elem)
+		if strElem == "" {
+			continue
+		}
 		builder.WriteString(strElem)
 		// 可以选择在此处添加分隔符，如空格、逗号等
 		if (index - 1) < l {

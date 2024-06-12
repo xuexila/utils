@@ -161,6 +161,12 @@ func FilterWhereData(data any, tableName ...string) func(db *gorm.DB) *gorm.DB {
 			if !strings.Contains(tagName, "filter") {
 				continue
 			}
+			var tagMap = make(map[string]string)
+			for _, v := range strings.Split(tagName, ";") {
+				if strings.Contains(v, ":") {
+					tagMap[strings.Split(v, ":")[0]] = strings.Split(v, ":")[1]
+				}
+			}
 			if len(tableName) > 0 {
 				tagName = tableName[0] + "." + tagName
 			}
@@ -181,7 +187,14 @@ func FilterWhereData(data any, tableName ...string) func(db *gorm.DB) *gorm.DB {
 					db.Where(jsonTag+"=?", v)
 				}
 			case reflect.Int:
-				db.Where(jsonTag+"=?", reflect.ValueOf(data).Field(i).Int())
+				v := reflect.ValueOf(data).Field(i).Int()
+				if tagMap["ignore"] != "" {
+					// 传递值 = 忽略值
+					if _tmp, err := strconv.Atoi(tagMap["ignore"]); err == nil && v == int64(_tmp) {
+						continue
+					}
+				}
+				db.Where(jsonTag+"=?", v)
 			}
 		}
 		return db
