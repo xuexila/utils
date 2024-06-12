@@ -150,6 +150,44 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 
 }
 
+func FilterWhereData(data any, tableName ...string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		t := reflect.TypeOf(data)
+		if t.Kind() != reflect.Struct {
+			return db
+		}
+		for i := 0; i < t.NumField(); i++ {
+			tagName := t.Field(i).Tag.Get("db")
+			if !strings.Contains(tagName, "filter") {
+				continue
+			}
+			if len(tableName) > 0 {
+				tagName = tableName[0] + "." + tagName
+			}
+			jsonTag := strings.Split(t.Field(i).Tag.Get("json"), ",")[0]
+			switch t.Field(i).Type.Kind() {
+			case reflect.String:
+				v := reflect.ValueOf(data).Field(i).String()
+				if v == "" {
+					continue
+				}
+				if strings.Contains(tagName, "%%") {
+					db.Where(jsonTag+" like ?", "%"+v+"%")
+				} else if strings.Contains(tagName, "%-") {
+					db.Where(jsonTag+" like ?", "%"+v)
+				} else if strings.Contains(tagName, "-%") {
+					db.Where(jsonTag+" like ?", v+"%")
+				} else {
+					db.Where(jsonTag+"=?", v)
+				}
+			case reflect.Int:
+				db.Where(jsonTag+"=?", reflect.ValueOf(data).Field(i).Int())
+			}
+		}
+		return db
+	}
+}
+
 // QueryDateTimeRange 时间区间查询
 func QueryDateTimeRange(r *http.Request, filed ...string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {

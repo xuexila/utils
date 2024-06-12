@@ -1,6 +1,7 @@
 package userDb
 
 import (
+	"database/sql"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -50,4 +51,29 @@ func GetRawSql(f func(tx *gorm.DB) *gorm.DB, dbTypes ...string) (string, []any) 
 func GetRawSqlByDb(f func(tx *gorm.DB) *gorm.DB, db *gorm.DB) (string, []any) {
 	query := f(db).Statement
 	return query.SQL.String(), query.Vars
+}
+
+func CloseDb(conn *sql.DB) {
+	if conn != nil {
+		_ = conn.Close()
+	}
+}
+
+func CloseMysqlRows(rows *sql.Rows) {
+	if rows != nil {
+		_ = rows.Close()
+	}
+}
+
+// Deprecated: As of utils v1.1.0, this value is simply [utils.CloseDb].
+func CloseMysql(conn *sql.DB) {
+	if conn != nil {
+		_ = conn.Close()
+	}
+}
+
+func CloseStmt(stmt *sql.Stmt) {
+	if stmt != nil {
+		_ = stmt.Close()
+	}
 }

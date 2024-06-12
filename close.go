@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"database/sql"
 	"golang.org/x/net/websocket"
 	"io"
 	"io/ioutil"
@@ -46,31 +45,6 @@ func CloseFile(file *os.File) {
 func CloseMultipartWriter(w *multipart.Writer) {
 	if w != nil {
 		_ = w.Close()
-	}
-}
-
-func CloseMysqlRows(rows *sql.Rows) {
-	if rows != nil {
-		_ = rows.Close()
-	}
-}
-
-// Deprecated: As of utils v1.1.0, this value is simply [utils.CloseDb].
-func CloseMysql(conn *sql.DB) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseDb(conn *sql.DB) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-}
-
-func CloseStmt(stmt *sql.Stmt) {
-	if stmt != nil {
-		_ = stmt.Close()
 	}
 }
 

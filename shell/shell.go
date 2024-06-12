@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"gitlab.itestor.com/helei/utils.git"
+	"gitlab.itestor.com/helei/utils.git/crypto/md5"
 	"os"
 	"os/exec"
 	"regexp"
@@ -122,7 +123,7 @@ func MachineCode() string {
 		os.Exit(1)
 	}
 	if _macode != "" {
-		machineCode = utils.Md5string(_macode)
+		machineCode = md5.Md5string(_macode)
 	} else {
 		cpuPreg := regexp.MustCompile(`Processor[\s\S]+?ID.+?((?:[A-Z0-9]{2} ?){8})`)
 
@@ -142,7 +143,7 @@ func MachineCode() string {
 		}
 		boardid := tmp[1]
 		// 生成机器码
-		machineCode = utils.Md5string(cpuid + utils.Salt + boardid)
+		machineCode = md5.Md5string(cpuid + utils.Salt + boardid)
 	}
 	utils.Debug("机器码", machineCode)
 	return machineCode
