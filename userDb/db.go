@@ -167,10 +167,10 @@ func FilterWhereData(data any, tableName ...string) func(db *gorm.DB) *gorm.DB {
 					tagMap[strings.Split(v, ":")[0]] = strings.Split(v, ":")[1]
 				}
 			}
-			if len(tableName) > 0 {
-				tagName = tableName[0] + "." + tagName
-			}
 			jsonTag := strings.Split(t.Field(i).Tag.Get("json"), ",")[0]
+			if len(tableName) > 0 {
+				jsonTag = tableName[0] + "." + jsonTag
+			}
 			switch t.Field(i).Type.Kind() {
 			case reflect.String:
 				v := reflect.ValueOf(data).Field(i).String()
