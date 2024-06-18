@@ -235,7 +235,7 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 		if tag == "" {
 			continue
 		}
-		if tag == "-:all" || tag == "-:migration" {
+		if tag == "-:all" || tag == "-:migration" || strings.Contains(tag, "-:migration") {
 			continue
 		}
 		column := utils.SnakeString(t.Field(i).Name)
