@@ -30,7 +30,7 @@ func Checkerr(err error, i ...interface{}) {
 	if err == nil {
 		return
 	}
-	Error(append([]any{err}, i...)...)
+	Error(append(i, err)...)
 }
 
 // DieCheckerr 检查错误，打印并输出错误信息
@@ -38,7 +38,7 @@ func DieCheckerr(err error, i ...any) {
 	if err == nil {
 		return
 	}
-	Error(append([]any{err}, i...)...)
+	Error(append(i, err)...)
 	os.Exit(1)
 }
 
@@ -47,7 +47,7 @@ func ReturnCheckerr(err error, i ...interface{}) bool {
 	if err == nil {
 		return true
 	}
-	Error(append([]any{err}, i...)...)
+	Error(append(i, err)...)
 	return false
 }
 
