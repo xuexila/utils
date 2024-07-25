@@ -19,7 +19,7 @@ func (this *CustomTime) Scan(value interface{}) (err error) {
 }
 
 func (this CustomTime) Value() (driver.Value, error) {
-	return this, nil
+	return time.Time(this), nil
 }
 
 func (this CustomTime) GormDataType() string {
