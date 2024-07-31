@@ -1,6 +1,7 @@
 package userDb
 
 import (
+	"fmt"
 	"gitlab.itestor.com/helei/utils.git"
 	"gorm.io/gorm"
 	"net/http"
@@ -89,8 +90,20 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 		if t.Kind() != reflect.Struct {
 			return db
 		}
+		tableName := alias
+		if tableName == "" {
+			tableName = utils.SnakeString(t.Name())
+			alias = tableName
+		}
+
 		query := r.URL.Query()
 		for i := 0; i < t.NumField(); i++ {
+			if t.Field(i).Type.Kind() == reflect.Struct && t.Field(i).Tag.Get("gorm") == "" && t.Field(i).Tag.Get("json") == "" {
+				fmt.Println(t.Field(i).Name, t.Field(i).Type.String(), reflect.ValueOf(s).Field(i).Interface())
+				db.Scopes(FilterWhereStruct(reflect.ValueOf(s).Field(i).Interface(), alias, enableDefault, r, likes...))
+
+				continue
+			}
 			if t.Field(i).Type.String() != "int" && t.Field(i).Type.String() != "string" {
 				continue
 			}
@@ -110,10 +123,6 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 				}
 			}
 
-			tableName := alias
-			if tableName == "" {
-				tableName = utils.SnakeString(t.Name())
-			}
 			// 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
 			fieldName := tableName + "." + utils.SnakeString(t.Field(i).Name)
 			if t.Field(i).Type.String() == "int" {
