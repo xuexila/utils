@@ -1,7 +1,6 @@
 package userDb
 
 import (
-	"fmt"
 	"gitlab.itestor.com/helei/utils.git"
 	"gorm.io/gorm"
 	"net/http"
@@ -99,9 +98,7 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 		query := r.URL.Query()
 		for i := 0; i < t.NumField(); i++ {
 			if t.Field(i).Type.Kind() == reflect.Struct && t.Field(i).Tag.Get("gorm") == "" && t.Field(i).Tag.Get("json") == "" {
-				fmt.Println(t.Field(i).Name, t.Field(i).Type.String(), reflect.ValueOf(s).Field(i).Interface())
 				db.Scopes(FilterWhereStruct(reflect.ValueOf(s).Field(i).Interface(), alias, enableDefault, r, likes...))
-
 				continue
 			}
 			if t.Field(i).Type.String() != "int" && t.Field(i).Type.String() != "string" {
@@ -239,7 +236,19 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 		utils.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
 	}
 	// 如果表存在，在判断结构体中是否有新增字段，如果有，就自动改变表
+	AutoCreateTableWithColumn(db, tb, errmsg, t)
+}
+
+// 根据表字段判断是否有数据缺失
+func AutoCreateTableWithColumn(db *gorm.DB, tb any, errmsg string, t reflect.Type) bool {
+	// 如果表存在，在判断结构体中是否有新增字段，如果有，就自动改变表
 	for i := 0; i < t.NumField(); i++ {
+		if t.Field(i).Type.Kind() == reflect.Struct && t.Field(i).Tag.Get("gorm") == "" && t.Field(i).Tag.Get("json") == "" {
+			if AutoCreateTableWithColumn(db, tb, errmsg, t.Field(i).Type) {
+				return true
+			}
+			continue
+		}
 		tag := t.Field(i).Tag.Get("gorm")
 		if tag == "" {
 			continue
@@ -254,9 +263,11 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 			}
 			column = item[7:]
 		}
+
 		if !db.Migrator().HasColumn(tb, column) {
 			utils.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
-			break // 创建一次就行了
+			return true // 创建一次就行了
 		}
 	}
+	return false
 }
