@@ -431,10 +431,13 @@ func Searchslice(s string, o []string) bool {
 
 // SearchIntSlice 在整数切片中搜索指定的元素，并返回是否找到。
 // 参数:
-//   s - 待搜索的整数。
-//   arr - 整数切片，将被搜索。
+//
+//	s - 待搜索的整数。
+//	arr - 整数切片，将被搜索。
+//
 // 返回值:
-//   如果找到 s 在 arr 中，则返回 true；否则返回 false。
+//
+//	如果找到 s 在 arr 中，则返回 true；否则返回 false。
 func SearchIntSlice(s int, arr []int) bool {
 	if arr == nil {
 		return false
@@ -446,7 +449,6 @@ func SearchIntSlice(s int, arr []int) bool {
 	}
 	return false
 }
-
 
 func SearchInt64Slice(s int64, arr []int64) bool {
 	if arr == nil {
@@ -519,7 +521,7 @@ func AnySlice2Str(slice []any, _sep ...string) string {
 		}
 		builder.WriteString(strElem)
 		// 可以选择在此处添加分隔符，如空格、逗号等
-		if (index - 1) < l {
+		if index < (l - 1) {
 			builder.WriteString(sep)
 		}
 	}
