@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"gorm.io/driver/mysql"
@@ -17,7 +16,7 @@ import (
 )
 
 // JSONMap defined JSON data type, need to implements driver.Valuer, sql.Scanner interface
-type JSONMap map[string]interface{}
+type JSONMap map[string]any
 
 // Value return json value, implement driver.Valuer interface
 func (m JSONMap) Value() (driver.Value, error) {
@@ -29,7 +28,7 @@ func (m JSONMap) Value() (driver.Value, error) {
 }
 
 // Scan scan value into Jsonb, implements sql.Scanner interface
-func (m *JSONMap) Scan(val interface{}) error {
+func (m *JSONMap) Scan(val any) error {
 	if val == nil {
 		*m = make(JSONMap)
 		return nil
@@ -43,7 +42,7 @@ func (m *JSONMap) Scan(val interface{}) error {
 	default:
 		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", val))
 	}
-	t := map[string]interface{}{}
+	t := map[string]any{}
 	rd := bytes.NewReader(ba)
 	decoder := json.NewDecoder(rd)
 	decoder.UseNumber()
@@ -57,13 +56,13 @@ func (m JSONMap) MarshalJSON() ([]byte, error) {
 	if m == nil {
 		return []byte("null"), nil
 	}
-	t := (map[string]interface{})(m)
+	t := (map[string]any)(m)
 	return json.Marshal(t)
 }
 
 // UnmarshalJSON to deserialize []byte
 func (m *JSONMap) UnmarshalJSON(b []byte) error {
-	t := map[string]interface{}{}
+	t := map[string]any{}
 	err := json.Unmarshal(b, &t)
 	*m = JSONMap(t)
 	return err
@@ -76,20 +75,7 @@ func (m JSONMap) GormDataType() string {
 
 // GormDBDataType gorm db data type
 func (JSONMap) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case "sqlite":
-		return "JSON"
-	case "mysql":
-		if v, ok := db.Dialector.(*mysql.Dialector); ok && !strings.Contains(v.ServerVersion, "MariaDB") && checkVersionSupportsJSON(v.ServerVersion) {
-			return "JSON"
-		}
-		return "LONGTEXT"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
-	}
-	return ""
+	return jsonDbDataType(db, field)
 }
 
 func (jm JSONMap) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
@@ -102,28 +88,4 @@ func (jm JSONMap) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 		}
 	}
 	return gorm.Expr("?", string(data))
-}
-
-// 检查版本是否支持JSON
-// mysql版本高于 5.7.8 ，才支持json
-func checkVersionSupportsJSON(versionStr string) bool {
-	versionParts := strings.Split(strings.TrimSpace(strings.Split("versionStr", "-")[0]), ".")
-	if len(versionParts) < 3 {
-		return false
-	}
-	major, err := strconv.Atoi(versionParts[0])
-	if err != nil {
-		return false
-	}
-
-	minor, err := strconv.Atoi(versionParts[1])
-	if err != nil {
-		return false
-	}
-
-	patch, err := strconv.Atoi(versionParts[2])
-	if err != nil {
-		return false
-	}
-	return major > 5 || (major == 5 && minor > 7) || (major == 5 && minor == 7 && patch >= 8)
 }

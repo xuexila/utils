@@ -532,11 +532,17 @@ func AnySlice2Str(slice []any, _sep ...string) string {
 
 // Map2Struct 将map转换为结构体
 // dst 需要传入一个变量的指针
-func Map2Struct(dst any, src map[string]any) error {
+func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst any, src map[string]any) error) error {
 	// 这里通过反射，将map转换为结构体
 	val := reflect.ValueOf(dst).Elem()
 	typ := val.Type()
 	for i := 0; i < val.NumField(); i++ {
+		if f, ok := customConvert[typ.Field(i).Name]; ok {
+			if err = f(dst, src); err != nil {
+				return fmt.Errorf("自定义转换函数%s执行失败：%v", typ.Field(i).Name, err)
+			}
+			continue
+		}
 		jsonTag := typ.Field(i).Tag.Get("json")
 		if jsonTag == "" {
 			continue
