@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"syscall"
@@ -527,4 +528,72 @@ func AnySlice2Str(slice []any, _sep ...string) string {
 	}
 
 	return builder.String()
+}
+
+// Map2Struct 将map转换为结构体
+// dst 需要传入一个变量的指针
+func Map2Struct(dst any, src map[string]any) error {
+	// 这里通过反射，将map转换为结构体
+	val := reflect.ValueOf(dst).Elem()
+	typ := val.Type()
+	for i := 0; i < val.NumField(); i++ {
+		jsonTag := typ.Field(i).Tag.Get("json")
+		if jsonTag == "" {
+			continue
+		}
+		// 获取结构体json标签
+		// 检查 map 中是否存在对应的键
+		if value, ok := src[jsonTag]; ok {
+			// 设置字段的值
+			fieldVal := val.Field(i)
+			switch fieldVal.Kind() {
+			case reflect.String:
+				fieldVal.SetString(Any2string(value))
+			case reflect.Int:
+				_tv, err := Any2int(value)
+				if err != nil {
+					return fmt.Errorf("字段%s转int失败：%v", jsonTag, err)
+				}
+				fieldVal.SetInt(int64(_tv))
+			default:
+			}
+		}
+	}
+	return nil
+}
+
+func Any2string(v any) string {
+	switch v.(type) {
+	case string:
+		return v.(string)
+	case int:
+		return strconv.Itoa(v.(int))
+	case int64:
+		return strconv.FormatInt(v.(int64), 10)
+	case int32:
+		return strconv.FormatInt(int64(v.(int32)), 10)
+	case float32:
+		return Float32tostring(v.(float32))
+	case float64:
+		return Float64tostring(v.(float64))
+	}
+	return fmt.Sprintf("%v", v)
+}
+
+func Any2int(v any) (int, error) {
+	switch v.(type) {
+	case string:
+		return strconv.Atoi(v.(string))
+	case int:
+		return v.(int), nil
+	case int64:
+		return int(v.(int64)), nil
+	case int32:
+		return int(v.(int32)), nil
+	case float32:
+		return int(v.(float32)), nil
+	case float64:
+		return int(v.(float64)), nil
+	}
+	return 0, fmt.Errorf("类型转换失败")
 }
