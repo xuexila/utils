@@ -530,6 +530,15 @@ func AnySlice2Str(slice []any, _sep ...string) string {
 	return builder.String()
 }
 
+type test struct {
+	uu useTest
+	useTest
+}
+
+type useTest struct {
+	a string
+}
+
 // Map2Struct 将map转换为结构体
 // dst 需要传入一个变量的指针
 func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst any, src map[string]any) error) error {
@@ -537,32 +546,64 @@ func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst a
 	val := reflect.ValueOf(dst).Elem()
 	typ := val.Type()
 	for i := 0; i < val.NumField(); i++ {
-		if f, ok := customConvert[typ.Field(i).Name]; ok {
+		field := typ.Field(i)
+		// 如果这个字段是一个匿名结构体，还需要递归处理
+		if field.Type.Kind() == reflect.Struct && field.Anonymous {
+			// 递归处理嵌套结构体，注意这里不能使用field
+			if err := Map2Struct(val.Field(i).Addr().Interface(), src, customConvert); err != nil {
+				return err
+			}
+			continue
+		}
+		// 如果有自定义转换函数，则使用自定义转换函数
+		if f, ok := customConvert[field.Name]; ok {
 			if err = f(dst, src); err != nil {
 				return fmt.Errorf("自定义转换函数%s执行失败：%v", typ.Field(i).Name, err)
 			}
 			continue
 		}
-		jsonTag := typ.Field(i).Tag.Get("json")
+		jsonTag := field.Tag.Get("json")
 		if jsonTag == "" {
 			continue
 		}
 		// 获取结构体json标签
 		// 检查 map 中是否存在对应的键
-		if value, ok := src[jsonTag]; ok {
-			// 设置字段的值
-			fieldVal := val.Field(i)
-			switch fieldVal.Kind() {
-			case reflect.String:
-				fieldVal.SetString(Any2string(value))
-			case reflect.Int:
-				_tv, err := Any2int(value)
-				if err != nil {
-					return fmt.Errorf("字段%s转int失败：%v", jsonTag, err)
-				}
-				fieldVal.SetInt(int64(_tv))
-			default:
+		value, ok := src[jsonTag]
+		if !ok {
+			continue
+		}
+		// 设置字段的值
+		fieldVal := val.Field(i)
+		switch fieldVal.Kind() {
+		case reflect.String:
+			fieldVal.SetString(fmt.Sprintf("%v", value))
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			_tv, err := Any2int(value)
+			if err != nil {
+				return fmt.Errorf("字段%s转int失败：%v", jsonTag, err)
 			}
+			fieldVal.SetInt(_tv)
+		case reflect.Float32, reflect.Float64:
+			tv, err := Any2float64(value)
+			if err != nil {
+				return fmt.Errorf("字段 %s 转 float64 失败: %v", jsonTag, err)
+			}
+			fieldVal.SetFloat(tv)
+		case reflect.Bool:
+			tv, err := Any2bool(value)
+			if err != nil {
+				return fmt.Errorf("字段 %s 转 bool 失败: %v", jsonTag, err)
+			}
+			fieldVal.SetBool(tv)
+		case reflect.Slice:
+			if field.Type.Elem().Kind() == reflect.Uint8 { // []byte
+				tv, err := Any2bytes(value)
+				if err != nil {
+					return fmt.Errorf("字段 %s 转 []byte 失败: %v", jsonTag, err)
+				}
+				fieldVal.SetBytes(tv)
+			}
+		default:
 		}
 	}
 	return nil
@@ -586,20 +627,60 @@ func Any2string(v any) string {
 	return fmt.Sprintf("%v", v)
 }
 
-func Any2int(v any) (int, error) {
-	switch v.(type) {
-	case string:
-		return strconv.Atoi(v.(string))
+// Any2int 尝试将任意类型转换为 int
+func Any2int(v any) (int64, error) {
+	switch v := v.(type) {
 	case int:
-		return v.(int), nil
-	case int64:
-		return int(v.(int64)), nil
+		return int64(v), nil
+	case int8:
+		return int64(v), nil
+	case int16:
+		return int64(v), nil
 	case int32:
-		return int(v.(int32)), nil
-	case float32:
-		return int(v.(float32)), nil
-	case float64:
-		return int(v.(float64)), nil
+		return int64(v), nil
+	case int64:
+		return v, nil
+	case string:
+		return strconv.ParseInt(v, 10, 64)
+	default:
+		return 0, fmt.Errorf("无法将类型 %T 转换为 int", v)
 	}
-	return 0, fmt.Errorf("类型转换失败")
+}
+
+// Any2float64 尝试将任意类型转换为 float64
+func Any2float64(v any) (float64, error) {
+	switch v := v.(type) {
+	case float32:
+		return float64(v), nil
+	case float64:
+		return v, nil
+	case string:
+		return strconv.ParseFloat(v, 64)
+	default:
+		return 0.0, fmt.Errorf("无法将类型 %T 转换为 float64", v)
+	}
+}
+
+// Any2bool 尝试将任意类型转换为 bool
+func Any2bool(v any) (bool, error) {
+	switch v := v.(type) {
+	case bool:
+		return v, nil
+	case string:
+		return strconv.ParseBool(v)
+	default:
+		return false, fmt.Errorf("无法将类型 %T 转换为 bool", v)
+	}
+}
+
+// Any2bytes 尝试将任意类型转换为 []byte
+func Any2bytes(v any) ([]byte, error) {
+	switch v := v.(type) {
+	case []byte:
+		return v, nil
+	case string:
+		return []byte(v), nil
+	default:
+		return nil, fmt.Errorf("无法将类型 %T 转换为 []byte", v)
+	}
 }
