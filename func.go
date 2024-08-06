@@ -641,6 +641,9 @@ func Any2int(v any) (int64, error) {
 	case int64:
 		return v, nil
 	case string:
+		if v == "" {
+			return 0, nil
+		}
 		return strconv.ParseInt(v, 10, 64)
 	default:
 		return 0, fmt.Errorf("无法将类型 %T 转换为 int", v)
