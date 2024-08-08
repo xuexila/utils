@@ -690,7 +690,7 @@ func Any2bytes(v any) ([]byte, error) {
 	}
 }
 
-// 解析ip地址，确认ip版本
+// GetIpVersion 解析ip地址，确认ip版本
 func GetIpVersion(ip string) (string, error) {
 	_ip := net.ParseIP(ip)
 	if _ip == nil {
