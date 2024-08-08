@@ -5,12 +5,14 @@ import (
 	"compress/gzip"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gopkg.in/mgo.v2/bson"
 	"io"
 	"io/ioutil"
 	"math"
 	"math/rand"
+	"net"
 	url2 "net/url"
 	"os"
 	"os/signal"
@@ -686,4 +688,16 @@ func Any2bytes(v any) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("无法将类型 %T 转换为 []byte", v)
 	}
+}
+
+// 解析ip地址，确认ip版本
+func GetIpVersion(ip string) (string, error) {
+	_ip := net.ParseIP(ip)
+	if _ip == nil {
+		return "", errors.New("ip地址不合法")
+	}
+	if _ip.To4() != nil {
+		return "ipv4", nil
+	}
+	return "ipv6", nil
 }
