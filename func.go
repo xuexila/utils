@@ -701,3 +701,16 @@ func GetIpVersion(ip string) (string, error) {
 	}
 	return "ipv6", nil
 }
+
+// Str2StrSlice 字符串转切片
+func Str2StrSlice(values string) ([]string, error) {
+	values = strings.TrimSpace(values)
+	if values == "" {
+		return nil, nil
+	}
+	var slice []string
+	if err := json.Unmarshal([]byte(values), &slice); err != nil {
+		return nil, fmt.Errorf("解析数据 [%s] 失败：%v", values, err)
+	}
+	return slice, nil
+}
