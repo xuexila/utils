@@ -44,6 +44,9 @@ func GormDbScan(val any, dst any) error {
 	default:
 		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", val))
 	}
+	if len(ba) < 1 {
+		return nil
+	}
 	err := json.Unmarshal(ba, dst)
 	return err
 }
