@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// CloseExcel 关闭excel文件
 func CloseExcel(f *excelize.File) {
 	if f != nil {
 		_ = f.Close()
