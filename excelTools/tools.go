@@ -19,9 +19,9 @@ func CloseExcel(f *excelize.File) {
 // sheetIndex []int sheet索引集合，如果不填就是读取所有sheet，注意，这里需要从0开始
 // dataRow int 数据行数，从第几行开始读取有效数据
 // dataCol int 数据列数，保证每行有效数据有多少列
-// call func(tmp map[string]any) error 回调函数，用于自定义处理每列数据
+// call func(sheetName string,tmp map[string]any) error 回调函数，用于自定义处理每列数据
 // fieldRowNum ...int 字段行数，默认为第一行, 从1开始。
-func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int, dataRow int, dataCol int, call func(tmp map[string]any) error, fieldRowNum ...int) error {
+func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int, dataRow int, dataCol int, call func(sheetName string, tmp map[string]any) error, fieldRowNum ...int) error {
 	var sheets []string
 	if len(sheetName) > 0 {
 		sheets = sheetName
@@ -66,7 +66,7 @@ func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int
 				}
 				tmp[fieldRows[i]] = cell
 			}
-			if err = call(tmp); err != nil {
+			if err = call(sheet, tmp); err != nil {
 				errs = append(errs, fmt.Sprintf("sheet%s第%d行数据处理失败: %v", sheet, idx+1, err))
 			}
 		}
