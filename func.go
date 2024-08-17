@@ -568,6 +568,7 @@ func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst a
 		if jsonTag == "" {
 			continue
 		}
+		jsonTag=strings.Split(jsonTag,",")[0]
 		// 获取结构体json标签
 		// 检查 map 中是否存在对应的键
 		value, ok := src[jsonTag]
