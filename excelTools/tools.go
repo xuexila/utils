@@ -13,7 +13,15 @@ func CloseExcel(f *excelize.File) {
 	}
 }
 
-func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int, dataRow int, dataCol int, call func(tmp map[string]any) error) error {
+// ReadExcelRow 读取excel 指定或者每个sheet的数据，并通过回调函数方式进行处理
+// excelFile *excelize.File excel文件
+// sheetName []string sheet名称集合，如果不填就是读取所有sheet
+// sheetIndex []int sheet索引集合，如果不填就是读取所有sheet，注意，这里需要从0开始
+// dataRow int 数据行数，从第几行开始读取有效数据
+// dataCol int 数据列数，保证每行有效数据有多少列
+// call func(tmp map[string]any) error 回调函数，用于自定义处理每列数据
+// fieldRowNum ...int 字段行数，默认为第一行, 从1开始。
+func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int, dataRow int, dataCol int, call func(tmp map[string]any) error, fieldRowNum ...int) error {
 	var sheets []string
 	if len(sheetName) > 0 {
 		sheets = sheetName
@@ -24,7 +32,13 @@ func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int
 	} else {
 		sheets = excelFile.GetSheetList()
 	}
-	var errs []string
+	var (
+		errs     []string
+		fieldRow int
+	)
+	if len(fieldRowNum) > 0 {
+		fieldRow = fieldRowNum[0] - 1
+	}
 	for _, sheet := range sheets {
 		rows, err := excelFile.GetRows(sheet)
 		if err != nil {
@@ -35,7 +49,8 @@ func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int
 			errs = append(errs, fmt.Sprintf("sheet%s数据行数小于%d，未读取到有效数据", sheet, dataRow))
 			continue
 		}
-		fieldLen := len(rows[0])
+		fieldRows := rows[fieldRow]
+		fieldLen := len(fieldRows)
 		for idx, row := range rows {
 			if idx < (dataRow - 1) {
 				continue
@@ -49,7 +64,7 @@ func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int
 				if i >= fieldLen {
 					break
 				}
-				tmp[rows[0][i]] = cell
+				tmp[fieldRows[i]] = cell
 			}
 			if err = call(tmp); err != nil {
 				errs = append(errs, fmt.Sprintf("sheet%s第%d行数据处理失败: %v", sheet, idx+1, err))
