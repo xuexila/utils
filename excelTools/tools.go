@@ -22,7 +22,7 @@ func CloseExcel(f *excelize.File) {
 // dataCol int 数据列数，保证每行有效数据有多少列
 // call func(sheetName string,tmp map[string]any) error 回调函数，用于自定义处理每列数据
 // fieldRowNum ...int 字段行数，默认为第一行, 从1开始。
-func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int, dataRow int, dataCol int, call func(sheetName string, tmp map[string]any) error, fieldRowNum ...int) error {
+func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int, excludeSheet []string, dataRow int, dataCol int, call func(sheetName string, tmp map[string]any) error, fieldRowNum ...int) error {
 	var sheets []string
 	if len(sheetName) > 0 {
 		sheets = sheetName
@@ -40,7 +40,14 @@ func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int
 	if len(fieldRowNum) > 0 {
 		fieldRow = fieldRowNum[0] - 1
 	}
+	var excludeSheetMap = make(map[string]bool)
+	for _, sheet := range excludeSheet {
+		excludeSheetMap[sheet] = true
+	}
 	for _, sheet := range sheets {
+		if excludeSheetMap[sheet] {
+			continue
+		}
 		rows, err := excelFile.GetRows(sheet)
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("读取sheet%s失败: %v", sheet, err))
