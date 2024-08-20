@@ -74,6 +74,16 @@ func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
 	}), "SetReturnData")
 }
 
+// SetReturnFile 直接讲文件反馈给前端
+func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
+	f, err := os.Open(file)
+	defer utils.CloseFile(f)
+	if err != nil {
+		SetReturnError(w, r, err, http.StatusForbidden, "模板下载失败")
+	}
+	_, _ = io.Copy(w, f)
+}
+
 func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
 	ReqError(r, append([]any{err}, msg...)...)
 	if len(msg) < 1 {
