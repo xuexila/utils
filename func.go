@@ -465,6 +465,20 @@ func SearchInt64Slice(s int64, arr []int64) bool {
 	return false
 }
 
+// CutStrSlice2Slice 获取切片的子切片
+func CutStrSlice2Slice(s []string, key string, direct int) []string {
+	for idx, v := range s {
+		if v == key {
+			if idx+direct < len(s) {
+				return s[idx+direct:]
+			} else {
+				return []string{} // 索引越界时返回空切片
+			}
+		}
+	}
+	return []string{}
+}
+
 // Fileabs 生成文件的绝对路径
 func Fileabs(cpath string) string {
 	if filepath.IsAbs(cpath) {
@@ -568,7 +582,7 @@ func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst a
 		if jsonTag == "" {
 			continue
 		}
-		jsonTag=strings.Split(jsonTag,",")[0]
+		jsonTag = strings.Split(jsonTag, ",")[0]
 		// 获取结构体json标签
 		// 检查 map 中是否存在对应的键
 		value, ok := src[jsonTag]
