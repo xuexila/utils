@@ -11,6 +11,14 @@ import (
 
 type CustomTime time.Time
 
+func (this CustomTime) String() string {
+	return time.Time(this).Format(time.DateTime)
+}
+
+func (this CustomTime) Unix() int64 {
+	return time.Time(this).Unix()
+}
+
 func (this *CustomTime) Scan(value interface{}) (err error) {
 	nullTime := &sql.NullTime{}
 	err = nullTime.Scan(value)
