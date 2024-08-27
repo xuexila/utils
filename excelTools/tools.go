@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/xuri/excelize/v2"
+	"reflect"
 	"strings"
 )
 
@@ -83,4 +84,71 @@ func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int
 		return nil
 	}
 	return errors.New(strings.Join(errs, "\n"))
+}
+
+type HasSheetName interface {
+	SheetName() string
+}
+
+// GetTplSheetFieldIndex 获取模板字段
+// 读取excel里面指定sheet的数据，并提取某一列的所有字段所在的位置。
+func GetTplSheetFieldIndex(file *excelize.File, model any, fieldRowNum int) (string, map[string]string, error) {
+	var (
+		hasSheetName HasSheetName
+		sheetName    string
+		ok           bool
+		val          = reflect.ValueOf(model)
+	)
+	// 验证是否实现了wireless.HasSheetName接口
+	switch val.Kind() {
+	case reflect.Ptr:
+		val = val.Elem()
+		switch val.Kind() {
+		case reflect.Slice:
+			if val.Len() < 1 {
+				return "", nil, errors.New("model为空")
+			}
+			hasSheetName, ok = val.Index(0).Interface().(HasSheetName)
+		case reflect.Struct:
+			hasSheetName, ok = val.Interface().(HasSheetName)
+		default:
+			return "", nil, errors.New("model类型错误")
+		}
+	case reflect.Slice:
+		if val.Len() < 1 {
+			return "", nil, errors.New("model为空")
+		}
+		hasSheetName, ok = val.Index(0).Interface().(HasSheetName)
+	case reflect.Struct:
+		hasSheetName, ok = val.Interface().(HasSheetName)
+	case reflect.String:
+		ok = true
+		sheetName = val.Interface().(string)
+	default:
+		return "", nil, errors.New("model类型错误")
+
+	}
+	if !ok {
+		return "", nil, errors.New(reflect.TypeOf(model).Name() + "未实现HasSheetName接口")
+	}
+	// 获取sheet内容
+	if hasSheetName != nil {
+		sheetName = hasSheetName.SheetName()
+	}
+
+	rows, err := file.GetRows(sheetName)
+	if err != nil {
+		return "", nil, err
+	}
+	if len(rows) < fieldRowNum {
+		return "", nil, errors.New("无有效字段列")
+	}
+	rowValues := rows[fieldRowNum-1]
+	var mapping = make(map[string]string)
+	for idx, cel := range rowValues {
+		celName, _ := excelize.ColumnNumberToName(idx + 1)
+		mapping[cel] = celName
+	}
+
+	return sheetName, mapping, nil
 }
