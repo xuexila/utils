@@ -24,6 +24,17 @@ import (
 	"time"
 )
 
+// PadRight 在字符串后面补齐固定字符，并达到n个长度
+func PadRight(str string, padStr string, lenght int) string {
+	if len(str) >= lenght {
+		return str
+	}
+	for i := len(str); i < lenght; i++ {
+		str += padStr
+	}
+	return str
+}
+
 // SnakeString 驼峰转蛇形
 func SnakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
