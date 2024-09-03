@@ -777,3 +777,14 @@ func Slice2MapWithHeader(rows any, header []string) map[string]any {
 	}
 	return tmp
 }
+
+// Any2Byte 将任意类型转换为字节数组
+func Any2Byte(src any) []byte {
+	b, _ := json.Marshal(src)
+	return b
+}
+
+// Any2Reader 将任意类型转换为 io.Reader
+func Any2Reader(src any) io.Reader {
+	return bytes.NewReader(Any2Byte(src))
+}
