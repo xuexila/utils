@@ -11,7 +11,7 @@ import (
 var nullSqlConn map[string]*gorm.DB
 
 // GetRawSql 生成sql的通用函数
-func GetRawSql(f func(tx *gorm.DB) *gorm.DB, dbTypes ...string) (string, []any) {
+func GetRawSql(f func(dTx *gorm.DB) *gorm.DB, dbTypes ...string) (string, []any) {
 	dbType := "pg"
 	if len(dbTypes) > 1 {
 		dbType = dbTypes[0]
@@ -48,7 +48,7 @@ func GetRawSql(f func(tx *gorm.DB) *gorm.DB, dbTypes ...string) (string, []any) 
 }
 
 // GetRawSqlByDb 生成sql的通用函数,db为数据库连接
-func GetRawSqlByDb(f func(tx *gorm.DB) *gorm.DB, db *gorm.DB) (string, []any) {
+func GetRawSqlByDb(f func(dTx *gorm.DB) *gorm.DB, db *gorm.DB) (string, []any) {
 	query := f(db).Statement
 	return query.SQL.String(), query.Vars
 }
