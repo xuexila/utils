@@ -673,6 +673,10 @@ func Any2int(v any) (int64, error) {
 			return 0, nil
 		}
 		return strconv.ParseInt(v, 10, 64)
+	case float32:
+		return int64(v), nil
+	case float64:
+		return int64(v), nil
 	default:
 		return 0, fmt.Errorf("无法将类型 %T 转换为 int", v)
 	}
