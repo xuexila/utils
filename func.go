@@ -604,6 +604,10 @@ func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst a
 		fieldVal := val.Field(i)
 		switch fieldVal.Kind() {
 		case reflect.String:
+			// 如果 value是nil
+			if value == nil {
+				continue
+			}
 			fieldVal.SetString(fmt.Sprintf("%v", value))
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			_tv, err := Any2int(value)
@@ -630,6 +634,11 @@ func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst a
 					return fmt.Errorf("字段 %s 转 []byte 失败: %v", jsonTag, err)
 				}
 				fieldVal.SetBytes(tv)
+			}
+		case reflect.Struct, reflect.Map:
+			err := json.Unmarshal(Any2Byte(value), fieldVal.Addr().Interface())
+			if err != nil {
+				return fmt.Errorf("字段 %s 转 struct 失败: %v", jsonTag, err)
 			}
 		default:
 		}

@@ -70,6 +70,9 @@ func (this *CustomTime) UnmarshalJSON(b []byte) (err error) {
 		return nil
 	}
 	_t, err := time.ParseInLocation(time.DateTime, s, time.FixedZone("CST", 8*3600))
+	if err != nil {
+		_t, err = time.ParseInLocation(time.RFC3339Nano, s, time.FixedZone("CST", 8*3600))
+	}
 	*this = CustomTime(_t)
 	return err
 }
