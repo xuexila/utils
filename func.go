@@ -801,3 +801,13 @@ func Any2Byte(src any) []byte {
 func Any2Reader(src any) io.Reader {
 	return bytes.NewReader(Any2Byte(src))
 }
+
+// Ternary 是一个通用的三元运算函数。
+// 它接受一个布尔条件和两个参数 a 和 b。
+// 如果条件为 true，则返回 a；否则返回 b。
+func Ternary[Type any](condition bool, a, b Type) Type {
+	if condition {
+		return a
+	}
+	return b
+}
