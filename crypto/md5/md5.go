@@ -3,7 +3,7 @@ package md5
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"io/ioutil"
+	"os"
 )
 
 // Md5 md5 函数
@@ -20,7 +20,7 @@ func Md5string(s string) string {
 
 // Md5file 计算文件的Md5
 func Md5file(path string) string {
-	byt, err := ioutil.ReadFile(path)
+	byt, err := os.ReadFile(path)
 	if err != nil {
 		return ""
 	}
