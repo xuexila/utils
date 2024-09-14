@@ -811,3 +811,17 @@ func Ternary[Type any](condition bool, a, b Type) Type {
 	}
 	return b
 }
+
+// RunSyncFunc 同步运行
+func RunSyncFunc(enable bool, f func()) {
+	if enable {
+		f()
+	}
+}
+
+// RunAsyncFunc 异步运行
+func RunAsyncFunc(enable bool, f func()) {
+	if enable {
+		go f()
+	}
+}
