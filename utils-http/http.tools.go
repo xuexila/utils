@@ -105,7 +105,7 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 
 // CheckReqPost 检查请求是否post
 func CheckReqPost(w http.ResponseWriter, r *http.Request) bool {
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		Forbidden(w, "Forbidden")
 		return false
 	}
