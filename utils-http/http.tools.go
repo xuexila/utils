@@ -92,6 +92,11 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 		msg = append(msg, err.Error())
 	}
 	w.Header().Set("Content-Type", "application/json")
+	if code == 0 || code == 200 {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(code)
+	}
 	utils.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
 		"code": code,
 		"msg":  utils.AnySlice2Str(msg),
