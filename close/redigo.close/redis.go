@@ -1,4 +1,4 @@
-package redigo
+package redigo_close
 
 import "github.com/gomodule/redigo/redis"
 

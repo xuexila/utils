@@ -5,6 +5,7 @@ go 1.21.1
 require (
 	github.com/IBM/sarama v1.43.2
 	github.com/colinmarc/hdfs/v2 v2.4.0
+	github.com/gomodule/redigo v1.9.2
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/pkg/sftp v1.13.6
 	github.com/redis/go-redis/v9 v9.6.1
@@ -14,6 +15,7 @@ require (
 	golang.org/x/net v0.27.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11

@@ -5,7 +5,10 @@ import (
 	"crypto/x509"
 	"errors"
 	"gitlab.itestor.com/helei/utils.git"
+	http_close "gitlab.itestor.com/helei/utils.git/close/http.close"
+	"gitlab.itestor.com/helei/utils.git/config"
 	"gitlab.itestor.com/helei/utils.git/crypto/md5"
+	"gitlab.itestor.com/helei/utils.git/ulogs"
 	"golang.org/x/net/websocket"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +25,7 @@ var err error
 // HttpServerStart 公功 http server 启动函数
 func (h *HttpServer) HttpServerStart() {
 	mux := http.NewServeMux()
-	if utils.Dbg {
+	if config.Dbg {
 		h.Route["/debug/pprof/"] = pprof.Index
 		h.Route["/debug/pprof/cmdline"] = pprof.Cmdline
 		h.Route["/debug/pprof/profile"] = pprof.Profile
@@ -57,7 +60,7 @@ func (h *HttpServer) HttpServerStart() {
 	}
 	defer Closehttpserver(server)
 
-	utils.Log("启动Http(s) Server", h.ListenAddr)
+	ulogs.Log("启动Http(s) Server", h.ListenAddr)
 	if h.Ssl {
 		server.TLSConfig = &tls.Config{
 			CipherSuites: []uint16{
@@ -73,7 +76,7 @@ func (h *HttpServer) HttpServerStart() {
 		if h.Ca != "" {
 			caCrt, err := ioutil.ReadFile(utils.Fileabs(h.Ca))
 			if err != nil {
-				utils.Error("HTTPS Service Load Ca error", err)
+				ulogs.Error("HTTPS Service Load Ca error", err)
 				os.Exit(1)
 			}
 			pool := x509.NewCertPool()
@@ -82,7 +85,7 @@ func (h *HttpServer) HttpServerStart() {
 			server.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
 		}
 		if err = server.ListenAndServeTLS(utils.Fileabs(h.Crt), utils.Fileabs(h.Key)); err != nil {
-			utils.Error("HTTPS Service 服务启动失败", server.Addr, err)
+			ulogs.Error("HTTPS Service 服务启动失败", server.Addr, err)
 			os.Exit(1)
 		}
 		return
@@ -92,7 +95,7 @@ func (h *HttpServer) HttpServerStart() {
 	go h.stopServer(server, &isQuit)
 	if err := server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
-			utils.Error("HTTP Service 启动失败", server.Addr, err)
+			ulogs.Error("HTTP Service 启动失败", server.Addr, err)
 			os.Exit(1)
 		}
 	}
@@ -103,8 +106,8 @@ func (h *HttpServer) HttpServerStart() {
 
 func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.ResponseWriter, r *http.Request)) {
 	mux.Handle(u, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer utils.CloseReq(r)
-		utils.Debug("请求地址", r.URL.String(), "IP", Getip(r))
+		defer http_close.CloseReq(r)
+		ulogs.Debug("请求地址", r.URL.String(), "IP", Getip(r))
 		// add header
 		w.Header().Set("server", "vs/1.0")
 		w.Header().Set("connection", "keep-alive")
@@ -154,7 +157,7 @@ func SetRequestDefaultPage(defaultPage, path string) ([]*os.File, []string, bool
 	if len(sarr) == 1 {
 		swapUrl, err := url.Parse(path)
 		if err != nil {
-			utils.Error("url 异常", err)
+			ulogs.Error("url 异常", err)
 			return nil, nil, false
 		}
 		path = swapUrl.Path
@@ -244,10 +247,10 @@ func (this HttpServer) hash() string {
 }
 
 func (this HttpServer) stopServer(server *http.Server, isQuit *bool) {
-	utils.EnableHttpserver = true
-	_ = <-utils.CloseHttpserverSig
+	config.EnableHttpserver = true
+	_ = <-config.CloseHttpserverSig
 	*isQuit = true
-	utils.Log("http server已关闭")
+	ulogs.Log("http server已关闭")
 	Closehttpserver(server)
-	utils.CloseHttpserverSig <- 1
+	config.CloseHttpserverSig <- 1
 }

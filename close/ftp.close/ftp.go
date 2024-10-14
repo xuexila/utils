@@ -1,4 +1,4 @@
-package ftp
+package ftp_close
 
 import "github.com/jlaffaye/ftp"
 

@@ -15,6 +15,7 @@ type BoxHeader struct {
 
 // GetMP4Duration 获取视频时长，以秒计
 func GetMP4Duration(reader io.ReaderAt) []byte {
+	var err error
 	var info = make([]byte, 0x10)
 	var boxHeader BoxHeader
 	var offset int64 = 0

@@ -1,4 +1,4 @@
-package hdfs
+package hdfs_close
 
 import "github.com/colinmarc/hdfs/v2"
 

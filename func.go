@@ -7,12 +7,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	os_close "gitlab.itestor.com/helei/utils.git/close/os.close"
+	"gitlab.itestor.com/helei/utils.git/config"
+	"gitlab.itestor.com/helei/utils.git/ulogs"
 	"gopkg.in/mgo.v2/bson"
 	"io"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"net"
+	"net/http"
 	url2 "net/url"
 	"os"
 	"os/signal"
@@ -95,14 +98,14 @@ func JsonEncode(j any) ([]byte, error) {
 func SignalHandle(funds ...func()) {
 	exitsin := make(chan os.Signal)
 	signal.Notify(exitsin, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // 注意，syscall.SIGKILL 不能被捕获
-	Log("退出信号", <-exitsin)                                                                   // 日志记录
+	ulogs.Log("退出信号", <-exitsin)                                                             // 日志记录
 	for _, f := range funds {
 		f()
 	}
-	Log("各个组件关闭完成，系统即将自动关闭", os.Getpid())
-	if EnableHttpserver {
-		CloseHttpserverSig <- 1
-		_ = <-CloseHttpserverSig
+	ulogs.Log("各个组件关闭完成，系统即将自动关闭", os.Getpid())
+	if config.EnableHttpserver {
+		config.CloseHttpserverSig <- 1
+		_ = <-config.CloseHttpserverSig
 	}
 	os.Exit(0)
 }
@@ -132,7 +135,7 @@ func FilePutContents(path, content string) error {
 		return err
 	}
 	_, err = file.WriteString(content)
-	CloseFile(file)
+	os_close.CloseFile(file)
 	return err
 }
 
@@ -149,11 +152,11 @@ func FilePutContentsbytes(path string, content []byte) error {
 		return err
 	}
 	_, err = file.Write(content)
-	CloseFile(file)
+	os_close.CloseFile(file)
 	return err
 }
 
-// 快速简易写文件（追加）
+// FileAppendContents 快速简易写文件（追加）
 func FileAppendContents(path, content string) error {
 	_path := filepath.Dir(path)
 	if _, err := os.Stat(_path); err != nil {
@@ -166,21 +169,21 @@ func FileAppendContents(path, content string) error {
 		return err
 	}
 	_, err = file.WriteString(content)
-	CloseFile(file)
+	os_close.CloseFile(file)
 	return err
 }
 
-// 快速简易读取文件
+// FileGetContents 快速简易读取文件
 func FileGetContents(path string) ([]byte, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0755)
 	if err != nil {
 		return nil, err
 	}
-	defer CloseFile(file)
-	return ioutil.ReadAll(file)
+	defer os_close.CloseFile(file)
+	return io.ReadAll(file)
 }
 
-// 判断目录是否存在，否则创建目录
+// Mkdir 判断目录是否存在，否则创建目录
 func Mkdir(path string) error {
 	if _, err := os.Stat(path); err == nil {
 		return nil
@@ -188,7 +191,7 @@ func Mkdir(path string) error {
 	return os.MkdirAll(path, 0755)
 }
 
-// 将 query部分进行 url encode
+// UrlEncode 将 query部分进行 url encode
 func UrlEncode(url string) string {
 	u, err := url2.Parse(url)
 	if err != nil {
@@ -351,6 +354,7 @@ func Uint64tostring(i uint64) string {
 }
 
 func Uint16ToBytes(n int) ([]byte, error) {
+	var err error
 	tmp := uint16(n)
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	err = binary.Write(bytesBuffer, binary.BigEndian, tmp)
@@ -358,6 +362,7 @@ func Uint16ToBytes(n int) ([]byte, error) {
 }
 
 func Uint32ToBytes(n int) ([]byte, error) {
+	var err error
 	tmp := uint32(n)
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	err = binary.Write(bytesBuffer, binary.BigEndian, tmp)
@@ -495,8 +500,10 @@ func Fileabs(cpath string) string {
 	if filepath.IsAbs(cpath) {
 		return cpath
 	}
-	return filepath.Join(Appath, cpath)
+	return filepath.Join(config.Appath, cpath)
 }
+
+var defaultLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 // RandomString 伪随机字符串
 func RandomString(n int, allowedChars ...[]rune) string {
@@ -569,6 +576,7 @@ type useTest struct {
 // Map2Struct 将map转换为结构体
 // dst 需要传入一个变量的指针
 func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst any, src map[string]any) error) error {
+	var err error
 	// 这里通过反射，将map转换为结构体
 	val := reflect.ValueOf(dst).Elem()
 	typ := val.Type()
@@ -824,4 +832,30 @@ func RunAsyncFunc(enable bool, f func()) {
 	if enable {
 		go f()
 	}
+}
+
+// GetFilePathMimeType 接受文件路径并返回文件的MIME类型。
+// 如果发生错误，返回错误信息。
+func GetFilePathMimeType(filePath string) (string, error) {
+	// 打开指定路径的文件
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("无法打开文件: %w", err)
+	}
+	defer os_close.CloseFile(file)
+	return GetFileMimeType(file)
+}
+
+// GetFileMimeType 接受一个已打开的文件指针并返回文件的MIME类型。
+// 如果发生错误，返回错误信息。在
+func GetFileMimeType(file io.Reader) (string, error) {
+	// 读取文件的前512个字节
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil && err != io.EOF {
+		return "", fmt.Errorf("读取文件时出错: %w", err)
+	}
+	// 检测MIME类型
+	contentType := http.DetectContentType(buffer[:n])
+	return contentType, nil
 }

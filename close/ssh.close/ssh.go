@@ -1,4 +1,4 @@
-package ssh
+package ssh_close
 
 import "golang.org/x/crypto/ssh"
 

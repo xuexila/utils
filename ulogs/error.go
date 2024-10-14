@@ -1,6 +1,7 @@
-package utils
+package ulogs
 
 import (
+	"gitlab.itestor.com/helei/utils.git/config"
 	"log"
 	"os"
 )
@@ -20,7 +21,7 @@ func Log(i ...interface{}) {
 }
 
 func Debug(i ...any) {
-	if Dbg {
+	if config.Dbg {
 		Log(append([]any{"[debug]"}, i...)...)
 	}
 }

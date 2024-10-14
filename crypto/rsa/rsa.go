@@ -9,7 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"gitlab.itestor.com/helei/utils.git"
+	"gitlab.itestor.com/helei/utils.git/config"
 	"gitlab.itestor.com/helei/utils.git/crypto/sha256"
 )
 
@@ -23,7 +23,7 @@ func RsaVerify(msg string, _sign string) error {
 		return err
 	}
 	// key
-	block, _ := pem.Decode(utils.PublicKeyByt)
+	block, _ := pem.Decode(config.PublicKeyByt)
 	if block == nil {
 		return errors.New("public key error")
 	}
@@ -44,7 +44,7 @@ func RsaSign(msg string) (string, error) {
 	if err != nil {
 		return "", errors.New("Sha256(msg)---->" + err.Error())
 	}
-	block, _ := pem.Decode(utils.PrivateKeyByt)
+	block, _ := pem.Decode(config.PrivateKeyByt)
 	if block == nil {
 		return "", errors.New("Private key error")
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gitlab.itestor.com/helei/utils.git"
 	"gitlab.itestor.com/helei/utils.git/crypto/md5"
+	"gitlab.itestor.com/helei/utils.git/ulogs"
 	"os"
 	"os/exec"
 	"regexp"
@@ -21,7 +22,7 @@ func ExecShell(name string, s ...string) (string, error) {
 	)
 	cmd.Stdout = out
 	cmd.Stderr = w
-	utils.Log("shell 执行命令", cmd.String())
+	ulogs.Log("shell 执行命令", cmd.String())
 
 	if err := cmd.Run(); err != nil {
 		return out.String(), errors.New(err.Error() + "，" + w.String())
@@ -53,27 +54,27 @@ func ExecCtlShell(stop chan byte, name string, s ...string) (string, error) {
 	)
 	cmd.Stdout = out
 	cmd.Stderr = w
-	utils.Log("shell 执行命令", cmd.String())
+	ulogs.Log("shell 执行命令", cmd.String())
 	go func(cmd *exec.Cmd, stop, end chan byte) {
 		for {
 			select {
 			case <-stop:
 				if cmd == nil {
-					utils.Error("分析EXEC 不存在", cmd.String())
+					ulogs.Error("分析EXEC 不存在", cmd.String())
 					continue
 				}
 				if cmd.Process == nil {
-					utils.Error("分析 Process不存在", cmd.String())
+					ulogs.Error("分析 Process不存在", cmd.String())
 					continue
 				}
 				if err := cmd.Process.Kill(); err != nil {
-					utils.Error("手动结束进程失败", err)
+					ulogs.Error("手动结束进程失败", err)
 				} else {
-					utils.Log("手动结束命令", cmd.String())
+					ulogs.Log("手动结束命令", cmd.String())
 				}
 
 			case <-end:
-				utils.Log("shell 执行完成", cmd.String())
+				ulogs.Log("shell 执行完成", cmd.String())
 				return
 			}
 		}
@@ -94,7 +95,7 @@ func ExecCtlShell(stop chan byte, name string, s ...string) (string, error) {
 func MachineCode() string {
 	_os := strings.ToLower(runtime.GOOS)
 	_arch := strings.ToLower(runtime.GOARCH)
-	utils.Log("系统版本", _os, "平台", _arch, "读取设备信息...")
+	ulogs.Log("系统版本", _os, "平台", _arch, "读取设备信息...")
 	var (
 		err         error
 		info        string
@@ -107,7 +108,7 @@ func MachineCode() string {
 		if err != nil {
 			_macode, err = ExecShell("/bin/bash", "-c", `"/sbin/ip link" | grep link | /usr/bin/sort | /usr/bin/uniq | /usr/bin/sha256sum`)
 			if err != nil {
-				utils.Error("机器码生成失败", err)
+				ulogs.Error("机器码生成失败", err)
 				os.Exit(1)
 			}
 		}
@@ -115,7 +116,7 @@ func MachineCode() string {
 		var tmp []byte
 		tmp, err = utils.FileGetContents("/Users/helay/go/src/company/vis-device/startUp/vis.agent/run/info")
 		if err != nil {
-			utils.Error("机器码生成失败", err)
+			ulogs.Error("机器码生成失败", err)
 			os.Exit(1)
 		}
 		info = string(tmp)
@@ -129,7 +130,7 @@ func MachineCode() string {
 
 		tmp := cpuPreg.FindStringSubmatch(info)
 		if len(tmp) != 2 {
-			utils.Error("系统信息获取失败")
+			ulogs.Error("系统信息获取失败")
 			os.Exit(0)
 		}
 		cpuid := strings.TrimSpace(tmp[1])
@@ -138,13 +139,13 @@ func MachineCode() string {
 
 		tmp = boardPreg.FindStringSubmatch(info)
 		if len(tmp) != 2 {
-			utils.Error("系统信息获取失败")
+			ulogs.Error("系统信息获取失败")
 			os.Exit(0)
 		}
 		boardid := tmp[1]
 		// 生成机器码
 		machineCode = md5.Md5string(cpuid + utils.Salt + boardid)
 	}
-	utils.Debug("机器码", machineCode)
+	ulogs.Debug("机器码", machineCode)
 	return machineCode
 }

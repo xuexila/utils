@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"gitlab.itestor.com/helei/utils.git"
+	http_close "gitlab.itestor.com/helei/utils.git/close/http.close"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -29,7 +30,7 @@ func (ro Router) Index(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-		utils.CloseReq(r)
+		http_close.CloseReq(r)
 	}()
 	var rmime string
 	if len(path) < 1 {

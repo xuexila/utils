@@ -1,4 +1,4 @@
-package sftp
+package sftp_close
 
 import "github.com/pkg/sftp"
 

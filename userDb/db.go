@@ -2,6 +2,8 @@ package userDb
 
 import (
 	"gitlab.itestor.com/helei/utils.git"
+	"gitlab.itestor.com/helei/utils.git/config"
+	"gitlab.itestor.com/helei/utils.git/ulogs"
 	"gorm.io/gorm"
 	"net/http"
 	"reflect"
@@ -57,7 +59,7 @@ func Paginate(r *http.Request, pageField, pageSizeField string, pageSize int) fu
 			tx.Offset((page - 1) * limit).Limit(limit)
 		}
 		_sort := r.URL.Query().Get("sort")
-		if _sort != "" && !utils.SpecialChartPreg.MatchString(_sort) {
+		if _sort != "" && !config.SpecialChartPreg.MatchString(_sort) {
 			if _sort[0] == '-' {
 				tx.Order(_sort[1:] + " desc")
 			} else {
@@ -233,7 +235,7 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 		return
 	}
 	if !db.Migrator().HasTable(tb) {
-		utils.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
+		ulogs.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
 	}
 	// 如果表存在，在判断结构体中是否有新增字段，如果有，就自动改变表
 	AutoCreateTableWithColumn(db, tb, errmsg, t)
@@ -265,7 +267,7 @@ func AutoCreateTableWithColumn(db *gorm.DB, tb any, errmsg string, t reflect.Typ
 		}
 
 		if !db.Migrator().HasColumn(tb, column) {
-			utils.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
+			ulogs.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
 			return true // 创建一次就行了
 		}
 	}

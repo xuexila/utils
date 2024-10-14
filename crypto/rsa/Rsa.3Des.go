@@ -8,21 +8,21 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"gitlab.itestor.com/helei/utils.git"
 	"gitlab.itestor.com/helei/utils.git/crypto/sm4"
+	"gitlab.itestor.com/helei/utils.git/ulogs"
 	"io/ioutil"
 )
 
 // //////////////////////////////Rsa加解密算法/////////////////////
 func RsaEncrypt(origData []byte, filePth string) ([]byte, error) {
 	PublicKey, err := ioutil.ReadFile(filePth)
-	utils.Checkerr(err)
+	ulogs.Checkerr(err)
 	block, _ := pem.Decode(PublicKey)
 	if block == nil {
 		return []byte{}, errors.New("public key empty")
 	}
 	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
-	utils.Checkerr(err)
+	ulogs.Checkerr(err)
 	pub := pubInterface.(*rsa.PublicKey)
 	//print(pub.Size())
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, origData)
@@ -63,7 +63,7 @@ func ThriDESEnCrypt(origData, key []byte) []byte {
 	//获取block块
 	block, err := des.NewTripleDESCipher(key[:24])
 	//补码
-	utils.Checkerr(err)
+	ulogs.Checkerr(err)
 	origData = sm4.Pkcs5Padding(origData, block.BlockSize())
 	//设置加密方式为 3DES  使用3条56位的密钥对数据进行三次加密
 

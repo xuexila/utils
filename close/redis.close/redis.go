@@ -1,4 +1,4 @@
-package go_redis
+package redis_close
 
 import rds "github.com/redis/go-redis/v9"
 

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"gitlab.itestor.com/helei/utils.git"
+	os_close "gitlab.itestor.com/helei/utils.git/close/os.close"
+	"gitlab.itestor.com/helei/utils.git/ulogs"
 	"io"
 	"log"
 	"net"
@@ -46,7 +48,7 @@ func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, da
 			resp["data"] = data[0]
 		}
 	}
-	utils.Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
+	ulogs.Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
 }
 
 // SetReturn 设置 返回函数Play
@@ -59,7 +61,7 @@ func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 			msg = []any{"失败"}
 		}
 	}
-	utils.Checkerr(json.NewEncoder(w).Encode(map[string]any{
+	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]any{
 		"code": code,
 		"msg":  msg[0],
 	}), "SetReturn")
@@ -67,7 +69,7 @@ func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 
 func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
 	w.Header().Set("Content-Type", "application/json")
-	utils.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
 		"code": code,
 		"msg":  msg,
 		"data": data,
@@ -77,7 +79,7 @@ func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
 // SetReturnFile 直接讲文件反馈给前端
 func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
 	f, err := os.Open(file)
-	defer utils.CloseFile(f)
+	defer os_close.CloseFile(f)
 	if err != nil {
 		SetReturnError(w, r, err, http.StatusForbidden, "模板下载失败")
 	}
@@ -97,7 +99,7 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 	} else {
 		w.WriteHeader(code)
 	}
-	utils.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
 		"code": code,
 		"msg":  utils.AnySlice2Str(msg),
 	}), "SetReturnError")
@@ -189,9 +191,9 @@ func ReqError(r *http.Request, i ...any) {
 // Play 公共函数文件
 func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
-	defer utils.CloseFile(f)
+	defer os_close.CloseFile(f)
 	if err != nil {
-		utils.Error("文件不存在", path)
+		ulogs.Error("文件不存在", path)
 		http.NotFound(w, r)
 		return
 	}
