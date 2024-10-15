@@ -27,7 +27,7 @@ func (m Array) GormDataType() string {
 
 // GormDBDataType gorm db data type
 func (Array) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	return jsonDbDataType(db, field)
+	return JsonDbDataType(db, field)
 }
 func (jm Array) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	return arrayGormValue(jm, db)
@@ -44,7 +44,7 @@ func (m *StringArray) Scan(val interface{}) error {
 }
 
 func (StringArray) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	return jsonDbDataType(db, field)
+	return JsonDbDataType(db, field)
 }
 
 func (jm StringArray) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
