@@ -1,7 +1,6 @@
 package http_close
 
 import (
-	"io"
 	"net/http"
 )
 
@@ -9,7 +8,6 @@ func CloseResp(resp *http.Response) {
 	if resp == nil || resp.Body == nil {
 		return
 	}
-	_, _ = io.Copy(io.Discard, resp.Body)
 	_ = resp.Close
 }
 
