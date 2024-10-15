@@ -3,7 +3,7 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
-	"gitlab.itestor.com/helei/utils.git"
+	os_close "gitlab.itestor.com/helei/utils.git/close/os.close"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,7 +16,7 @@ func CompressDirectoryToZip(dirPath string, zipFilePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create ZIP file: %w", err)
 	}
-	defer utils.CloseFile(f)
+	defer os_close.CloseFile(f)
 
 	zw := zip.NewWriter(f)
 	defer CloseZipWriter(zw)
@@ -60,7 +60,7 @@ func CompressDirectoryToZip(dirPath string, zipFilePath string) error {
 			if err != nil {
 				return fmt.Errorf("failed to open file %s: %w", path, err)
 			}
-			defer utils.CloseFile(file)
+			defer os_close.CloseFile(file)
 
 			_, err = io.Copy(writer, file)
 			if err != nil {
@@ -104,7 +104,7 @@ func UnCompressZip(zipFilePath string, targetDir string) error {
 			}
 			// 创建目标文件
 			outputFile, err := os.Create(filePath)
-			defer utils.CloseFile(outputFile)
+			defer os_close.CloseFile(outputFile)
 			if err != nil {
 				return err
 			}
