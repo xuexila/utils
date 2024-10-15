@@ -15,12 +15,12 @@ import (
 	"strings"
 )
 
-func jsonDbDataType(db *gorm.DB, field *schema.Field) string {
+func JsonDbDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
 	case "sqlite":
 		return "JSON"
 	case "mysql":
-		if v, ok := db.Dialector.(*mysql.Dialector); ok && !strings.Contains(v.ServerVersion, "MariaDB") && checkVersionSupportsJSON(v.ServerVersion) {
+		if v, ok := db.Dialector.(*mysql.Dialector); ok && !strings.Contains(v.ServerVersion, "MariaDB") && CheckVersionSupportsJSON(v.ServerVersion) {
 			return "JSON"
 		}
 		return "LONGTEXT"
@@ -32,9 +32,9 @@ func jsonDbDataType(db *gorm.DB, field *schema.Field) string {
 	return ""
 }
 
-// 检查版本是否支持JSON
+// CheckVersionSupportsJSON 检查版本是否支持JSON
 // mysql版本高于 5.7.8 ，才支持json
-func checkVersionSupportsJSON(versionStr string) bool {
+func CheckVersionSupportsJSON(versionStr string) bool {
 	versionParts := strings.Split(strings.TrimSpace(strings.Split("versionStr", "-")[0]), ".")
 	if len(versionParts) < 3 {
 		return false
@@ -93,7 +93,7 @@ func arrayGormValue(jm any, db *gorm.DB) clause.Expr {
 	data, _ := marshalSlice(jm)
 	switch db.Dialector.Name() {
 	case "mysql":
-		if v, ok := db.Dialector.(*mysql.Dialector); ok && !strings.Contains(v.ServerVersion, "MariaDB") && checkVersionSupportsJSON(v.ServerVersion) {
+		if v, ok := db.Dialector.(*mysql.Dialector); ok && !strings.Contains(v.ServerVersion, "MariaDB") && CheckVersionSupportsJSON(v.ServerVersion) {
 			fmt.Println(v.ServerVersion)
 			return gorm.Expr("CAST(? AS JSON)", string(data))
 		}
