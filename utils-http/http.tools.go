@@ -251,7 +251,7 @@ func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 	}
 	total := strconv.Itoa(fileSize)
 
-	mime := utils.MimeMap[fType]
+	mime := MimeMap[fType]
 	if mime == "" {
 		mime = "text/html;charset=utf-8"
 	}

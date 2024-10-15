@@ -3,7 +3,6 @@ package utils_http
 import (
 	"bytes"
 	"fmt"
-	"gitlab.itestor.com/helei/utils.git"
 	http_close "gitlab.itestor.com/helei/utils.git/close/http.close"
 	"io"
 	"net/http"
@@ -37,7 +36,7 @@ func (ro Router) Index(w http.ResponseWriter, r *http.Request) {
 		rmime = "text/html; charset=utf-8"
 	} else {
 		if len(filepath.Ext(path[0])) > 0 {
-			rmime = utils.MimeMap[strings.ToLower(filepath.Ext(path[0])[1:])]
+			rmime = MimeMap[strings.ToLower(filepath.Ext(path[0])[1:])]
 		}
 		if rmime == "" {
 			rmime = "text/html; charset=utf-8"

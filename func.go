@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	os_close "gitlab.itestor.com/helei/utils.git/close/os.close"
+	osclose "gitlab.itestor.com/helei/utils.git/close/os.close"
 	"gitlab.itestor.com/helei/utils.git/config"
 	"gitlab.itestor.com/helei/utils.git/ulogs"
 	"gopkg.in/mgo.v2/bson"
@@ -135,7 +135,7 @@ func FilePutContents(path, content string) error {
 		return err
 	}
 	_, err = file.WriteString(content)
-	os_close.CloseFile(file)
+	osclose.CloseFile(file)
 	return err
 }
 
@@ -152,7 +152,7 @@ func FilePutContentsbytes(path string, content []byte) error {
 		return err
 	}
 	_, err = file.Write(content)
-	os_close.CloseFile(file)
+	osclose.CloseFile(file)
 	return err
 }
 
@@ -169,7 +169,7 @@ func FileAppendContents(path, content string) error {
 		return err
 	}
 	_, err = file.WriteString(content)
-	os_close.CloseFile(file)
+	osclose.CloseFile(file)
 	return err
 }
 
@@ -179,7 +179,7 @@ func FileGetContents(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer os_close.CloseFile(file)
+	defer osclose.CloseFile(file)
 	return io.ReadAll(file)
 }
 
@@ -842,7 +842,7 @@ func GetFilePathMimeType(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("无法打开文件: %w", err)
 	}
-	defer os_close.CloseFile(file)
+	defer osclose.CloseFile(file)
 	return GetFileMimeType(file)
 }
 
