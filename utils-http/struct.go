@@ -7,19 +7,19 @@ import (
 )
 
 type HttpServer struct {
-	ListenAddr     string        `ini:"listen_addr" json:"listen_addr" yaml:"listen_addr"`
-	Auth           string        `ini:"auth" json:"auth" yaml:"auth"`
-	Allowip        []string      `ini:"allowip,omitempty" yaml:"allowip" json:"allowip"`
-	Denyip         []string      `ini:"denyip,omitempty" json:"denyip" yaml:"denyip"`
-	Ssl            bool          `ini:"ssl" json:"ssl" yaml:"ssl"`
-	Ca             string        `ini:"ca" json:"ca" yaml:"ca"`
-	Crt            string        `ini:"crt" json:"crt" yaml:"crt"`
-	Key            string        `ini:"key" json:"key" yaml:"key"`
-	SocketTimeout  time.Duration `ini:"socket_timeout" json:"socket_timeout" yaml:"socket_timeout"` // socket 心跳超时时间
-	Hotupdate      bool          `ini:"hotupdate" json:"hotupdate" yaml:"hotupdate"`                // 是否启动热加载
-	Route          map[string]func(w http.ResponseWriter, r *http.Request)
-	RouteSocket    map[string]func(ws *websocket.Conn)
-	CommonCallback func(w http.ResponseWriter, r *http.Request) bool
+	ListenAddr     string                                                  `ini:"listen_addr" json:"listen_addr" yaml:"listen_addr"`
+	Auth           string                                                  `ini:"auth" json:"auth" yaml:"auth"`
+	Allowip        []string                                                `ini:"allowip,omitempty" json:"allowip" yaml:"allowip,omitempty"`
+	Denyip         []string                                                `ini:"denyip,omitempty" json:"denyip" yaml:"denyip,omitempty"`
+	Ssl            bool                                                    `ini:"ssl" json:"ssl" yaml:"ssl"`
+	Ca             string                                                  `ini:"ca" json:"ca" yaml:"ca"`
+	Crt            string                                                  `ini:"crt" json:"crt" yaml:"crt"`
+	Key            string                                                  `ini:"key" json:"key" yaml:"key"`
+	SocketTimeout  time.Duration                                           `ini:"socket_timeout" json:"socket_timeout" yaml:"socket_timeout"` // socket 心跳超时时间
+	Hotupdate      bool                                                    `ini:"hotupdate" json:"hotupdate" yaml:"hotupdate"`                // 是否启动热加载
+	Route          map[string]func(w http.ResponseWriter, r *http.Request) `yaml:"-" json:"-"`
+	RouteSocket    map[string]func(ws *websocket.Conn)                     `yaml:"-" json:"-"`
+	CommonCallback func(w http.ResponseWriter, r *http.Request) bool       `yaml:"-" json:"-"`
 }
 
 type Router struct {
