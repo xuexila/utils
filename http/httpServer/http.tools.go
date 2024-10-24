@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/xuexila/utils/close/osClose"
+	"github.com/xuexila/utils/http/mime"
 	"github.com/xuexila/utils/tools"
 	"github.com/xuexila/utils/ulogs"
 	"io"
@@ -17,176 +18,6 @@ import (
 	"strings"
 	"time"
 )
-
-func RespJson(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-}
-
-func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
-	w.Header().Set("Content-Type", "application/json")
-	if code == 0 || code == 200 {
-		w.WriteHeader(200)
-	} else {
-		w.WriteHeader(code)
-		ReqError(r, code, msg)
-	}
-
-	if _, ok := msg.(error); ok {
-		if len(data) > 0 && reflect.TypeOf(data[0]).String() == "bool" && !data[0].(bool) {
-			msg = "系统处理失败"
-		} else {
-			msg = msg.(error).Error()
-		}
-	}
-	resp := map[string]interface{}{
-		"code": code,
-		"msg":  msg,
-	}
-	if len(data) > 0 {
-		resp["data"] = data
-		if len(data) == 1 {
-			resp["data"] = data[0]
-		}
-	}
-	ulogs.Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
-}
-
-// SetReturn 设置 返回函数Play
-func SetReturn(w http.ResponseWriter, code int, msg ...any) {
-	w.Header().Set("Content-Type", "application/json")
-	if len(msg) < 1 {
-		if code == 0 {
-			msg = []any{"成功"}
-		} else {
-			msg = []any{"失败"}
-		}
-	}
-	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]any{
-		"code": code,
-		"msg":  msg[0],
-	}), "SetReturn")
-}
-
-func SetReturnData(w http.ResponseWriter, code int, msg any, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
-		"code": code,
-		"msg":  msg,
-		"data": data,
-	}), "SetReturnData")
-}
-
-// SetReturnFile 直接讲文件反馈给前端
-func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
-	f, err := os.Open(file)
-	defer osClose.CloseFile(f)
-	if err != nil {
-		SetReturnError(w, r, err, http.StatusForbidden, "模板下载失败")
-	}
-	_, _ = io.Copy(w, f)
-}
-
-func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
-	ReqError(r, append([]any{err}, msg...)...)
-	if len(msg) < 1 {
-		msg = []any{err.Error()}
-	} else {
-		msg = append(msg, err.Error())
-	}
-	w.Header().Set("Content-Type", "application/json")
-	if code == 0 || code == 200 {
-		w.WriteHeader(200)
-	} else {
-		w.WriteHeader(code)
-	}
-	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
-		"code": code,
-		"msg":  tools.AnySlice2Str(msg),
-	}), "SetReturnError")
-}
-
-// CheckReqPost 检查请求是否post
-func CheckReqPost(w http.ResponseWriter, r *http.Request) bool {
-	if r.Method != http.MethodPost {
-		Forbidden(w, "Forbidden")
-		return false
-	}
-	return true
-}
-
-// Getip 获取客户端IP
-func Getip(r *http.Request) string {
-	remoteAddr := r.RemoteAddr
-	if ip := r.Header.Get("HTTP_CLIENT_IP"); ip != "" {
-		remoteAddr = ip
-	} else if ip := r.Header.Get("HTTP_X_FORWARDED_FOR"); ip != "" {
-		remoteAddr = ip
-	} else if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		remoteAddr = ip
-	} else {
-		remoteAddr, _, _ = net.SplitHostPort(remoteAddr)
-	}
-	if remoteAddr == "::1" {
-		remoteAddr = "127.0.0.1"
-	}
-	return remoteAddr
-}
-
-// HttpServerMiddleware http统一验证 中间件
-func HttpServerMiddleware(next http.Handler, callback func(w http.ResponseWriter, r *http.Request) bool) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if r != nil && r.Body != nil {
-				_ = r.Body.Close()
-			}
-		}()
-		w.Header().Set("Connection", "keep-alive")
-		w.Header().Set("server", "vs/1.0")
-		if callback != nil && !callback(w, r) {
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-// MethodNotAllowed 设置返回 405
-func MethodNotAllowed(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
-	_, _ = fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
-}
-
-// Forbidden 设置系统返回403
-func Forbidden(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusForbidden)
-	_html := `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>403 Forbidden!</title></head><body><h3 style="text-align:center">` + msg + `</h3></body></html>`
-	_, _ = fmt.Fprintln(w, _html)
-	return
-}
-
-// NotFound 设置返回 404
-func NotFound(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusNotFound)
-	_html := `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>404 Not Found!</title></head><body><h3 style="text-align:center">` + msg + `</h3></body></html>`
-	_, _ = fmt.Fprintln(w, _html)
-	return
-}
-
-func ReqError(r *http.Request, i ...any) {
-	log.SetPrefix("")
-	log.SetOutput(os.Stderr)
-	var msg = []any{Getip(r), r.URL.String()}
-	log.Println(append(msg, i...)...)
-}
 
 // Play 公共函数文件
 func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
@@ -244,18 +75,16 @@ func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 		_, _ = f.Seek(ranges, 0)
 	}
 	fileSize = int(fInfo.Size())
-
 	totalSize := fileSize
 	if rangeSwap != "" && rangeEnd > 0 {
 		totalSize = rangeEnd
 	}
 	total := strconv.Itoa(fileSize)
-
-	mime := MimeMap[fType]
-	if mime == "" {
-		mime = "text/html;charset=utf-8"
+	m := mime.MimeMap[fType]
+	if m == "" {
+		m = "text/html;charset=utf-8"
 	}
-	w.Header().Set("Content-Type", mime)
+	w.Header().Set("Content-Type", m)
 	w.Header().Set("Content-Length", strconv.Itoa(totalSize-int(ranges)))
 	w.Header().Set("Last-Modified", fInfo.ModTime().Format(time.RFC822))
 	w.Header().Set("Accept-Ranges", "bytes")
@@ -282,11 +111,185 @@ func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 	_, _ = io.Copy(w, f)
 }
 
+// Forbidden 设置系统返回403
+func Forbidden(w http.ResponseWriter, msg ...string) {
+	w.WriteHeader(http.StatusForbidden)
+	_html := `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>403 Forbidden!</title></head><body><h3 style="text-align:center">` + strings.Join(msg, " ") + `</h3></body></html>`
+	_, _ = fmt.Fprintln(w, _html)
+	return
+}
+
+// NotFound 设置返回 404
+func NotFound(w http.ResponseWriter, msg ...string) {
+	w.WriteHeader(http.StatusNotFound)
+	_html := `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>404 Not Found!</title></head><body><h3 style="text-align:center">` + strings.Join(msg, " ") + `</h3></body></html>`
+	_, _ = fmt.Fprintln(w, _html)
+	return
+}
+
 // MethodNotAllow 405
 func MethodNotAllow(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	_, _ = fmt.Fprint(w, `
-<h1 style="text-align:center;">400 Error!</h1>
-<p style="text-align:center;">`+http.StatusText(http.StatusMethodNotAllowed)+`</p>
-`)
+	_, _ = w.Write([]byte(`<h1 style="text-align:center;">405 Error!</h1>
+<p style="text-align:center;">` + http.StatusText(http.StatusMethodNotAllowed) + `</p>`))
+}
+
+func InternalServerError(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError)
+	_, _ = w.Write([]byte(`<h1 style="text-align:center;">500 Error!</h1>
+<p style="text-align:center;">` + http.StatusText(http.StatusInternalServerError) + `</p>`))
+}
+
+func ReqError(r *http.Request, i ...any) {
+	log.SetPrefix("")
+	log.SetOutput(os.Stderr)
+	var msg = []any{Getip(r), r.URL.String()}
+	log.Println(append(msg, i...)...)
+}
+
+func RespJson(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+}
+
+func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
+	w.Header().Set("Content-Type", "application/json")
+	if code == 0 || code == 200 {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(code)
+		ReqError(r, code, msg)
+	}
+
+	if _, ok := msg.(error); ok {
+		if len(data) > 0 && reflect.TypeOf(data[0]).String() == "bool" && !data[0].(bool) {
+			msg = "系统处理失败"
+		} else {
+			msg = msg.(error).Error()
+		}
+	}
+	resp := map[string]interface{}{
+		"code": code,
+		"msg":  msg,
+	}
+	if len(data) > 0 {
+		resp["data"] = data
+		if len(data) == 1 {
+			resp["data"] = data[0]
+		}
+	}
+	ulogs.Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
+}
+
+// SetReturn 设置 返回函数Play
+func SetReturn(w http.ResponseWriter, code int, msg ...any) {
+	w.Header().Set("Content-Type", "application/json")
+	if len(msg) < 1 {
+		if code == 0 {
+			msg = []any{"成功"}
+		} else {
+			msg = []any{"失败"}
+		}
+	}
+	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]any{
+		"code": code,
+		"msg":  msg[0],
+	}), "SetReturn")
+}
+
+func SetReturnData(w http.ResponseWriter, code int, msg any, data ...any) {
+	RespJson(w)
+	r := resp{
+		"code": code,
+		"msg":  msg,
+	}
+	if len(data) == 1 {
+		r["data"] = data[0]
+	} else if len(data) > 1 {
+		r["data"] = data
+	}
+	ulogs.Checkerr(json.NewEncoder(w).Encode(r), "SetReturnData")
+}
+
+// SetReturnFile 直接讲文件反馈给前端
+func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
+	f, err := os.Open(file)
+	defer osClose.CloseFile(f)
+	if err != nil {
+		SetReturnError(w, r, err, http.StatusForbidden, "模板下载失败")
+	}
+	_, _ = io.Copy(w, f)
+}
+
+func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
+	ReqError(r, append([]any{err}, msg...)...)
+	if len(msg) < 1 {
+		msg = []any{err.Error()}
+	} else {
+		msg = append(msg, err.Error())
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if code == 0 || code == 200 {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(code)
+	}
+	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+		"code": code,
+		"msg":  tools.AnySlice2Str(msg),
+	}), "SetReturnError")
+}
+
+// CheckReqPost 检查请求是否post
+func CheckReqPost(w http.ResponseWriter, r *http.Request) bool {
+	if r.Method != http.MethodPost {
+		Forbidden(w, "Forbidden")
+		return false
+	}
+	return true
+}
+
+// CheckSessionActive
+// 检测session 有效期，超时就删除
+func CheckSessionActive() {
+	for range time.NewTicker(1 * time.Hour).C {
+		LoginSessionMap.Range(func(key, value interface{}) bool {
+			sid := key.(string)
+			val := value.(LoginInfo)
+			if val.HoldTime < 1 {
+				val.HoldTime = 604800 // 默认保留7填
+			}
+			if int(time.Since(val.ActiveTime).Seconds()) > val.HoldTime {
+				LoginSessionMap.Delete(sid)
+			}
+			return true
+		})
+	}
+}
+
+// Getip 获取客户端IP
+func Getip(r *http.Request) string {
+	remoteAddr := r.RemoteAddr
+	if ip := r.Header.Get("HTTP_CLIENT_IP"); ip != "" {
+		remoteAddr = ip
+	} else if ip := r.Header.Get("HTTP_X_FORWARDED_FOR"); ip != "" {
+		remoteAddr = ip
+	} else if ip := r.Header.Get("X-Real-IP"); ip != "" {
+		remoteAddr = ip
+	} else {
+		remoteAddr, _, _ = net.SplitHostPort(remoteAddr)
+	}
+	if remoteAddr == "::1" {
+		remoteAddr = "127.0.0.1"
+	}
+	return remoteAddr
 }

@@ -5,10 +5,13 @@ go 1.21.1
 require (
 	github.com/IBM/sarama v1.43.2
 	github.com/colinmarc/hdfs/v2 v2.4.0
+	github.com/dchest/captcha v1.0.0
 	github.com/gomodule/redigo v1.9.2
+	github.com/gorilla/handlers v1.5.2
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/pkg/sftp v1.13.6
 	github.com/redis/go-redis/v9 v9.6.1
+	github.com/satori/go.uuid v1.2.0
 	github.com/tjfoc/gmsm v1.4.1
 	github.com/xuri/excelize/v2 v2.8.1
 	golang.org/x/crypto v0.25.0
@@ -29,6 +32,7 @@ require (
 	github.com/eapache/go-resiliency v1.6.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
+	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect

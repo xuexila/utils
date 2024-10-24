@@ -1,4 +1,4 @@
-package httpServer
+package mime
 
 // MimeMap 文件后缀 mime 类型
 var MimeMap = map[string]string{

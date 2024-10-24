@@ -4,13 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"github.com/gorilla/handlers"
 	"github.com/xuexila/utils/close/httpClose"
 	"github.com/xuexila/utils/config"
 	"github.com/xuexila/utils/crypto/md5"
 	"github.com/xuexila/utils/tools"
 	"github.com/xuexila/utils/ulogs"
 	"golang.org/x/net/websocket"
-	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
 	"net/url"
@@ -20,10 +20,12 @@ import (
 	"time"
 )
 
-var err error
-
 // HttpServerStart 公功 http server 启动函数
 func (h *HttpServer) HttpServerStart() {
+	h.serverNameMap = make(map[string]byte)
+	for _, dom := range h.ServerName {
+		h.serverNameMap[strings.ToLower(dom)] = 0
+	}
 	mux := http.NewServeMux()
 	if config.Dbg {
 		h.Route["/debug/pprof/"] = pprof.Index
@@ -45,7 +47,6 @@ func (h *HttpServer) HttpServerStart() {
 
 	server := &http.Server{
 		Addr:              h.ListenAddr,
-		Handler:           mux,
 		TLSConfig:         nil,
 		ReadTimeout:       0,
 		ReadHeaderTimeout: 0,
@@ -57,6 +58,11 @@ func (h *HttpServer) HttpServerStart() {
 		ErrorLog:          nil,
 		// BaseContext:       nil,
 		// ConnContext:       nil,
+	}
+	if h.EnableGzip {
+		server.Handler = handlers.CompressHandler(mux)
+	} else {
+		server.Handler = mux
 	}
 	defer Closehttpserver(server)
 
@@ -74,7 +80,7 @@ func (h *HttpServer) HttpServerStart() {
 		}
 		// 如果包含ca证书，就需要做强制双向https 验证
 		if h.Ca != "" {
-			caCrt, err := ioutil.ReadFile(tools.Fileabs(h.Ca))
+			caCrt, err := os.ReadFile(tools.Fileabs(h.Ca))
 			if err != nil {
 				ulogs.Error("HTTPS Service Load Ca error", err)
 				os.Exit(1)
@@ -107,6 +113,16 @@ func (h *HttpServer) HttpServerStart() {
 func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.ResponseWriter, r *http.Request)) {
 	mux.Handle(u, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer httpClose.CloseReq(r)
+		if len(h.serverNameMap) > 0 {
+			// 需要验证请求的host是否绑定了
+			_host := strings.Split(strings.ToLower(r.Host), ":")
+			if len(_host) > 0 {
+				if _, ok := h.serverNameMap[_host[0]]; !ok {
+					w.WriteHeader(http.StatusBadGateway)
+					return
+				}
+			}
+		}
 		ulogs.Debug("请求地址", r.URL.String(), "IP", Getip(r))
 		// add header
 		w.Header().Set("server", "vs/1.0")
