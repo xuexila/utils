@@ -3,7 +3,7 @@ package utils_http
 import (
 	"bytes"
 	"fmt"
-	http_close "gitlab.itestor.com/helei/utils.git/close/http.close"
+	http_close "github.com/xuexila/utils/close/http.close"
 	"io"
 	"net/http"
 	"path/filepath"

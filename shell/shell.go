@@ -3,9 +3,9 @@ package shell
 import (
 	"bytes"
 	"errors"
-	"gitlab.itestor.com/helei/utils.git"
-	"gitlab.itestor.com/helei/utils.git/crypto/md5"
-	"gitlab.itestor.com/helei/utils.git/ulogs"
+	"github.com/xuexila/utils"
+	"github.com/xuexila/utils/crypto/md5"
+	"github.com/xuexila/utils/ulogs"
 	"os"
 	"os/exec"
 	"regexp"

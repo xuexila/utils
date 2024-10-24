@@ -3,8 +3,8 @@ package utils
 import (
 	"flag"
 	"fmt"
-	"gitlab.itestor.com/helei/utils.git/config"
-	"gitlab.itestor.com/helei/utils.git/ulogs"
+	"github.com/xuexila/utils/config"
+	"github.com/xuexila/utils/ulogs"
 	"os"
 	"path/filepath"
 )

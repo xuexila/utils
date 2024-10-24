@@ -9,8 +9,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"gitlab.itestor.com/helei/utils.git/config"
-	"gitlab.itestor.com/helei/utils.git/crypto/sha256"
+	"github.com/xuexila/utils/config"
+	"github.com/xuexila/utils/crypto/sha256"
 )
 
 // RsaVerify 签名验证，用公钥进行验证

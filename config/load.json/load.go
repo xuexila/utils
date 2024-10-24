@@ -2,9 +2,9 @@ package load_json
 
 import (
 	"encoding/json"
-	"gitlab.itestor.com/helei/utils.git"
-	"gitlab.itestor.com/helei/utils.git/config"
-	"gitlab.itestor.com/helei/utils.git/ulogs"
+	"github.com/xuexila/utils"
+	"github.com/xuexila/utils/config"
+	"github.com/xuexila/utils/ulogs"
 	"os"
 )
 

@@ -1,7 +1,7 @@
 package ulogs
 
 import (
-	"gitlab.itestor.com/helei/utils.git/config"
+	"github.com/xuexila/utils/config"
 	"log"
 	"os"
 )

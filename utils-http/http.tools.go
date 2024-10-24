@@ -3,9 +3,9 @@ package utils_http
 import (
 	"encoding/json"
 	"fmt"
-	"gitlab.itestor.com/helei/utils.git"
-	os_close "gitlab.itestor.com/helei/utils.git/close/os.close"
-	"gitlab.itestor.com/helei/utils.git/ulogs"
+	"github.com/xuexila/utils"
+	os_close "github.com/xuexila/utils/close/os.close"
+	"github.com/xuexila/utils/ulogs"
 	"io"
 	"log"
 	"net"

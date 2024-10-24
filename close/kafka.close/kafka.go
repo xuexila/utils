@@ -2,7 +2,7 @@ package kafka_close
 
 import (
 	"github.com/IBM/sarama"
-	"gitlab.itestor.com/helei/utils.git/ulogs"
+	"github.com/xuexila/utils/ulogs"
 )
 
 func CloseKafkaPartition(partition sarama.PartitionConsumer) {

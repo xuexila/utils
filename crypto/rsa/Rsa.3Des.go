@@ -8,8 +8,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"gitlab.itestor.com/helei/utils.git/crypto/sm4"
-	"gitlab.itestor.com/helei/utils.git/ulogs"
+	"github.com/xuexila/utils/crypto/sm4"
+	"github.com/xuexila/utils/ulogs"
 	"io/ioutil"
 )
 

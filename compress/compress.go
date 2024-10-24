@@ -3,7 +3,7 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
-	os_close "gitlab.itestor.com/helei/utils.git/close/os.close"
+	os_close "github.com/xuexila/utils/close/os.close"
 	"io"
 	"os"
 	"path/filepath"
