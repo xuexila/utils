@@ -2,7 +2,7 @@ package mime
 
 import (
 	"fmt"
-	"github.com/xuexila/utils/close/osClose"
+	"github.com/helays/utils/close/osClose"
 	"io"
 	"net/http"
 	"os"

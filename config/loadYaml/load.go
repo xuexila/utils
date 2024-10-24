@@ -1,9 +1,9 @@
 package loadYaml
 
 import (
-	"github.com/xuexila/utils/config"
-	"github.com/xuexila/utils/tools"
-	"github.com/xuexila/utils/ulogs"
+	"github.com/helays/utils/config"
+	"github.com/helays/utils/tools"
+	"github.com/helays/utils/ulogs"
 	"gopkg.in/yaml.v3"
 	"os"
 )

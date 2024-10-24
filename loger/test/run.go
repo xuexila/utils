@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/xuexila/utils/config/loadIni"
-	"github.com/xuexila/utils/config/parseCmd"
-	"github.com/xuexila/utils/loger"
+	"github.com/helays/utils/config/loadIni"
+	"github.com/helays/utils/config/parseCmd"
+	"github.com/helays/utils/loger"
 	"strings"
 	"time"
 )

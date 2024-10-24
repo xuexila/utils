@@ -1,7 +1,7 @@
 package ulogs
 
 import (
-	"github.com/xuexila/utils/config"
+	"github.com/helays/utils/config"
 	"log"
 	"os"
 )

@@ -3,7 +3,7 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/xuexila/utils/close/osClose"
+	"github.com/helays/utils/close/osClose"
 	"io"
 	"os"
 	"path/filepath"

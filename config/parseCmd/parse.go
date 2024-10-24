@@ -3,9 +3,9 @@ package parseCmd
 import (
 	"flag"
 	"fmt"
-	"github.com/xuexila/utils"
-	"github.com/xuexila/utils/config"
-	"github.com/xuexila/utils/ulogs"
+	"github.com/helays/utils"
+	"github.com/helays/utils/config"
+	"github.com/helays/utils/ulogs"
 	"os"
 )
 

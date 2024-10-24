@@ -1,4 +1,4 @@
-module github.com/xuexila/utils
+module github.com/helays/utils
 
 go 1.21.1
 

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/StackExchange/wmi"
-	"github.com/xuexila/utils/crypto/md5"
+	"github.com/helays/utils/crypto/md5"
 	"golang.org/x/sys/windows"
 	"net"
 	"sort"

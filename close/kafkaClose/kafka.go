@@ -2,7 +2,7 @@ package kafkaClose
 
 import (
 	"github.com/IBM/sarama"
-	"github.com/xuexila/utils/ulogs"
+	"github.com/helays/utils/ulogs"
 )
 
 // CloseKafkaPartition 关闭分区
