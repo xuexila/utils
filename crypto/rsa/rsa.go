@@ -38,7 +38,7 @@ func RsaVerify(msg string, _sign string) error {
 	return rsa.VerifyPKCS1v15(pubKey.(*rsa.PublicKey), crypto.SHA256, msgHashbyt, sign)
 }
 
-// 内容签名，用私钥签名
+// RsaSign 内容签名，用私钥签名
 func RsaSign(msg string) (string, error) {
 	msgHashByt, err := sha256.Sha256(msg)
 	if err != nil {
@@ -77,11 +77,6 @@ func decodePublicKey(publicKey []byte) (*rsa.PublicKey, error) {
 		return nil, errors.New("failed to decode PEM block containing private key")
 	}
 	return x509.ParsePKCS1PublicKey(block.Bytes)
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	return pub.(*rsa.PublicKey), err
 }
 
 func decodePrivateKey(privateKey []byte) (*rsa.PrivateKey, error) {
