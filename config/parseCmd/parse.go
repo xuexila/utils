@@ -3,6 +3,7 @@ package parseCmd
 import (
 	"flag"
 	"fmt"
+	"github.com/xuexila/utils"
 	"github.com/xuexila/utils/config"
 	"github.com/xuexila/utils/ulogs"
 	"os"
@@ -23,7 +24,7 @@ func Parseparams(f func()) {
 	}
 	flag.Parse()
 	if vers {
-		fmt.Println(os.Args[0], tools.Version, tools.BuildTime)
+		fmt.Println(os.Args[0], utils.Version, utils.BuildTime)
 		os.Exit(1)
 	}
 	if config.Help {
