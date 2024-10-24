@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	"compress/gzip"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -10,7 +9,6 @@ import (
 	osclose "github.com/xuexila/utils/close/os.close"
 	"github.com/xuexila/utils/config"
 	"github.com/xuexila/utils/ulogs"
-	"gopkg.in/mgo.v2/bson"
 	"io"
 	"math"
 	"math/rand"
@@ -119,10 +117,6 @@ func DeleteStrarr(arr []string, val string) []string {
 		}
 	}
 	return arr
-}
-
-func NewId() string {
-	return bson.NewObjectId().Hex()
 }
 
 // FilePutContents 快速简易写文件
@@ -396,28 +390,6 @@ func BytesToUint16(b []byte) uint16 {
 	return uint16(tmp)
 }
 
-func ParseGzip(data []byte) ([]byte, error) {
-	b := new(bytes.Buffer)
-	if err := binary.Write(b, binary.LittleEndian, data); err != nil {
-		return nil, nil
-	}
-
-	r, err := gzip.NewReader(b)
-	if err != nil {
-		// fmt.Println("[ParseGzip] NewReader error: %v, maybe data is ungzip", err)
-		return data, nil
-	} else {
-		defer func() {
-			_ = r.Close()
-		}()
-		undatas, err := io.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
-		return undatas, nil
-	}
-}
-
 // 空字符串转为 -
 func EmptyString2(s string) string {
 	if s = strings.TrimSpace(s); s == "" {
@@ -562,15 +534,6 @@ func AnySlice2Str(slice []any, _sep ...string) string {
 	}
 
 	return builder.String()
-}
-
-type test struct {
-	uu useTest
-	useTest
-}
-
-type useTest struct {
-	a string
 }
 
 // Map2Struct 将map转换为结构体
