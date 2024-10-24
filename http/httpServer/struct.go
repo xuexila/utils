@@ -1,4 +1,4 @@
-package utilsHttp
+package httpServer
 
 import (
 	"golang.org/x/net/websocket"

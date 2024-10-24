@@ -13,6 +13,7 @@ require (
 	github.com/xuri/excelize/v2 v2.8.1
 	golang.org/x/crypto v0.25.0
 	golang.org/x/net v0.27.0
+	gopkg.in/iconv.v1 v1.1.1
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/yaml.v3 v3.0.1
