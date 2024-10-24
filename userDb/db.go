@@ -1,8 +1,8 @@
 package userDb
 
 import (
-	"github.com/xuexila/utils"
 	"github.com/xuexila/utils/config"
+	"github.com/xuexila/utils/tools"
 	"github.com/xuexila/utils/ulogs"
 	"gorm.io/gorm"
 	"net/http"
@@ -93,7 +93,7 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 		}
 		tableName := alias
 		if tableName == "" {
-			tableName = utils.SnakeString(t.Name())
+			tableName = tools.SnakeString(t.Name())
 			alias = tableName
 		}
 
@@ -123,7 +123,7 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 			}
 
 			// 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
-			fieldName := tableName + "." + utils.SnakeString(t.Field(i).Name)
+			fieldName := tableName + "." + tools.SnakeString(t.Field(i).Name)
 			if t.Field(i).Type.String() == "int" {
 				valList := strings.Split(val, ",")
 				if len(valList) > 1 {
@@ -258,7 +258,7 @@ func AutoCreateTableWithColumn(db *gorm.DB, tb any, errmsg string, t reflect.Typ
 		if tag == "-:all" || tag == "-:migration" || strings.Contains(tag, "-:migration") {
 			continue
 		}
-		column := utils.SnakeString(t.Field(i).Name)
+		column := tools.SnakeString(t.Field(i).Name)
 		for _, item := range strings.Split(tag, ";") {
 			if !strings.HasPrefix(item, "column") {
 				continue

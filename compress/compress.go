@@ -3,7 +3,7 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
-	os_close "github.com/xuexila/utils/close/os.close"
+	"github.com/xuexila/utils/close/osClose"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,7 +16,7 @@ func CompressDirectoryToZip(dirPath string, zipFilePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create ZIP file: %w", err)
 	}
-	defer os_close.CloseFile(f)
+	defer osClose.CloseFile(f)
 
 	zw := zip.NewWriter(f)
 	defer CloseZipWriter(zw)
@@ -60,7 +60,7 @@ func CompressDirectoryToZip(dirPath string, zipFilePath string) error {
 			if err != nil {
 				return fmt.Errorf("failed to open file %s: %w", path, err)
 			}
-			defer os_close.CloseFile(file)
+			defer osClose.CloseFile(file)
 
 			_, err = io.Copy(writer, file)
 			if err != nil {
@@ -104,7 +104,7 @@ func UnCompressZip(zipFilePath string, targetDir string) error {
 			}
 			// 创建目标文件
 			outputFile, err := os.Create(filePath)
-			defer os_close.CloseFile(outputFile)
+			defer osClose.CloseFile(outputFile)
 			if err != nil {
 				return err
 			}
@@ -131,7 +131,7 @@ func CloseZipReader(f *zip.ReadCloser) {
 	}
 }
 
-// 关闭IoReader
+// CloseIoReader 关闭IoReader
 func CloseIoReader(f io.ReadCloser) {
 	if f != nil {
 		_ = f.Close()

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/xuexila/utils"
 	"github.com/xuexila/utils/crypto/md5"
+	"github.com/xuexila/utils/tools"
 	"github.com/xuexila/utils/ulogs"
 	"os"
 	"os/exec"
@@ -114,7 +115,7 @@ func MachineCode() string {
 		}
 	case "darwin":
 		var tmp []byte
-		tmp, err = utils.FileGetContents("/Users/helay/go/src/company/vis-device/startUp/vis.agent/run/info")
+		tmp, err = tools.FileGetContents("/Users/helay/go/src/company/vis-device/startUp/vis.agent/run/info")
 		if err != nil {
 			ulogs.Error("机器码生成失败", err)
 			os.Exit(1)

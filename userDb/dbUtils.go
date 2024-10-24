@@ -65,7 +65,7 @@ func CloseMysqlRows(rows *sql.Rows) {
 	}
 }
 
-// Deprecated: As of utils v1.1.0, this value is simply [utils.CloseDb].
+// Deprecated: As of utils v1.1.0, this value is simply [tools.CloseDb].
 func CloseMysql(conn *sql.DB) {
 	if conn != nil {
 		_ = conn.Close()
