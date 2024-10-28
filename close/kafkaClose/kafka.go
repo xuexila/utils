@@ -19,3 +19,9 @@ func CloseKafkaConsumerGroup(group sarama.ConsumerGroup) {
 		ulogs.Checkerr(group.Close(), "CloseKafkaConsumerGroup 执行失败")
 	}
 }
+
+func CloseKafkaConsumer(consumer sarama.Consumer) {
+	if consumer != nil {
+		ulogs.Checkerr(consumer.Close(), "CloseKafkaConsumer 执行失败")
+	}
+}
