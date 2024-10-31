@@ -4,6 +4,7 @@ go 1.21.1
 
 require (
 	github.com/IBM/sarama v1.43.2
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/colinmarc/hdfs/v2 v2.4.0
 	github.com/dchest/captcha v1.0.0
 	github.com/elastic/go-elasticsearch/v8 v8.15.0
