@@ -2,6 +2,9 @@ package tools
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -397,6 +400,63 @@ func Searchslice(s string, o []string) bool {
 		}
 	}
 	return false
+}
+
+// StringUniq 对字符串切片进行去重
+func StringUniq(tmp []string) []string {
+	var tmpMap = make(map[string]bool)
+	var result []string
+	for _, item := range tmp {
+		if tmpMap[item] {
+			continue
+		}
+		result = append(result, item)
+		tmpMap[item] = true
+	}
+	return result
+}
+
+// CreateSignature 带有 密钥的 sha1 hash
+func CreateSignature(s, key string) string {
+	h := hmac.New(sha1.New, []byte(key))
+	h.Write([]byte(s))
+
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
+
+// ByteFormat 字节格式化
+func ByteFormat(s int) string {
+	var (
+		p      float64
+		format = ` Bytes`
+		swap   = float64(s)
+	)
+	if s <= 1 {
+		return "-"
+	} else if s > 0 && s < 1024 {
+		return strconv.Itoa(s) + format
+	} else if s >= 1024 && swap < math.Pow(1024, 2) {
+		p = 1
+		format = ` KB`
+	} else if swap >= math.Pow(1024, 2) && float64(s) < math.Pow(1024, 3) {
+		p = 2
+		format = ` MB`
+	} else if swap >= math.Pow(1024, 3) && float64(s) < math.Pow(1024, 4) {
+		p = 3
+		format = ` GB`
+	} else if swap >= math.Pow(1024, 4) && float64(s) < math.Pow(1024, 5) {
+		p = 4
+		format = ` TB`
+	}
+	return fmt.Sprintf("%.2f%s", swap/math.Pow(1024, p), format)
+}
+
+// MapDeepCopy map 深拷贝
+func MapDeepCopy(src map[string]interface{}) map[string]interface{} {
+	byt, _ := json.Marshal(src)
+	var _tmp = new(map[string]interface{})
+	_ = json.Unmarshal(byt, _tmp)
+	return *_tmp
 }
 
 // SearchIntSlice 在整数切片中搜索指定的元素，并返回是否找到。

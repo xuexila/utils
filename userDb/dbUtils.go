@@ -60,6 +60,10 @@ func CloseDb(conn *sql.DB) {
 }
 
 func CloseMysqlRows(rows *sql.Rows) {
+	CloseRows(rows)
+}
+
+func CloseRows(rows *sql.Rows) {
 	if rows != nil {
 		_ = rows.Close()
 	}
