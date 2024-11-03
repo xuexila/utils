@@ -236,6 +236,7 @@ func (this *HttpServer) hotUpdate(server *http.Server) {
 		go func() {
 			hash := this.hash()
 			tck := time.NewTicker(1 * time.Second)
+			defer tck.Stop()
 			for range tck.C {
 				if hash == this.hash() {
 					continue
