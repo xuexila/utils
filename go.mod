@@ -15,6 +15,7 @@ require (
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/tjfoc/gmsm v1.4.1
+	github.com/xdg-go/scram v1.1.2
 	github.com/xuri/excelize/v2 v2.8.1
 	golang.org/x/crypto v0.25.0
 	golang.org/x/net v0.27.0
@@ -64,6 +65,8 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
+	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53 // indirect
 	github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
