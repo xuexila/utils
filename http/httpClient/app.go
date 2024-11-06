@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"github.com/helays/utils/close/gzipClose"
 	"github.com/helays/utils/close/httpClose"
 	"github.com/helays/utils/http/httpTools"
 	"gopkg.in/iconv.v1"
@@ -163,7 +164,7 @@ func (c *Curl) Run(url string) (*Curlresult, error) {
 	if err != nil {
 		return re, err
 	}
-	defer read.Close()
+	defer gzipClose.Close(read)
 	body, err := c.readBody(read)
 	if err != nil {
 		return re, err
