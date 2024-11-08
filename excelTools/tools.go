@@ -73,7 +73,7 @@ func ReadExcelRow(excelFile *excelize.File, sheetName []string, sheetIndex []int
 				if i >= fieldLen {
 					break
 				}
-				tmp[fieldRows[i]] = cell
+				tmp[strings.TrimSpace(fieldRows[i])] = strings.TrimSpace(cell)
 			}
 			if err = call(sheet, tmp); err != nil {
 				errs = append(errs, fmt.Sprintf("sheet%s第%d行数据处理失败: %v", sheet, idx+1, err))
