@@ -575,6 +575,14 @@ func AnySlice2Str(slice []any, _sep ...string) string {
 	return builder.String()
 }
 
+// Struct2Map 将结构体转换为map
+func Struct2Map(src any) map[string]any {
+	var _map map[string]any
+	byt, _ := json.Marshal(src)
+	_ = json.Unmarshal(byt, &_map)
+	return _map
+}
+
 // Map2Struct 将map转换为结构体
 // dst 需要传入一个变量的指针
 func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst any, src map[string]any) error) error {
