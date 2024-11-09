@@ -13,7 +13,7 @@ import (
 func SignalHandle(funds ...func()) {
 	exitsin := make(chan os.Signal)
 	signal.Notify(exitsin, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // 注意，syscall.SIGKILL 不能被捕获
-	ulogs.Log("退出信号", <-exitsin)                                                         // 日志记录
+	ulogs.Log("退出信号", <-exitsin)                                                             // 日志记录
 	ulogs.Log("执行回调", "数量", len(funds))
 	for _, f := range funds {
 		if f == nil {
