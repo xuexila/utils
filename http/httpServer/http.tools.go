@@ -227,6 +227,10 @@ func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
 	if err != nil {
 		SetReturnError(w, r, err, http.StatusForbidden, "模板下载失败")
 	}
+	// 设置响应头
+	mimeType, _ := mime.GetFilePathMimeType(file)
+	w.Header().Set("Content-Type", mimeType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filepath.Base(file)))
 	_, _ = io.Copy(w, f)
 }
 
