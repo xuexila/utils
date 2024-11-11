@@ -2,6 +2,7 @@ package loadJson
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/helays/utils/close/osClose"
 	"github.com/helays/utils/config"
 	"github.com/helays/utils/tools"
@@ -10,9 +11,15 @@ import (
 )
 
 func LoadJson(i any) {
+	ulogs.DieCheckerr(LoadJsonBase(i), "解析配置文件失败")
+}
+
+func LoadJsonBase(i any) error {
 	reader, err := os.Open(tools.Fileabs(config.Cpath))
 	defer osClose.CloseFile(reader)
-	ulogs.DieCheckerr(err, "打开配置文件失败")
+	if err != nil {
+		return fmt.Errorf("打开配置文件失败：%s", err.Error())
+	}
 	y := json.NewDecoder(reader)
-	ulogs.DieCheckerr(y.Decode(i), "解析配置文件失败")
+	return y.Decode(i)
 }

@@ -5,12 +5,13 @@ import (
 	"github.com/helays/utils/tools"
 	"github.com/helays/utils/ulogs"
 	"gopkg.in/ini.v1"
-	"os"
 )
 
 func LoadIni(i any) {
-	if err := ini.MapTo(i, tools.Fileabs(config.Cpath)); err != nil {
-		ulogs.Error("载入配置文件错误", err.Error())
-		os.Exit(1)
-	}
+	ulogs.DieCheckerr(LoadIniBase(i), "载入配置文件失败")
+}
+
+// LoadIniBase 载入配置基础功能
+func LoadIniBase(i any) error {
+	return ini.MapTo(i, tools.Fileabs(config.Cpath))
 }

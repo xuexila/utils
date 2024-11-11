@@ -1,6 +1,7 @@
 package loadYaml
 
 import (
+	"fmt"
 	"github.com/helays/utils/close/osClose"
 	"github.com/helays/utils/config"
 	"github.com/helays/utils/tools"
@@ -10,9 +11,15 @@ import (
 )
 
 func LoadYaml(i any) {
+	ulogs.DieCheckerr(LoadYamlBase(i), "解析配置文件失败")
+}
+
+func LoadYamlBase(i any) error {
 	reader, err := os.Open(tools.Fileabs(config.Cpath))
 	defer osClose.CloseFile(reader)
-	ulogs.DieCheckerr(err, "打开配置文件失败")
+	if err != nil {
+		return fmt.Errorf("打开配置文件失败：%s", err.Error())
+	}
 	y := yaml.NewDecoder(reader)
-	ulogs.DieCheckerr(y.Decode(i), "解析配置文件失败")
+	return y.Decode(i)
 }
