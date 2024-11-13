@@ -2,6 +2,7 @@ package httpServer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/helays/utils/close/osClose"
 	"github.com/helays/utils/http/mime"
@@ -302,4 +303,39 @@ func Getip(r *http.Request) string {
 		remoteAddr = "127.0.0.1"
 	}
 	return remoteAddr
+}
+
+// flushingWriter 是一个带有自动 Flush 的 io.Writer
+type flushingWriter struct {
+	w       io.Writer
+	flusher http.Flusher
+}
+
+func (fw *flushingWriter) Write(p []byte) (int, error) {
+	n, err := fw.w.Write(p)
+	if err != nil {
+		return n, err
+	}
+	fw.flusher.Flush()
+	return n, nil
+}
+
+// Copy 复制数据，并自动刷新
+func Copy(dst io.Writer, src io.Reader) (written int64, err error) {
+	// 使用 Flusher 确保数据及时发送
+	flusher, ok := dst.(http.Flusher)
+	if !ok {
+		return 0, errors.New("Streaming unsupported!")
+	}
+	return io.Copy(&flushingWriter{w: dst, flusher: flusher}, src)
+}
+
+// CopyBuffer 复制数据，并自动刷新
+func CopyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err error) {
+	// 使用 Flusher 确保数据及时发送
+	flusher, ok := dst.(http.Flusher)
+	if !ok {
+		return 0, errors.New("Streaming unsupported!")
+	}
+	return io.CopyBuffer(&flushingWriter{w: dst, flusher: flusher}, src, buf)
 }
