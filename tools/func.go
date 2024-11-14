@@ -843,3 +843,12 @@ func RunAsyncFunc(enable bool, f func()) {
 		go f()
 	}
 }
+
+// ReverseMapUnique 反转值唯一的 map
+func ReverseMapUnique[K comparable, V comparable](m map[K]V) map[V]K {
+	reversed := make(map[V]K)
+	for k, v := range m {
+		reversed[v] = k
+	}
+	return reversed
+}
