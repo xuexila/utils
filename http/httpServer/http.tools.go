@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/helays/utils/close/osClose"
+	"github.com/helays/utils/http/httpTools"
 	"github.com/helays/utils/http/mime"
 	"github.com/helays/utils/tools"
 	"github.com/helays/utils/ulogs"
@@ -12,7 +13,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -234,10 +234,7 @@ func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
 	w.Header().Set("Content-Type", mimeType)
 	// 对文件名进行URL转义，以支持中文等非ASCII字符
 	fileName := filepath.Base(file)
-	encodedFileName := url.QueryEscape(fileName)
-	// 设置Content-Disposition头部，使用RFC5987兼容的方式指定文件名
-	contentDisposition := fmt.Sprintf("attachment; filename=\"%s\"; filename*=UTF-8''%s", encodedFileName, encodedFileName)
-	w.Header().Set("Content-Disposition", contentDisposition)
+	httpTools.SetDisposition(w, fileName)
 	_, _ = io.Copy(w, f)
 }
 
