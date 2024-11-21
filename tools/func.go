@@ -742,9 +742,23 @@ func Any2bytes(v any) ([]byte, error) {
 		return v, nil
 	case string:
 		return []byte(v), nil
+	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		b, _ := json.Marshal(v)
+		return b, nil
 	default:
-		return nil, fmt.Errorf("无法将类型 %T 转换为 []byte", v)
+		// 尝试使用 JSON 序列化其他类型
+		b, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("无法将类型 %T 转换为 []byte: %w", v, err)
+		}
+		return b, nil
 	}
+}
+
+// Any2Byte 将任意类型转换为字节数组
+func Any2Byte(src any) []byte {
+	b, _ := json.Marshal(src)
+	return b
 }
 
 // GetIpVersion 解析ip地址，确认ip版本
@@ -807,12 +821,6 @@ func Slice2MapWithHeader(rows any, header []string) map[string]any {
 		tmp[header[i]] = rowsValue.Index(i).Interface()
 	}
 	return tmp
-}
-
-// Any2Byte 将任意类型转换为字节数组
-func Any2Byte(src any) []byte {
-	b, _ := json.Marshal(src)
-	return b
 }
 
 // Any2Reader 将任意类型转换为 io.Reader
