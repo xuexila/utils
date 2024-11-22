@@ -54,6 +54,7 @@ func Paginate(r *http.Request, pageField, pageSizeField string, pageSize int) fu
 		if limit < 1 {
 			limit = pageSize
 		}
+		limit = tools.Ternary(limit < 1, 30, limit)
 		tx := db
 		if r.URL.Query().Get("rall") != "1" {
 			tx.Offset((page - 1) * limit).Limit(limit)
