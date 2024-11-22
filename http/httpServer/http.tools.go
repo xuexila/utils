@@ -344,3 +344,15 @@ func CopyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err er
 	}
 	return io.CopyBuffer(&flushingWriter{w: dst, flusher: flusher}, src, buf)
 }
+
+// JsonDecode 解析json数据
+func JsonDecode[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
+	var postData T
+	jd := json.NewDecoder(r.Body)
+	err := jd.Decode(&postData)
+	if err != nil && !errors.Is(err, io.EOF) {
+		SetReturnError(w, r, err, http.StatusInternalServerError, "参数解析失败", tools.MustStringReader(jd.Buffered()))
+		return postData, false
+	}
+	return postData, true
+}
