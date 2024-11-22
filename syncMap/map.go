@@ -120,9 +120,9 @@ func (sm *Map[K, V]) Store(key K, value V) error {
 }
 
 // Delete 删除键对应的值
-func (sm *Map[K, V]) Delete(key K) error {
+func (sm *Map[K, V]) Delete(key K) {
 	if err := sm.checkClosed(); err != nil {
-		return err
+		return
 	}
 	seg := sm.segments[sm.hash(key)]
 	seg.mu.Lock()
@@ -134,7 +134,6 @@ func (sm *Map[K, V]) Delete(key K) error {
 		seg.cleaner.mu.Unlock()
 	}
 	delete(seg.m, key)
-	return nil
 }
 
 // initCleaner 初始化 cleaner，确保线程安全
