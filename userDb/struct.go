@@ -11,5 +11,5 @@ type Dbbase struct {
 	Dbname       string               `ini:"dbname" yaml:"dbname" json:"dbname" gorm:"type:varchar(128);not null;comment:默认连接的库"`
 	MaxIdleConns int                  `ini:"max_idle_conns" yaml:"maxIdleConns" json:"maxIdleConns" gorm:"type:int;not null;default:2;comment:最大空闲连接数"`
 	MaxOpenConns int                  `ini:"max_open_conns" yaml:"maxOpenConns" json:"maxOpenConns" gorm:"type:int;not null;default:10;comment:最大连接数"`
-	Remark       string               `ini:"remark" yaml:"remark" json:"remark" gorm:"type:varchar(256);not null;default:'';comment:备注信息"`
+	Remark       string               `ini:"remark" yaml:"remark" json:"remark" gorm:"type:varchar(256);not null;uniqueIndex;comment:备注信息，只能唯一"`
 }
