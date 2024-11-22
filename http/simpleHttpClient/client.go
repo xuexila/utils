@@ -1,4 +1,4 @@
-package sampleHttpClient
+package simpleHttpClient
 
 import (
 	"context"

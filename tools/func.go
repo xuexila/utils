@@ -852,6 +852,24 @@ func RunAsyncFunc(enable bool, f func()) {
 	}
 }
 
+// RunAsyncTickerFunc 异步运行，并定时执行
+func RunAsyncTickerFunc(enable bool, d time.Duration, f func(), runFirst ...bool) {
+	if !enable {
+		return
+	}
+	if len(runFirst) < 1 || runFirst[0] {
+		f()
+	}
+	go func() {
+		tck := time.NewTicker(d)
+		defer tck.Stop()
+		for range tck.C {
+			f()
+		}
+	}()
+
+}
+
 // ReverseMapUnique 反转值唯一的 map
 func ReverseMapUnique[K comparable, V comparable](m map[K]V) map[V]K {
 	reversed := make(map[V]K)
