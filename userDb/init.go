@@ -2,6 +2,7 @@ package userDb
 
 import (
 	"errors"
+	"github.com/helays/utils/tools"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -50,15 +51,9 @@ func InitDb(c Dbbase) (*gorm.DB, error) {
 		CloseGormDb(_db)
 		return nil, err
 	}
-	if c.MaxIdleConns < 1 {
-		c.MaxIdleConns = 20
-	}
-	if c.MaxOpenConns < 1 {
-		c.MaxOpenConns = 100
-	}
-	_sqlDb.SetMaxIdleConns(c.MaxIdleConns) // 设置连接池中空闲连接的最大数量
-	_sqlDb.SetMaxOpenConns(c.MaxOpenConns) // 设置打开数据库连接的最大数量
-	_sqlDb.SetConnMaxIdleTime(time.Hour)   // 连接空闲1小时候将失效
+	_sqlDb.SetMaxIdleConns(tools.Ternary(c.MaxIdleConns < 1, 2, c.MaxIdleConns)) // 设置连接池中空闲连接的最大数量
+	_sqlDb.SetMaxOpenConns(tools.Ternary(c.MaxOpenConns < 1, 5, c.MaxOpenConns)) // 设置打开数据库连接的最大数量
+	_sqlDb.SetConnMaxIdleTime(time.Hour)                                         // 连接空闲1小时候将失效
 	return _db, nil
 }
 
