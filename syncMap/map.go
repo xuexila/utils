@@ -144,12 +144,20 @@ func (seg *segment[K, V]) initCleaner() {
 
 // clean 清理已删除的条目
 func (seg *segment[K, V]) clean() {
+	if seg.cleaner == nil {
+		return // 或者返回一个错误
+	}
+
 	seg.cleaner.mu.Lock()
 	pending := make(map[K]struct{})
 	for k := range seg.cleaner.pending {
 		pending[k] = struct{}{}
 	}
 	seg.cleaner.mu.Unlock()
+
+	if seg.m == nil {
+		return // 或者返回一个错误
+	}
 
 	seg.mu.RLock()
 	for key := range pending {

@@ -163,6 +163,14 @@ func RespJson(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
+func SetReturnCheckErr(w http.ResponseWriter, r *http.Request, err error, msg any, data ...any) {
+	if err == nil {
+		SetReturnData(w, 0, "成功", data...)
+		return
+	}
+	SetReturnError(w, r, err, 500, msg)
+}
+
 func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
 	w.Header().Set("Content-Type", "application/json")
 	if code == 0 || code == 200 {
