@@ -39,7 +39,6 @@ import (
 //
 
 func (this SqlFilter) RunSql(w http.ResponseWriter, r *http.Request, inputTx *gorm.DB) {
-
 	if this.Sql == "" {
 		httpServer.SetReturnCode(w, r, 500, "无可执行sql")
 		return
