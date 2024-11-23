@@ -1,8 +1,9 @@
-package SqlCraft
+package sqlCraft
 
 import (
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
+	"fmt"
+	"regexp"
+	"strings"
 )
 
 //
@@ -29,41 +30,22 @@ import (
 //
 //
 // User helay
-// Date: 2024/11/23 16:03
+// Date: 2024/11/23 14:50
 //
 
-// 设置 模式
-func (this SqlFilter) setSchema(tx *gorm.DB) error {
-	var err error
-	if this.Schema != "" {
-		err = tx.Exec("set search_path To ?;", clause.Table{
-			Name: this.Schema,
-			Raw:  false,
-		}).Error
-		if err != nil {
-			return err
-		}
+var (
+	fieldAliasRegex  = regexp.MustCompile(`(\w+?)\.`)
+	reservedFieldMap = map[string]bool{
+		"GROUP": true,
 	}
-	return nil
-}
+)
 
-// TableName 设置表名
-func (this SqlFilter) TableName(inputTx *gorm.DB) (*gorm.DB, error) {
-	newSession := inputTx.Session(&gorm.Session{NewDB: true})
-	err := this.setSchema(newSession)
-	if err != nil {
-		return nil, err
+// 如果有 。号，。号前面的字符串需要加双引号
+func fieldAliasAddQuota(field string, arg string) string {
+
+	field = fieldAliasRegex.ReplaceAllString(field, fmt.Sprintf(`%s$1%s.`, arg, arg))
+	if reservedFieldMap[strings.ToUpper(field)] {
+		field = fmt.Sprintf(`%s%s%s`, arg, field, arg)
 	}
-	if this.Debug {
-		return newSession.Debug().Table("?", clause.Table{
-			Name:  this.Table,
-			Alias: this.Alias,
-			Raw:   false,
-		}), nil
-	}
-	return newSession.Table("?", clause.Table{
-		Name:  this.Table,
-		Alias: this.Alias,
-		Raw:   false,
-	}), nil
+	return field
 }

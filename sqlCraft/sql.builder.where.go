@@ -1,4 +1,4 @@
-package SqlCraft
+package sqlCraft
 
 import (
 	"fmt"
