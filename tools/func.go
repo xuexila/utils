@@ -847,7 +847,7 @@ func RunSyncFunc(enable bool, f func()) {
 
 // RunAsyncFunc 异步运行
 func RunAsyncFunc(enable bool, f func()) {
-	if enable {
+	if enable && f != nil {
 		go f()
 	}
 }
@@ -855,6 +855,9 @@ func RunAsyncFunc(enable bool, f func()) {
 // RunAsyncTickerFunc 异步运行，并定时执行
 func RunAsyncTickerFunc(enable bool, d time.Duration, f func(), runFirst ...bool) {
 	if !enable {
+		return
+	}
+	if f == nil {
 		return
 	}
 	if len(runFirst) < 1 || runFirst[0] {
