@@ -25,3 +25,15 @@ func CloseKafkaConsumer(consumer sarama.Consumer) {
 		ulogs.Checkerr(consumer.Close(), "CloseKafkaConsumer 执行失败")
 	}
 }
+
+func CloseKafkaSyncProducer(producer sarama.SyncProducer) {
+	if producer != nil {
+		ulogs.Checkerr(producer.Close(), "CloseKafkaProducer 执行失败")
+	}
+}
+
+func CloseKafkaAsyncProducer(producer sarama.AsyncProducer) {
+	if producer != nil {
+		ulogs.Checkerr(producer.Close(), "CloseKafkaAsyncProducer 执行失败")
+	}
+}
