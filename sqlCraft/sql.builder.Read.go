@@ -36,7 +36,7 @@ import (
 //
 
 func (this SqlFilter) Builder(inputTx *gorm.DB) (*gorm.DB, error) {
-	newSession, err := this.NewDb(inputTx)
+	newSession, err := newDb(inputTx, this.Schema)
 	if err != nil {
 		return nil, err
 	}

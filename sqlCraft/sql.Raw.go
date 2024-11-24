@@ -43,7 +43,7 @@ func (this SqlFilter) RunSql(w http.ResponseWriter, r *http.Request, inputTx *go
 		httpServer.SetReturnCode(w, r, 500, "无可执行sql")
 		return
 	}
-	uTx, err := this.NewDb(inputTx)
+	uTx, err := newDb(inputTx, this.Schema)
 	if err != nil {
 		httpServer.SetReturnError(w, r, err, 500, "数据库复制失败")
 		return

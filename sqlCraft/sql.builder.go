@@ -65,30 +65,6 @@ type whereStruct struct {
 	Conditions []whereStruct `json:"conditions"`
 }
 
-// NewDb 克隆 一个事务
-func (this SqlFilter) NewDb(inputTx *gorm.DB) (*gorm.DB, error) {
-	newSession := inputTx.Session(&gorm.Session{NewDB: true})
-	err := this.setSchema(newSession)
-	if err != nil {
-		return newSession, err
-	}
-	return newSession, nil
-}
-
-// 设置 模式
-func (this SqlFilter) setSchema(tx *gorm.DB) error {
-	if this.Schema != "" {
-		switch tx.Dialector.Name() {
-		case "postgres":
-			return tx.Exec("set search_path To ?;", clause.Table{
-				Name: this.Schema,
-				Raw:  false,
-			}).Error
-		}
-	}
-	return nil
-}
-
 // TableName 设置表名
 func (this SqlFilter) TableName(inputTx *gorm.DB) *gorm.DB {
 	if this.Debug {

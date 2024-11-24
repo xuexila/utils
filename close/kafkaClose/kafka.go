@@ -34,6 +34,6 @@ func CloseKafkaSyncProducer(producer sarama.SyncProducer) {
 
 func CloseKafkaAsyncProducer(producer sarama.AsyncProducer) {
 	if producer != nil {
-		ulogs.Checkerr(producer.Close(), "CloseKafkaAsyncProducer 执行失败")
+		producer.AsyncClose()
 	}
 }
