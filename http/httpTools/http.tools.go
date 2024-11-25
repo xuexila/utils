@@ -2,6 +2,7 @@ package httpTools
 
 import (
 	"fmt"
+	"github.com/helays/utils/tools"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,6 +16,12 @@ func QueryGetSlice(r *http.Request, key string, step string) []string {
 		return nil
 	}
 	return strings.Split(v, step)
+}
+
+// QueryGet 获取query参数，如果值不存在就设置默认值
+func QueryGet(query url.Values, k, dfValue string) string {
+	v := query.Get(k)
+	return tools.Ternary(v == "", dfValue, v)
 }
 
 // SetDisposition 文件下载时候，设置中文文件名

@@ -6,6 +6,7 @@ import (
 	"github.com/helays/utils/http/httpServer"
 	"github.com/helays/utils/tools"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"net/http"
 	"strings"
 )
@@ -41,10 +42,12 @@ import (
 type DataWrite struct {
 	Debug  bool   `json:"-"`      // 是否调试模式
 	Remark string `json:"remark"` // 数据库唯一标识
-	Mode   string `json:"mode"`   // sync 同步模式 async 异步模式
 	// 数据库相关
-	Table  string `json:"table"`  // 表名
-	Schema string `json:"schema"` // 表模式
+	Table  string   `json:"table"`  // 表名
+	Schema string   `json:"schema"` // 表模式
+	Upsert bool     `json:"upsert"`
+	Column []string `json:"column"`
+
 	// topic
 	Topic  string            `json:"topic"`  // topic
 	Key    string            `json:"key"`    // 消息key
@@ -81,6 +84,29 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 		httpServer.SetReturnError(w, r, err, 500, "数据库复制失败")
 		return
 	}
+	if this.Upsert {
+		var (
+			onColumns []clause.Column
+			doUpdate  []string
+		)
+		for key, _ := range saveData[0] {
+			doUpdate = append(doUpdate, key)
+		}
+		for _, v := range this.Column {
+			onColumns = append(onColumns, clause.Column{Name: v})
+		}
+		err = uTx.Clauses(clause.OnConflict{
+			Columns:   onColumns,
+			DoUpdates: clause.AssignmentColumns(doUpdate),
+		}).Table(this.Table).CreateInBatches(saveData, 1000).Error
+		if err != nil {
+			httpServer.SetReturnError(w, r, err, 500, "数据写入失败")
+			return
+		}
+		httpServer.SetReturnCode(w, r, 0, "数据写入成功", uTx.RowsAffected)
+		return
+	}
+
 	err = uTx.Table(this.Table).CreateInBatches(&saveData, 1000).Error
 	if err != nil {
 		httpServer.SetReturnError(w, r, err, 500, "数据写入失败")

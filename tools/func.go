@@ -786,15 +786,6 @@ func Str2StrSlice(values string) ([]string, error) {
 	return slice, nil
 }
 
-// QueryGet 获取url参数，如果为空则返回默认值
-func QueryGet(query url2.Values, k, dv string) string {
-	_v := query.Get(k)
-	if _v == "" {
-		_v = dv
-	}
-	return _v
-}
-
 // Slice2MapWithHeader 主要是将excel 或者 csv的每一行转为map，键为header，值为cell
 func Slice2MapWithHeader(rows any, header []string) map[string]any {
 	// 获取 rows 的反射值
