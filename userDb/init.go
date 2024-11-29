@@ -2,31 +2,61 @@ package userDb
 
 import (
 	"errors"
+	"fmt"
 	"github.com/helays/utils/tools"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"net/url"
 	"strings"
 	"time"
 )
 
+func (this Dbbase) Dsn() string {
+	dsn := url.URL{
+		User: url.UserPassword(this.User, this.Pwd),
+		Host: strings.Join(this.Host, ","),
+		Path: this.Dbname,
+	}
+	query := dsn.Query()
+	switch this.DbType {
+	case "pg":
+		dsn.Scheme = "postgres"
+		query.Set("TimeZone", "Asia/Shanghai")
+		if this.Schema != "" {
+			query.Set("search_path", this.Schema)
+		}
+	case "mysql":
+		//dsn.Scheme = "mysql" // mysql 不需要这个
+		dsn.Host = fmt.Sprintf("tcp(%s)", dsn.Host)
+		query.Set("charset", "utf8mb4")
+		query.Set("parseTime", "True")
+		query.Set("loc", "Local")
+	}
+	dsn.RawQuery = query.Encode()
+	return dsn.String()
+}
+
 // InitDb 连接数据库
 func InitDb(c Dbbase) (*gorm.DB, error) {
 	var (
-		dsn       string
+		dsn       = c.Dsn()
 		dialector gorm.Dialector
 	)
 	switch c.DbType {
 	case "pg":
 		//postgres://user:password@host1:port1,host2:port2/database?target_session_attrs=read-write&TimeZone=Asia/Shanghai
-		dsn = "postgres://" + c.User + ":" + c.Pwd + "@" + strings.Join(c.Host, ",") + "/" + c.Dbname + "?TimeZone=Asia/Shanghai"
+		//dsn = "postgres://" + c.User + ":" + c.Pwd + "@" + strings.Join(c.Host, ",") + "/" + c.Dbname + "?TimeZone=Asia/Shanghai"
 		dialector = postgres.New(postgres.Config{
 			DSN:                  dsn,
 			PreferSimpleProtocol: true,
 		})
 	case "mysql":
-		dsn = c.User + ":" + c.Pwd + "@tcp(" + strings.Join(c.Host, ",") + ")/" + c.Dbname + "?charset=utf8mb4&parseTime=True&loc=Local"
+		dsn = strings.TrimLeft(dsn, "//")
+		//fmt.Println(dsn)
+		//dsn = c.User + ":" + c.Pwd + "@tcp(" + strings.Join(c.Host, ",") + ")/" + c.Dbname + "?charset=utf8mb4&parseTime=True&loc=Local"
+		//fmt.Println(dsn)
 		dialector = mysql.New(mysql.Config{
 			DSN:                       dsn,
 			DefaultStringSize:         256,   // string 类型字段的默认长度

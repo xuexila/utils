@@ -14,6 +14,7 @@ type Dbbase struct {
 
 	// 这部分是数据库独有
 	Dbname       string `ini:"dbname" yaml:"dbname" json:"dbname" gorm:"type:varchar(128);not null;index;default:'';comment:默认连接的库"`
+	Schema       string `ini:"schema" yaml:"schema" json:"schema" gorm:"type:varchar(128);not null;default:'';comment:数据库模式"`
 	MaxIdleConns int    `ini:"max_idle_conns" yaml:"max_idle_conns" json:"max_idle_conns" gorm:"type:int;not null;default:2;comment:最大空闲连接数"`
 	MaxOpenConns int    `ini:"max_open_conns" yaml:"max_open_conns" json:"max_open_conns" gorm:"type:int;not null;default:10;comment:最大连接数"`
 
