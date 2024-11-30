@@ -64,5 +64,3 @@ type LoginInfo struct {
 	RsaPrivateKey []byte    //ras 私钥
 	RsaPublickKey []byte    // rsa 公钥
 }
-
-type resp map[string]any

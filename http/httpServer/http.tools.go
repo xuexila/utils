@@ -171,35 +171,6 @@ func SetReturnCheckErr(w http.ResponseWriter, r *http.Request, err error, msg an
 	SetReturnError(w, r, err, 500, msg)
 }
 
-func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
-	w.Header().Set("Content-Type", "application/json")
-	if code == 0 || code == 200 {
-		w.WriteHeader(200)
-	} else {
-		w.WriteHeader(code)
-		ReqError(r, code, msg)
-	}
-
-	if _, ok := msg.(error); ok {
-		if len(data) > 0 && reflect.TypeOf(data[0]).String() == "bool" && !data[0].(bool) {
-			msg = "系统处理失败"
-		} else {
-			msg = msg.(error).Error()
-		}
-	}
-	resp := map[string]interface{}{
-		"code": code,
-		"msg":  msg,
-	}
-	if len(data) > 0 {
-		resp["data"] = data
-		if len(data) == 1 {
-			resp["data"] = data[0]
-		}
-	}
-	ulogs.Checkerr(json.NewEncoder(w).Encode(resp), "SetReturnCode")
-}
-
 // SetReturn 设置 返回函数Play
 func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -216,16 +187,42 @@ func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 	}), "SetReturn")
 }
 
+// SetReturnCode 设置返回函数Play
+func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
+	if code != 0 && code != 200 {
+		ReqError(r, code, msg)
+	}
+	if _, ok := msg.(error); ok {
+		if len(data) > 0 && reflect.TypeOf(data[0]).String() == "bool" && !data[0].(bool) {
+			msg = "系统处理失败"
+		} else {
+			msg = msg.(error).Error()
+		}
+	}
+	SetReturnData(w, code, msg, data...)
+}
+
+type resp struct {
+	Code int `json:"code"`
+	Msg  any `json:"msg"`
+	Data any `json:"data,omitempty"`
+}
+
 func SetReturnData(w http.ResponseWriter, code int, msg any, data ...any) {
+	if code == 0 || code == 200 {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(code)
+	}
 	RespJson(w)
 	r := resp{
-		"code": code,
-		"msg":  msg,
+		Code: code,
+		Msg:  msg,
 	}
 	if len(data) == 1 {
-		r["data"] = data[0]
+		r.Data = data[0]
 	} else if len(data) > 1 {
-		r["data"] = data
+		r.Data = data
 	}
 	ulogs.Checkerr(json.NewEncoder(w).Encode(r), "SetReturnData")
 }
