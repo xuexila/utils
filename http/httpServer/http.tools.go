@@ -219,7 +219,6 @@ func SetReturnData(w http.ResponseWriter, code int, msg any, data ...any) {
 		Code: code,
 		Msg:  msg,
 	}
-	fmt.Println(msg)
 	if len(data) == 1 {
 		r.Data = data[0]
 	} else if len(data) > 1 {
