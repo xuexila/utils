@@ -3,6 +3,7 @@ package httpServer
 import (
 	"golang.org/x/net/websocket"
 	"net/http"
+	"regexp"
 	"time"
 )
 
@@ -37,12 +38,17 @@ type Router struct {
 	CookieSecure           bool   `ini:"cookie_secure" json:"cookie_secure" yaml:"cookie_secure"`
 	CookieHttpOnly         bool   `ini:"cookie_http_only" json:"cookie_http_only" yaml:"cookie_http_only"`
 
-	IsLogin          bool            // 是否登录
-	LoginPath        string          // 登录页面
-	HomePage         string          //首页
-	MustLoginPath    map[string]bool //必须登录才能访问的页面
-	DisableLoginPath map[string]bool // 登录状态下不能访问的页面
-	ManagePage       map[string]bool // 管理员访问
+	IsLogin                bool             // 是否登录
+	LoginPath              string           // 登录页面
+	HomePage               string           //首页
+	UnLoginPath            map[string]bool  // 免授权页面
+	UnLoginPathRegexp      []*regexp.Regexp // 免授权页面正则
+	MustLoginPath          map[string]bool  //必须登录才能访问的页面
+	MustLoginPathRegexp    []*regexp.Regexp // 必须登录才能访问的页面正则
+	DisableLoginPath       map[string]bool  // 登录状态下不能访问的页面
+	DisableLoginPathRegexp []*regexp.Regexp // 登录状态下不能访问的页面正则
+	ManagePage             map[string]bool  // 管理员访问
+	ManagePageRegexp       []*regexp.Regexp
 }
 
 // LoginInfo 登录信息
