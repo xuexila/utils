@@ -160,7 +160,7 @@ func ReqError(r *http.Request, i ...any) {
 }
 
 func RespJson(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 }
 
 func SetReturnCheckErr(w http.ResponseWriter, r *http.Request, err error, msg any, data ...any) {
@@ -209,16 +209,17 @@ type resp struct {
 }
 
 func SetReturnData(w http.ResponseWriter, code int, msg any, data ...any) {
+	RespJson(w)
 	if code == 0 || code == 200 {
 		w.WriteHeader(200)
 	} else {
 		w.WriteHeader(code)
 	}
-	RespJson(w)
 	r := resp{
 		Code: code,
 		Msg:  msg,
 	}
+	fmt.Println(msg)
 	if len(data) == 1 {
 		r.Data = data[0]
 	} else if len(data) > 1 {
