@@ -268,7 +268,6 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 
 // SetReturnWithoutError，错误信息会记录下来，但是只会反馈msg
 func SetReturnWithoutError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
-	ReqError(r, append([]any{err}, msg...)...)
 	if len(msg) < 1 {
 		msg = []any{"数据处理失败"}
 	}
