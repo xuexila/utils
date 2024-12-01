@@ -31,7 +31,7 @@ type Router struct {
 	Root                   string `ini:"root" json:"root" yaml:"root"`
 	HttpCache              bool   `ini:"http_cache" json:"http_cache" yaml:"http_cache"`
 	HttpCacheMaxAge        string `ini:"http_cache_max_age" json:"http_cache_max_age" yaml:"http_cache_max_age"`
-	UnauthorizedRespMethod int    `ini:"unauthorized_resp_method"` // 未登录响应方法 默认为 401，302 表示自动重定向到登录页面
+	UnauthorizedRespMethod int    `ini:"unauthorized_resp_method" json:"unauthorized_resp_method" yaml:"unauthorized_resp_method"` // 未登录响应方法 默认为 401，302 表示自动重定向到登录页面
 	SessionId              string `ini:"session_id" json:"session_id" yaml:"session_id"`
 	CookiePath             string `ini:"cookie_path" json:"cookie_path" yaml:"cookie_path"`
 	CookieDomain           string `ini:"cookie_domain" json:"cookie_domain" yaml:"cookie_domain"`

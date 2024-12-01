@@ -173,7 +173,7 @@ func SetReturnCheckErr(w http.ResponseWriter, r *http.Request, err error, msg an
 
 // SetReturn 设置 返回函数Play
 func SetReturn(w http.ResponseWriter, code int, msg ...any) {
-	w.Header().Set("Content-Type", "application/json")
+	RespJson(w)
 	if len(msg) < 1 {
 		if code == 0 {
 			msg = []any{"成功"}
@@ -187,7 +187,8 @@ func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 	}), "SetReturn")
 }
 
-// SetReturnCode 设置返回函数Play
+// SetReturnCode 设置返回函数
+// code值异常，会记录日志
 func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
 	if code != 0 && code != 200 {
 		ReqError(r, code, msg)
@@ -208,6 +209,8 @@ type resp struct {
 	Data any `json:"data,omitempty"`
 }
 
+// SetReturnData 设置返回函数
+// 如果 code 异常，不想记录日志，就可以直接使用这个
 func SetReturnData(w http.ResponseWriter, code int, msg any, data ...any) {
 	RespJson(w)
 	if code == 0 || code == 200 {
@@ -243,6 +246,7 @@ func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
 	_, _ = io.Copy(w, f)
 }
 
+// 错误信息会记录下来，同时也会反馈给前端
 func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
 	ReqError(r, append([]any{err}, msg...)...)
 	if len(msg) < 1 {
@@ -250,7 +254,25 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 	} else {
 		msg = append(msg, err.Error())
 	}
-	w.Header().Set("Content-Type", "application/json")
+	RespJson(w)
+	if code == 0 || code == 200 {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(code)
+	}
+	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+		"code": code,
+		"msg":  tools.AnySlice2Str(msg),
+	}), "SetReturnError")
+}
+
+// SetReturnWithoutError，错误信息会记录下来，但是只会反馈msg
+func SetReturnWithoutError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
+	ReqError(r, append([]any{err}, msg...)...)
+	if len(msg) < 1 {
+		msg = []any{"数据处理失败"}
+	}
+	RespJson(w)
 	if code == 0 || code == 200 {
 		w.WriteHeader(200)
 	} else {

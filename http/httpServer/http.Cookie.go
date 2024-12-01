@@ -1,12 +1,13 @@
 package httpServer
 
 import (
+	"github.com/helays/utils/tools"
 	"net/http"
 	"time"
 )
 
 func (router Router) SetCookie(w http.ResponseWriter, k, value, path string) {
-
+	path = tools.Ternary(path == "", "/", path)
 	cookie := http.Cookie{
 		Name:       k,
 		Value:      value,

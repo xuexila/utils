@@ -64,7 +64,7 @@ func (this *Router) validMustLogin(path string) bool {
 // 无授权的响应
 func (this *Router) unAuthorizedResp(w http.ResponseWriter, r *http.Request) bool {
 	if this.UnauthorizedRespMethod == 401 {
-		SetReturnCode(w, r, this.UnauthorizedRespMethod, "未登录，请先登录！！")
+		SetReturnData(w, this.UnauthorizedRespMethod, "未登录，请先登录！！")
 		return false
 	}
 	http.Redirect(w, r, this.LoginPath, 302)
