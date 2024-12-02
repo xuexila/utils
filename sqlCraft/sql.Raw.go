@@ -38,18 +38,13 @@ import (
 // Date: 2024/11/23 16:59
 //
 
-func (this SqlFilter) RunSql(w http.ResponseWriter, r *http.Request, inputTx *gorm.DB) {
+func (this SqlFilter) RunSql(w http.ResponseWriter, r *http.Request, tx *gorm.DB) {
 	if this.Sql == "" {
 		httpServer.SetReturnCode(w, r, 500, "无可执行sql")
 		return
 	}
-	uTx, err := newDb(inputTx, this.Schema)
-	if err != nil {
-		httpServer.SetReturnError(w, r, err, 500, "数据库复制失败")
-		return
-	}
 	if this.Type == "exec" {
-		exx := uTx.Exec(this.Sql, this.Args...)
+		exx := tx.Exec(this.Sql, this.Args...)
 		err := exx.Error
 		if err != nil {
 			httpServer.SetReturnError(w, r, err, 500, "执行原生sql失败")
@@ -58,13 +53,13 @@ func (this SqlFilter) RunSql(w http.ResponseWriter, r *http.Request, inputTx *go
 		httpServer.SetReturnCode(w, r, 0, "执行原生sql成功", exx.RowsAffected)
 		return
 	}
-	rows, err := uTx.Raw(this.Sql, this.Args...).Rows()
+	rows, err := tx.Raw(this.Sql, this.Args...).Rows()
 	defer userDb.CloseMysqlRows(rows)
 	if err != nil {
 		httpServer.SetReturnError(w, r, err, 500, "执行原生sql失败")
 		return
 	}
-	this.Response(w, uTx, rows)
+	this.Response(w, tx, rows)
 }
 
 func (this SqlFilter) Response(w http.ResponseWriter, uTx *gorm.DB, rows *sql.Rows) (bool, int) {

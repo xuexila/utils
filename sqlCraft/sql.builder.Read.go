@@ -36,14 +36,10 @@ import (
 //
 
 func (this SqlFilter) Builder(inputTx *gorm.DB) (*gorm.DB, error) {
-	newSession, err := newDb(inputTx, this.Schema)
-	if err != nil {
-		return nil, err
-	}
-	tx := this.TableName(newSession)
+	tx := this.TableName(inputTx)
 	this.SetQuota(inputTx)
 	this._select(tx)
-	if err = this._join(tx); err != nil {
+	if err := this._join(tx); err != nil {
 		return nil, err
 	}
 	this.SetWhere(tx)
