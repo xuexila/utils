@@ -62,7 +62,11 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 		httpServer.SetReturnCode(w, r, 500, "无有效载荷")
 		return
 	}
-	var saveData []map[string]any
+	var (
+		saveData []map[string]any
+		err      error
+	)
+
 	// 判断 Payload是否是数组，如果不是数组，需要转换为数组
 	if _d, ok := this.Payload.(map[string]any); ok {
 		saveData = append(saveData, _d)
@@ -79,11 +83,6 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 	if _, ok := this.Payload.([]any); !ok {
 		this.Payload = []any{this.Payload}
 	}
-	uTx, err := newDb(inputTx, this.Schema)
-	if err != nil {
-		httpServer.SetReturnError(w, r, err, 500, "数据库复制失败")
-		return
-	}
 	if this.Upsert {
 		var (
 			onColumns []clause.Column
@@ -95,7 +94,7 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 		for _, v := range this.Column {
 			onColumns = append(onColumns, clause.Column{Name: v})
 		}
-		err = uTx.Clauses(clause.OnConflict{
+		err = inputTx.Clauses(clause.OnConflict{
 			Columns:   onColumns,
 			DoUpdates: clause.AssignmentColumns(doUpdate),
 		}).Table(this.Table).CreateInBatches(saveData, 1000).Error
@@ -103,16 +102,16 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 			httpServer.SetReturnError(w, r, err, 500, "数据写入失败")
 			return
 		}
-		httpServer.SetReturnCode(w, r, 0, "数据写入成功", uTx.RowsAffected)
+		httpServer.SetReturnCode(w, r, 0, "数据写入成功", inputTx.RowsAffected)
 		return
 	}
 
-	err = uTx.Table(this.Table).CreateInBatches(&saveData, 1000).Error
+	err = inputTx.Table(this.Table).CreateInBatches(&saveData, 1000).Error
 	if err != nil {
 		httpServer.SetReturnError(w, r, err, 500, "数据写入失败")
 		return
 	}
-	httpServer.SetReturnCode(w, r, 0, "数据写入成功", uTx.RowsAffected)
+	httpServer.SetReturnCode(w, r, 0, "数据写入成功", inputTx.RowsAffected)
 }
 
 func (this *DataWrite) Save2Kafka(w http.ResponseWriter, r *http.Request, sd func(msg *sarama.ProducerMessage) error) {
