@@ -59,7 +59,7 @@ type DataWrite struct {
 
 func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *gorm.DB) {
 	if this.Payload == nil {
-		httpServer.SetReturnCode(w, r, 500, "无有效载荷")
+		httpServer.SetReturnData(w, 500, "无有效载荷")
 		return
 	}
 	var (
@@ -77,7 +77,7 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 			}
 		}
 	} else {
-		httpServer.SetReturnCode(w, r, 500, "载荷无法识别入库", this.Payload)
+		httpServer.SetReturnData(w, 500, "载荷无法识别入库", this.Payload)
 		return
 	}
 	if _, ok := this.Payload.([]any); !ok {
@@ -102,7 +102,7 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 			httpServer.SetReturnError(w, r, err, 500, "数据写入失败")
 			return
 		}
-		httpServer.SetReturnCode(w, r, 0, "数据写入成功", inputTx.RowsAffected)
+		httpServer.SetReturnData(w, 0, "数据写入成功", inputTx.RowsAffected)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (this *DataWrite) Save2Db(w http.ResponseWriter, r *http.Request, inputTx *
 		httpServer.SetReturnError(w, r, err, 500, "数据写入失败")
 		return
 	}
-	httpServer.SetReturnCode(w, r, 0, "数据写入成功", inputTx.RowsAffected)
+	httpServer.SetReturnData(w, 0, "数据写入成功", inputTx.RowsAffected)
 }
 
 func (this *DataWrite) Save2Kafka(w http.ResponseWriter, r *http.Request, sd func(msg *sarama.ProducerMessage) error) {
@@ -147,8 +147,8 @@ func (this *DataWrite) Save2Kafka(w http.ResponseWriter, r *http.Request, sd fun
 		}
 	}
 	if len(errs) < 1 {
-		httpServer.SetReturnCode(w, r, 0, "数据写入成功")
+		httpServer.SetReturnData(w, 0, "数据写入成功")
 		return
 	}
-	httpServer.SetReturnCode(w, r, 500, "数据写入失败", strings.Join(errs, "\n"))
+	httpServer.SetReturnData(w, 500, "数据写入失败", strings.Join(errs, "\n"))
 }

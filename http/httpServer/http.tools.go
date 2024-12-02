@@ -246,7 +246,7 @@ func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
 	_, _ = io.Copy(w, f)
 }
 
-// 错误信息会记录下来，同时也会反馈给前端
+// SetReturnError 错误信息会记录下来，同时也会反馈给前端
 func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
 	ReqError(r, append([]any{err}, msg...)...)
 	if len(msg) < 1 {
@@ -266,7 +266,7 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 	}), "SetReturnError")
 }
 
-// SetReturnWithoutError，错误信息会记录下来，但是只会反馈msg
+// SetReturnWithoutError ，错误信息会记录下来，但是只会反馈msg
 func SetReturnWithoutError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
 	ReqError(r, append([]any{err}, msg...)...)
 	if len(msg) < 1 {
