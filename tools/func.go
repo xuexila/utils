@@ -493,6 +493,18 @@ func SearchInt64Slice(s int64, arr []int64) bool {
 	return false
 }
 
+func SearchStringSlice(key string, arr []string) bool {
+	if arr == nil {
+		return false
+	}
+	for _, v := range arr {
+		if v == key {
+			return true
+		}
+	}
+	return false
+}
+
 // CutStrSlice2Slice 获取切片的子切片
 func CutStrSlice2Slice(s []string, key string, direct int) []string {
 	for idx, v := range s {
