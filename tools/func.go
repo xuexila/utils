@@ -2,6 +2,7 @@ package tools
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
@@ -215,7 +216,7 @@ func MaxInt32(d1, d2 int32) int32 {
 	return d2
 }
 
-// 计算平均数
+// AvgInt32 计算平均数
 func AvgInt32(d1, d2 int32, isf bool) int32 {
 	if isf {
 		if d1 > d2 {
@@ -305,7 +306,7 @@ func AvgFloat32(d1, d2 float32, isf bool) float32 {
 	return (d1 + d2) / 2
 }
 
-// 字符串转 float 64
+// StrToFloat64 字符串转 float 64
 func StrToFloat64(s string) (float64, error) {
 	return strconv.ParseFloat(s, 64)
 }
@@ -355,7 +356,7 @@ func Uint32ToBytes(n int) ([]byte, error) {
 // 	return int(x), err
 // }
 
-// 字节转换成整形
+// BytesToInt 字节转换成整形
 func BytesToInt(b []byte) int {
 	bytesBuffer := bytes.NewBuffer(b)
 
@@ -372,7 +373,7 @@ func BytesToUint16(b []byte) uint16 {
 	return uint16(tmp)
 }
 
-// 空字符串转为 -
+// EmptyString2 空字符串转为 -
 func EmptyString2(s string) string {
 	if s = strings.TrimSpace(s); s == "" {
 		return "-"
@@ -844,7 +845,12 @@ func RunAsyncFunc(enable bool, f func()) {
 }
 
 // RunAsyncTickerFunc 异步运行，并定时执行
-func RunAsyncTickerFunc(enable bool, d time.Duration, f func(), runFirst ...bool) {
+// ctx 用于控制循环的退出
+// enable 是否启用
+// d 执行间隔
+// f 要执行的函数
+// runFirst 是否先执行一次
+func RunAsyncTickerFunc(ctx context.Context, enable bool, d time.Duration, f func(), runFirst ...bool) {
 	if !enable {
 		return
 	}
@@ -857,11 +863,15 @@ func RunAsyncTickerFunc(enable bool, d time.Duration, f func(), runFirst ...bool
 	go func() {
 		tck := time.NewTicker(d)
 		defer tck.Stop()
-		for range tck.C {
-			f()
+		for {
+			select {
+			case <-ctx.Done(): // 退出循环
+				return
+			case <-tck.C:
+				f()
+			}
 		}
 	}()
-
 }
 
 // ReverseMapUnique 反转值唯一的 map
