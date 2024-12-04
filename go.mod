@@ -5,9 +5,11 @@ go 1.21.1
 require (
 	github.com/IBM/sarama v1.43.2
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
+	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/colinmarc/hdfs/v2 v2.4.0
 	github.com/dchest/captcha v1.0.0
 	github.com/elastic/go-elasticsearch/v8 v8.15.0
+	github.com/go-stomp/stomp/v3 v3.1.3
 	github.com/gomodule/redigo v1.9.2
 	github.com/gorilla/handlers v1.5.2
 	github.com/jlaffaye/ftp v0.2.0
@@ -29,7 +31,6 @@ require (
 )
 
 require (
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/eapache/go-resiliency v1.6.0 // indirect
