@@ -15,7 +15,6 @@ var (
 	FTPEpsv = []map[string]any{
 		{"type": 0, "value": "被动模式"},
 		{"type": 1, "value": "主动模式"},
-		{"type": 2, "value": "自动模式"},
 	}
 	// Authentication 认证方式
 	Authentication = []map[string]string{
