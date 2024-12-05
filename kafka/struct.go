@@ -6,7 +6,7 @@ type KafkaConfig struct {
 	GroupName   string        `json:"group_name" yaml:"group_name" ini:"group_name"`
 	Addrs       []string      `yaml:"addrs" json:"addrs" ini:"addrs,omitempty"`
 	Version     string        `yaml:"version" json:"version" ini:"version"` // kafka版本
-	Sasl        bool          `yaml:"sasl" json:"sasl" ini:"version"`
+	Sasl        bool          `yaml:"sasl" json:"sasl" ini:"sasl"`
 	User        string        `yaml:"user" json:"user" ini:"user"`
 	Password    string        `yaml:"password" json:"password" ini:"password"`
 	Mechanism   string        `yaml:"mechanism" json:"mechanism" ini:"mechanism"`
