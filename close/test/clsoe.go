@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/helays/utils/close"
+	"github.com/helays/utils/close/vclose"
 	"os"
 )
 
 func main() {
 	file, err := os.Open("clsoe.go")
-	defer close.Close(file)
+	defer vclose.Close(file)
 	fmt.Println(err, "文件")
 }

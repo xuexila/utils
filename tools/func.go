@@ -842,6 +842,22 @@ func Ternary[Type any](condition bool, a, b Type) Type {
 	return b
 }
 
+// AutoTimeDuration 自动转换时间单位，主要是用于 ini json yaml 几种配置文件 解析出来的时间单位不一致。
+func AutoTimeDuration(input time.Duration, unit time.Duration, dValue ...time.Duration) time.Duration {
+	if input < 1 {
+		if len(dValue) < 1 {
+			return 0
+		}
+		return dValue[0]
+	}
+	// 然后这里就要开始自适应ini json yaml 几种配置文件解析出来的时间勒
+	if input < time.Microsecond {
+		// 这表示输入时间就是默认单位,要更新单位
+		return input * unit
+	}
+	return input
+}
+
 // RunSyncFunc 同步运行
 func RunSyncFunc(enable bool, f func()) {
 	if enable {
