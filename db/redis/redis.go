@@ -33,7 +33,6 @@ func (this Rediscfg) NewUniversalClient() (redis.UniversalClient, error) {
 	c := redis.UniversalOptions{
 		Addrs:            this.Addrs,
 		ClientName:       this.ClientName,
-		DB:               this.Db,
 		Username:         this.User,
 		Password:         this.Password,
 		SentinelUsername: this.SentinelUsername,
@@ -41,16 +40,18 @@ func (this Rediscfg) NewUniversalClient() (redis.UniversalClient, error) {
 		MasterName:       this.MasterName,
 		DisableIndentity: this.DisableIndentity,
 		IdentitySuffix:   this.IdentitySuffix,
-	}
-	if this.OnConnect {
-		c.OnConnect = func(ctx context.Context, cn *redis.Conn) error {
-			err := cn.Auth(ctx, this.Password).Err()
-			ulogs.Log("redis 二次认证", err)
-			if err != nil {
-				return err
+		OnConnect: func(ctx context.Context, cn *redis.Conn) error {
+			var err error
+			if this.OnConnect {
+				auth:=cn.Auth(ctx, this.Password)
+				ulogs.Log("redis 二次认证",auth.String(),auth.Err())
+				if err=auth.Err();err!=nil{
+					return err
+				}
 			}
+			// 在连接的时候，设置库
 			return cn.Select(ctx, this.Db).Err()
-		}
+		},
 	}
 	ulogs.Log("redis连接参数", this.Addrs, "库编号", this.Db, "on Conect", this.OnConnect, "set lib", this.DisableIndentity)
 	rdb := redis.NewUniversalClient(&c)
