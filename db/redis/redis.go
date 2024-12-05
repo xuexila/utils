@@ -21,7 +21,7 @@ type Rediscfg struct {
 	// 具体来说，当 DisableIndentity 设置为 true 时，它会阻止客户端在建立连接时自动发送命令来设置自己的标识信息。
 	// 这通常涉及到通过 CLIENT SETINFO LIBRARY 或类似的命令向 Redis 服务器报告客户端库的名称和版本等信息。
 	// 在某些情况下，这可能会导致一些问题，例如，当客户端库不支持这些命令时，或者当应用程序需要控制客户端标识信息的设置方式时。
-	DisableIndentity  bool   `json:"disable_identity" yaml:"disable_identity" ini:"disable_identity"`             //  否禁用在连接时设置客户端库标识的行为
+	DisableIndentity  bool   `json:"disable_identity" yaml:"disable_identity" ini:"disable_identity"`             //  是否禁用在连接时设置客户端库标识的行为
 	IdentitySuffix    string `json:"identity_suffix" yaml:"identity_suffix" ini:"identity_suffix"`                // 默认为空, 用于在客户端标识信息中添加后缀
 	OnConnect         bool   `json:"on_connect" yaml:"on_connect" ini:"on_connect"`                               // 主要是在云组件ctg cache 的时候，才需要这个，其他情况一般不需要
 	CustomScan        bool   `ini:"custom_scan" yaml:"custom_scan" json:"custom_scan"`                            // 系统中使用scan 扫描的时候，云组件可能需要用这个
