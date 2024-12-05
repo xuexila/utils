@@ -12,6 +12,6 @@ type KafkaConfig struct {
 	Mechanism   string        `yaml:"mechanism" json:"mechanism" ini:"mechanism"`
 	Offset      int64         `yaml:"offset" json:"offset" ini:"offset"`                // 默认从最新开始消费 -1 -2从最后
 	MaxRetry    int           `yaml:"max_retry" json:"max_retry" ini:"max_retry"`       // 生产消息失败，默认重试3次
-	Timeout     time.Duration `json:"time_out" yaml:"time_out" ini:"time_out"`          // 超时时间
+	Timeout     time.Duration `json:"timeout" yaml:"timeout" ini:"timeout"`             // 超时时间
 	Compression bool          `json:"compression" yaml:"compression" ini:"compression"` // 发送消息是否开启压缩
 }
