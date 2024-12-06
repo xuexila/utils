@@ -64,7 +64,7 @@ func (this Rediscfg) NewUniversalClient() (redis.UniversalClient, error) {
 	if this.EnableSetDbBeforeConnect {
 		c.DB = this.Db
 	}
-	ulogs.Log("redis连接参数", this.Addrs, "库编号", this.Db, "on Conect", this.OnConnect, "set lib", this.DisableIndentity)
+	ulogs.Log("redis连接参数", this.Addrs, "库编号", this.Db, "二次认证", this.OnConnect || this.EnableAuthOnConnect, "set lib", this.DisableIndentity)
 	rdb := redis.NewUniversalClient(&c)
 	if this.EnableCheckOnInit {
 		status := rdb.Ping(context.Background())
@@ -73,6 +73,6 @@ func (this Rediscfg) NewUniversalClient() (redis.UniversalClient, error) {
 			return nil, fmt.Errorf("redis指令【%s】执行失败：%s", status.String(), err.Error())
 		}
 	}
-	ulogs.Log("redis连接成功", this.Addrs, "库编号", this.Db, "on Connect", this.OnConnect)
+	ulogs.Log("redis连接成功", this.Addrs, "库编号", this.Db, "二次认证", this.OnConnect || this.EnableAuthOnConnect)
 	return rdb, nil
 }
