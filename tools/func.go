@@ -36,22 +36,31 @@ func PadRight(str string, padStr string, lenght int) string {
 	return str
 }
 
-// SnakeString 驼峰转蛇形
+// SnakeString 将驼峰命名法的字符串转换为蛇形命名法（小写字母加下划线）
 func SnakeString(s string) string {
-	data := make([]byte, 0, len(s)*2)
-	j := false
-	num := len(s)
+	var data []byte // 用于存储转换后的字符
+	num := len(s)   // 获取字符串长度
+
 	for i := 0; i < num; i++ {
-		d := s[i]
-		if i > 0 && d >= 'A' && d <= 'Z' && j {
-			data = append(data, '_')
+		d := s[i] // 当前字符
+
+		// 检查当前字符是否为大写字母且不是第一个字符
+		if d >= 'A' && d <= 'Z' && i > 0 {
+			// 向前看是否跟着一个小写字母
+			isNextLower := i+1 < num && s[i+1] >= 'a' && s[i+1] <= 'z'
+			// 向后看是否前面是小写字母或数字
+			isPrevLowerOrDigit := i > 0 && (s[i-1] >= 'a' && s[i-1] <= 'z' || s[i-1] >= '0' && s[i-1] <= '9')
+
+			// 如果当前字符是大写，并且前面是小写字母或数字，或者后面是小写字母，则添加下划线
+			if isPrevLowerOrDigit || isNextLower {
+				data = append(data, '_') // 添加下划线
+			}
 		}
-		if d != '_' {
-			j = true
-		}
-		data = append(data, d)
+
+		data = append(data, d) // 添加当前字符到结果中
 	}
-	return strings.ToLower(string(data[:]))
+
+	return strings.ToLower(string(data)) // 返回转换为小写后的结果字符串
 }
 
 // CamelString 蛇形转驼峰
