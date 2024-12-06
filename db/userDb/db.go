@@ -242,7 +242,7 @@ func AutoCreateTableWithStruct(db *gorm.DB, tb any, errmsg string) {
 	AutoCreateTableWithColumn(db, tb, errmsg, t)
 }
 
-// 根据表字段判断是否有数据缺失
+// AutoCreateTableWithColumn 根据表字段判断是否有数据缺失
 func AutoCreateTableWithColumn(db *gorm.DB, tb any, errmsg string, t reflect.Type) bool {
 	// 如果表存在，在判断结构体中是否有新增字段，如果有，就自动改变表
 	for i := 0; i < t.NumField(); i++ {
@@ -268,6 +268,7 @@ func AutoCreateTableWithColumn(db *gorm.DB, tb any, errmsg string, t reflect.Typ
 		}
 
 		if !db.Migrator().HasColumn(tb, column) {
+			ulogs.Log("表字段有缺失，正在自动创建表字段：", reflect.TypeOf(tb).String(), column)
 			ulogs.DieCheckerr(db.Debug().AutoMigrate(tb), errmsg)
 			return true // 创建一次就行了
 		}

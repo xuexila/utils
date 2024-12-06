@@ -34,10 +34,12 @@ type Dbbase struct {
 	Encrypt string               `ini:"encrypt" yaml:"encrypt" json:"encrypt" gorm:"type:varchar(64);not null;default:none;comment:密码加密存储方式，默认none明文"` // 是否加密
 
 	// 这部分是数据库独有
-	Dbname       string `ini:"dbname" yaml:"dbname" json:"dbname" gorm:"type:varchar(128);not null;index;default:'';comment:默认连接的库"`
-	Schema       string `ini:"schema" yaml:"schema" json:"schema" gorm:"type:varchar(128);not null;default:'';comment:数据库模式"`
-	MaxIdleConns int    `ini:"max_idle_conns" yaml:"max_idle_conns" json:"max_idle_conns" gorm:"type:int;not null;default:2;comment:最大空闲连接数"`
-	MaxOpenConns int    `ini:"max_open_conns" yaml:"max_open_conns" json:"max_open_conns" gorm:"type:int;not null;default:10;comment:最大连接数"`
+	Dbname        string `ini:"dbname" yaml:"dbname" json:"dbname" gorm:"type:varchar(128);not null;index;default:'';comment:默认连接的库"`
+	Schema        string `ini:"schema" yaml:"schema" json:"schema" gorm:"type:varchar(128);not null;default:'';comment:数据库模式"`
+	MaxIdleConns  int    `ini:"max_idle_conns" yaml:"max_idle_conns" json:"max_idle_conns" gorm:"type:int;not null;default:2;comment:最大空闲连接数"`
+	MaxOpenConns  int    `ini:"max_open_conns" yaml:"max_open_conns" json:"max_open_conns" gorm:"type:int;not null;default:10;comment:最大连接数"`
+	TablePrefix   string `ini:"table_prefix" yaml:"table_prefix" json:"table_prefix" gorm:"type:varchar(64);not null;default:'';comment:表前缀"`
+	SingularTable int    `ini:"singular_table" yaml:"singular_table" json:"singular_table" gorm:"type:int;not null;default:0;comment:是否启用单数表"` // 1 启用 0 不启用
 
 	// 这部分是kafka独有
 	MsgRole   string `ini:"msg_role" yaml:"msg_role" json:"msg_role" gorm:"type:varchar(32);not null;index;default:'';comment:消息角色，syncProducer|asyncProducer|consumer"`

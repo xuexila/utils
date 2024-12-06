@@ -8,6 +8,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 	"net/url"
 	"strings"
 	"time"
@@ -68,11 +69,19 @@ func InitDb(c Dbbase) (*gorm.DB, error) {
 	default:
 		return nil, errors.New("不支持的数据库")
 	}
-	_db, err := gorm.Open(dialector, &gorm.Config{
+	nameingStrategy := schema.NamingStrategy{}
+	if c.TablePrefix != "" {
+		nameingStrategy.TablePrefix = c.TablePrefix
+	}
+	nameingStrategy.SingularTable = c.SingularTable == 1
+	cfg := gorm.Config{
+		SkipDefaultTransaction:                   true,
 		Logger:                                   logger.Default.LogMode(logger.Silent),
 		DisableForeignKeyConstraintWhenMigrating: true,
-		SkipDefaultTransaction:                   true,
-	})
+		NamingStrategy:                           nameingStrategy,
+	}
+
+	_db, err := gorm.Open(dialector, &cfg)
 	if err != nil {
 		return nil, err
 	}
