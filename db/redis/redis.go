@@ -7,6 +7,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// 配置说明
+
 type Rediscfg struct {
 	MasterName       string   `json:"master_name" yaml:"master_name" ini:"master_name"`                    // 指定这个 MasterName ，就是FailoverClient哨兵模式，
 	Addrs            []string `json:"addrs" yaml:"addrs" ini:"addrs,omitempty"`                            // 如果这个有两个以及上，就是集群模式
