@@ -95,7 +95,7 @@ func Play(path string, w http.ResponseWriter, r *http.Request, args ...any) {
 	if len(args) > 0 {
 		if args[0] == "downloader" {
 			w.Header().Del("Accept-Ranges")
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filepath.Base(path)))
+			httpTools.SetDisposition(w, filepath.Base(path))
 		}
 	}
 	if rangeSwap != "" {
