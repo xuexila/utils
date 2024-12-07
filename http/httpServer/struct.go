@@ -1,6 +1,7 @@
 package httpServer
 
 import (
+	"github.com/helays/utils/http/session"
 	"golang.org/x/net/websocket"
 	"net/http"
 	"regexp"
@@ -32,12 +33,15 @@ type Router struct {
 	HttpCache              bool   `ini:"http_cache" json:"http_cache" yaml:"http_cache"`
 	HttpCacheMaxAge        string `ini:"http_cache_max_age" json:"http_cache_max_age" yaml:"http_cache_max_age"`
 	UnauthorizedRespMethod int    `ini:"unauthorized_resp_method" json:"unauthorized_resp_method" yaml:"unauthorized_resp_method"` // 未登录响应方法 默认为 401，302 表示自动重定向到登录页面
-	SessionId              string `ini:"session_id" json:"session_id" yaml:"session_id"`
-	CookiePath             string `ini:"cookie_path" json:"cookie_path" yaml:"cookie_path"`
-	CookieDomain           string `ini:"cookie_domain" json:"cookie_domain" yaml:"cookie_domain"`
-	CookieSecure           bool   `ini:"cookie_secure" json:"cookie_secure" yaml:"cookie_secure"`
-	CookieHttpOnly         bool   `ini:"cookie_http_only" json:"cookie_http_only" yaml:"cookie_http_only"`
+	SessionLoginName       string `ini:"session_login_name" json:"session_login_name" yaml:"session_login_name"`                   // 系统中，用于在session中存储登录信息的key
 
+	// cookie相关配置
+	CookiePath     string `ini:"cookie_path" json:"cookie_path" yaml:"cookie_path"`
+	CookieDomain   string `ini:"cookie_domain" json:"cookie_domain" yaml:"cookie_domain"`
+	CookieSecure   bool   `ini:"cookie_secure" json:"cookie_secure" yaml:"cookie_secure"`
+	CookieHttpOnly bool   `ini:"cookie_http_only" json:"cookie_http_only" yaml:"cookie_http_only"`
+
+	Store                  *session.Store   // session 系统
 	IsLogin                bool             // 是否登录
 	LoginPath              string           // 登录页面
 	HomePage               string           //首页
@@ -59,8 +63,6 @@ type LoginInfo struct {
 	User          string    // 用户名
 	IsManage      bool      // 是否管理员
 	DemoUser      bool      // 是否演示用户
-	ActiveTime    time.Time // 最后活动时间
-	HoldTime      int       // 会话保留时长
 	RsaPrivateKey []byte    //ras 私钥
 	RsaPublickKey []byte    // rsa 公钥
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/dchest/captcha"
 	"github.com/helays/utils/close/httpClose"
-	"github.com/helays/utils/crypto/md5"
 	"github.com/helays/utils/http/mime"
 	"github.com/helays/utils/ulogs"
 	"io"
@@ -111,26 +110,16 @@ func (this *Router) BeforeAction(w http.ResponseWriter, r *http.Request) bool {
 	if this.CookiePath == "" {
 		this.CookiePath = "/"
 	}
-	sessionId, err := GetSessionId(r, this.SessionId)
-	if err != nil {
-		// 未登录
-		this.SetCookie(w, this.SessionId, sessionId, "/")
-		// 判断 当前路径是否在必须登录列表中
-		if this.validMustLogin(r.URL.Path) {
-			return this.unAuthorizedResp(w, r)
-		}
-		return true
-	}
-	_loginInfo, ok := GetLoginInfo(sessionId)
-	if !ok || !_loginInfo.IsLogin {
+	// 这里改用session 系统
+	_loginInfo, err := this.GetLoginInfo(w, r)
+	if err != nil || !_loginInfo.IsLogin {
+		ulogs.Checkerr(err, "session获取失败", "BeforeAction")
 		// 这里还未登录 ，判断 当前路径是否在必须登录列表中
 		if this.validMustLogin(r.URL.Path) {
 			return this.unAuthorizedResp(w, r)
 		}
 		return true
 	}
-	_loginInfo.ActiveTime = time.Now()
-	LoginSessionMap.Store(sessionId, _loginInfo)
 	// 登录禁止访问的页面
 	if this.validDisableLoginRequestPath(r.URL.Path) {
 		http.Redirect(w, r, this.HomePage, 302)
@@ -149,9 +138,15 @@ func (this Router) Captcha(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
 	var content bytes.Buffer
-	sessionId, _ := GetSessionId(r, this.SessionId)
+
+	// 验证码存储在session中
 	captchaId := captcha.NewLen(4)
-	this.SetCookie(w, "_c."+md5.Md5string(sessionId), captchaId, "/")
+	err = this.Store.Set(w, r, "captcha", captchaId, 4*time.Minute)
+	if err != nil {
+		InternalServerError(w)
+		return
+	}
+
 	if err := captcha.WriteImage(&content, captchaId, 106, 40); err != nil {
 		InternalServerError(w)
 		ulogs.Error(err, "captcha writeImage")

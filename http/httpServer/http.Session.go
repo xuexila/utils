@@ -1,6 +1,7 @@
 package httpServer
 
 import (
+	"encoding/json"
 	uuid "github.com/satori/go.uuid"
 	"net/http"
 	"strings"
@@ -15,10 +16,14 @@ func GetSessionId(r *http.Request, sid string) (string, error) {
 	return cookie.Value, nil
 }
 
-func GetLoginInfo(session string) (LoginInfo, bool) {
-	tmp, ok := LoginSessionMap.Load(session)
-	if !ok {
-		return LoginInfo{}, false
+func (this Router) GetLoginInfo(w http.ResponseWriter, r *http.Request) (LoginInfo, error) {
+	info := LoginInfo{}
+	raw, err := this.Store.GetUp(w, r, this.SessionLoginName)
+	if err != nil {
+		return info, err
 	}
-	return tmp.(LoginInfo), true
+	if err = json.Unmarshal([]byte(raw), &info); err != nil {
+		return info, err
+	}
+	return info, nil
 }

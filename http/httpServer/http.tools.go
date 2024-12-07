@@ -293,24 +293,6 @@ func CheckReqPost(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-// CheckSessionActive
-// 检测session 有效期，超时就删除
-func CheckSessionActive() {
-	for range time.NewTicker(1 * time.Hour).C {
-		LoginSessionMap.Range(func(key, value interface{}) bool {
-			sid := key.(string)
-			val := value.(LoginInfo)
-			if val.HoldTime < 1 {
-				val.HoldTime = 604800 // 默认保留7填
-			}
-			if int(time.Since(val.ActiveTime).Seconds()) > val.HoldTime {
-				LoginSessionMap.Delete(sid)
-			}
-			return true
-		})
-	}
-}
-
 // Getip 获取客户端IP
 func Getip(r *http.Request) string {
 	remoteAddr := r.RemoteAddr
