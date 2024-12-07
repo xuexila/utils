@@ -2,6 +2,7 @@ package sessionConfig
 
 import (
 	"github.com/helays/utils/dataType"
+	"io"
 	"net/http"
 	"time"
 )
@@ -43,6 +44,7 @@ type Dialector interface {
 	Destroy(w http.ResponseWriter, r *http.Request) error                                                // 销毁session
 
 	Apply(*Options) // 设置
+	io.Closer
 }
 
 // Session session 数据结构

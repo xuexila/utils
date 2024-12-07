@@ -58,3 +58,9 @@ func Init(dialector sessionConfig.Dialector, opt ...*sessionConfig.Options) *Sto
 	c.Dialector.Apply(c.Options)
 	return c
 }
+
+func Close(c *Store) {
+	if c != nil {
+		_ = c.Close()
+	}
+}

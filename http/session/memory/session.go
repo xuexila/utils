@@ -63,6 +63,10 @@ func (this *Instance) Apply(options *sessionConfig.Options) {
 	})
 }
 
+func (this *Instance) Close() error {
+	return nil
+}
+
 var (
 	sessionStorage sync.Map // 存储session
 )
