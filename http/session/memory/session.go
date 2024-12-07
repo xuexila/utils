@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"context"
 	"github.com/helays/utils/dataType"
 	"github.com/helays/utils/http/session/sessionConfig"
 	"github.com/helays/utils/tools"
@@ -50,7 +51,16 @@ func New() *Instance {
 
 func (this *Instance) Apply(options *sessionConfig.Options) {
 	this.option = options
-
+	// 还需要自动删除
+	tools.RunAsyncTickerFunc(context.Background(), true, this.option.CheckInterval, func() {
+		sessionStorage.Range(func(key, value any) bool {
+			session := value.(sessionConfig.Session)
+			if time.Time(session.ExpireTime).Before(time.Now()) {
+				sessionStorage.Delete(key)
+			}
+			return true
+		})
+	})
 }
 
 var (
