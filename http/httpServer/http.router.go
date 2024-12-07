@@ -113,7 +113,6 @@ func (this *Router) BeforeAction(w http.ResponseWriter, r *http.Request) bool {
 	// 这里改用session 系统
 	_loginInfo, err := this.GetLoginInfo(w, r)
 	if err != nil || !_loginInfo.IsLogin {
-		ulogs.Checkerr(err, "session获取失败", "BeforeAction")
 		// 这里还未登录 ，判断 当前路径是否在必须登录列表中
 		if this.validMustLogin(r.URL.Path) {
 			return this.unAuthorizedResp(w, r)
