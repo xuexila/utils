@@ -40,7 +40,11 @@ var (
 type User struct{}
 
 func run() {
+	defer session.Close(store)
 	engine, _ := file.New(file.Instance{Path: "runtime/session"})
+	// 在session中需要存储User 结构体数据，需要将结构体注册进去
+	// 需要在session 初始化之前进行注册
+	engine.Register(User{})
 
 	store = session.Init(engine, &session.Options{
 		CookieName:    "vsclub.ltd",
@@ -53,6 +57,5 @@ func run() {
 		HttpOnly:      false,
 		SameSite:      0,
 	})
-	// 在session中需要存储User 结构体数据，需要将结构体注册进去
-	store.Register(User{})
+
 }

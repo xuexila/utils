@@ -44,9 +44,6 @@ type Dialector interface {
 	Destroy(w http.ResponseWriter, r *http.Request) error                                                // 销毁session
 
 	Apply(*Options) // 设置
-	// Register 注册结构定义
-	// 在使用文件作为session引擎的时候，需要将存储session值的结构注册进来。
-	Register(value ...any)
 	io.Closer
 }
 

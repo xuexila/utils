@@ -52,10 +52,6 @@ func New() *Instance {
 	return &Instance{}
 }
 
-func (this *Instance) Register(value ...any) {
-
-}
-
 func (this *Instance) Apply(options *session.Options) {
 	this.option = options
 	this.ctx, this.cancel = context.WithCancel(context.Background())

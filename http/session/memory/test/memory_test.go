@@ -38,7 +38,7 @@ var (
 )
 
 func run() {
-
+	defer session.Close(store)
 	store = session.Init(memory.New(), &session.Options{
 		CookieName:    "vsclub.ltd",
 		CheckInterval: time.Hour,
