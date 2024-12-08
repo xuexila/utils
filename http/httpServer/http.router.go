@@ -111,21 +111,23 @@ func (this *Router) BeforeAction(w http.ResponseWriter, r *http.Request) bool {
 		this.CookiePath = "/"
 	}
 	// 这里改用session 系统
-	_loginInfo, err := this.GetLoginInfo(w, r)
-	if err != nil || !_loginInfo.IsLogin {
+	var loginInfo LoginInfo
+	err = this.Store.GetUp(w, r, this.SessionLoginName, &loginInfo)
+	if err != nil || !loginInfo.IsLogin {
 		// 这里还未登录 ，判断 当前路径是否在必须登录列表中
 		if this.validMustLogin(r.URL.Path) {
 			return this.unAuthorizedResp(w, r)
 		}
 		return true
 	}
+
 	// 登录禁止访问的页面
 	if this.validDisableLoginRequestPath(r.URL.Path) {
 		http.Redirect(w, r, this.HomePage, 302)
 		return false
 	}
 	// 控制管理员访问的
-	if this.validManagePage(r.URL.Path) && !_loginInfo.IsManage {
+	if this.validManagePage(r.URL.Path) && !loginInfo.IsManage {
 		SetReturnCode(w, r, http.StatusForbidden, "无权限访问")
 		return false
 	}

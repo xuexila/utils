@@ -50,11 +50,11 @@ func (CustomTime) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 }
 
 func (this CustomTime) GobEncode() ([]byte, error) {
-	return this.GobEncode()
+	return time.Time(this).GobEncode()
 }
 
 func (this *CustomTime) GobDecode(b []byte) error {
-	return this.GobDecode(b)
+	return (*time.Time)(this).GobDecode(b)
 }
 
 func (this CustomTime) MarshalJSON() ([]byte, error) {

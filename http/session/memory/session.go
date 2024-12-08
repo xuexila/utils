@@ -2,11 +2,12 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"github.com/helays/utils/dataType"
-	"github.com/helays/utils/http/session/sessionConfig"
+	"github.com/helays/utils/http/session"
 	"github.com/helays/utils/tools"
 	"net/http"
-	"strings"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -41,7 +42,7 @@ import (
 
 // Instance session 实例
 type Instance struct {
-	option *sessionConfig.Options
+	option *session.Options
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -51,14 +52,18 @@ func New() *Instance {
 	return &Instance{}
 }
 
-func (this *Instance) Apply(options *sessionConfig.Options) {
+func (this *Instance) Register(value ...any) {
+
+}
+
+func (this *Instance) Apply(options *session.Options) {
 	this.option = options
 	this.ctx, this.cancel = context.WithCancel(context.Background())
 	// 还需要自动删除
 	tools.RunAsyncTickerFunc(this.ctx, true, this.option.CheckInterval, func() {
 		sessionStorage.Range(func(key, value any) bool {
-			session := value.(sessionConfig.Session)
-			if time.Time(session.ExpireTime).Before(time.Now()) {
+			ss := value.(session.Session)
+			if time.Time(ss.ExpireTime).Before(time.Now()) {
 				sessionStorage.Delete(key)
 			}
 			return true
@@ -75,70 +80,87 @@ var (
 	sessionStorage sync.Map // 存储session
 )
 
-func (this *Instance) get(w http.ResponseWriter, r *http.Request, name string) (*sessionConfig.Session, string, error) {
-	sessionId, err := sessionConfig.GetSessionId(w, r, this.option)
+func (this *Instance) get(w http.ResponseWriter, r *http.Request, name string) (*session.Session, string, error) {
+	sessionId, err := session.GetSessionId(w, r, this.option) // 这一步一般不会失败
 	if err != nil {
 		return nil, "", err // 从cookie中获取sessionId失败
 	}
-	_k := sessionConfig.GetSessionName(sessionId, name)
+	_k := session.GetSessionName(sessionId, name)
 	val, ok := sessionStorage.Load(_k)
 	if !ok {
-		return nil, "", sessionConfig.ErrNotFound
+		return nil, "", session.ErrNotFound
 	}
-	sesseionVal := val.(sessionConfig.Session)
-	if time.Time(sesseionVal.ExpireTime).Before(time.Now()) {
+	sessionVal := val.(session.Session)
+	if time.Time(sessionVal.ExpireTime).Before(time.Now()) {
 		sessionStorage.Delete(_k)
 		// session已过期
-		return nil, "", sessionConfig.ErrNotFound
+		return nil, "", session.ErrNotFound
 	}
-	return &sesseionVal, _k, nil
+	return &sessionVal, _k, nil
 }
 
 // Get 获取session
-func (this *Instance) Get(w http.ResponseWriter, r *http.Request, name string) (string, error) {
+func (this *Instance) Get(w http.ResponseWriter, r *http.Request, name string, dst any) error {
+	v := reflect.ValueOf(dst)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return fmt.Errorf("dst must be a pointer")
+	}
 	sessionVal, _, err := this.get(w, r, name)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return sessionVal.Values, nil
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	return nil
 }
 
 // GetUp 获取session并更新过期时间
-func (this *Instance) GetUp(w http.ResponseWriter, r *http.Request, name string) (string, error) {
+func (this *Instance) GetUp(w http.ResponseWriter, r *http.Request, name string, dst any) error {
+	v := reflect.ValueOf(dst)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return fmt.Errorf("dst must be a pointer")
+	}
 	sessionVal, _k, err := this.get(w, r, name)
 	if err != nil {
-		return "", err
+		return err
 	}
 	// 更新session过期时间
 	sessionVal.ExpireTime = dataType.CustomTime(time.Now().Add(sessionVal.Duration))
 	sessionStorage.Store(_k, *sessionVal)
-	return sessionVal.Values, nil
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	return nil
 }
 
 // Flashes 获取并删除session
-func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name string) (string, error) {
-	sessionVal, _k, err := this.get(w, r, name)
-	if err != nil {
-		return "", err
+func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name string, dst any) error {
+	v := reflect.ValueOf(dst)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return fmt.Errorf("dst must be a pointer")
 	}
-	sessionStorage.Delete(_k)
-	return sessionVal.Values, nil
-}
-
-func (this *Instance) Set(w http.ResponseWriter, r *http.Request, name string, value any, duration ...time.Duration) error {
-	sessionId, _ := sessionConfig.GetSessionId(w, r, this.option)
-	dstVal, err := tools.Any2bytes(value)
+	sessionVal, _k, err := this.get(w, r, name)
 	if err != nil {
 		return err
 	}
-	_k := sessionConfig.GetSessionName(sessionId, name)
-	sessionVal := sessionConfig.Session{
+	sessionStorage.Delete(_k)
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	return nil
+}
+
+// Set 设置session
+// w
+// r
+// name  session 名称
+// value session 值
+// duration session 过期时间，默认为24小时
+func (this *Instance) Set(w http.ResponseWriter, r *http.Request, name string, value any, duration ...time.Duration) error {
+	sessionId, _ := session.GetSessionId(w, r, this.option)
+	_k := session.GetSessionName(sessionId, name)
+	sessionVal := session.Session{
 		Id:         sessionId,
 		Name:       name,
-		Values:     string(dstVal),
+		Values:     value,
 		CreateTime: dataType.CustomTime{},
 		ExpireTime: dataType.CustomTime{},
-		Duration:   sessionConfig.ExpireTime,
+		Duration:   session.ExpireTime,
 	}
 	if len(duration) > 0 {
 		sessionVal.Duration = duration[0]
@@ -153,25 +175,24 @@ func (this *Instance) Set(w http.ResponseWriter, r *http.Request, name string, v
 
 // Del 删除session
 func (this *Instance) Del(w http.ResponseWriter, r *http.Request, name string) error {
-	sessionId, _ := sessionConfig.GetSessionId(w, r, this.option)
-	_k := sessionConfig.GetSessionName(sessionId, name)
+	sessionId, _ := session.GetSessionId(w, r, this.option)
+	_k := session.GetSessionName(sessionId, name)
 	sessionStorage.Delete(_k)
 	return nil
 }
 
 // Destroy 销毁session
 func (this *Instance) Destroy(w http.ResponseWriter, r *http.Request) error {
-	sessionId, err := sessionConfig.GetSessionId(w, r, this.option)
+	sessionId, err := session.GetSessionId(w, r, this.option)
 	if err != nil {
 		return err // 从cookie中获取sessionId失败
 	}
 	// 需要删除 cookie 或者 header
-	sessionConfig.DeleteSessionId(w, this.option)
+	session.DeleteSessionId(w, this.option)
 	// 删除所有以 sessionId 为前缀的 key
 	sessionStorage.Range(func(key, value any) bool {
-		_k := key.(string)
-		// 判断_k 是否以 sessionId 开头
-		if strings.HasPrefix(_k, sessionId) {
+		sessVal := value.(session.Session)
+		if sessVal.Id == sessionId {
 			sessionStorage.Delete(key)
 		}
 		return true

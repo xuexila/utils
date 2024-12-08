@@ -1,4 +1,4 @@
-package sessionConfig
+package session
 
 import (
 	"github.com/helays/utils/dataType"
@@ -36,14 +36,17 @@ import (
 
 // Dialector session 接口
 type Dialector interface {
-	Get(w http.ResponseWriter, r *http.Request, name string) (string, error)                             // 获取session
-	GetUp(w http.ResponseWriter, r *http.Request, name string) (string, error)                           // 获取并刷新
-	Flashes(w http.ResponseWriter, r *http.Request, name string) (string, error)                         // 获取session然后销毁
+	Get(w http.ResponseWriter, r *http.Request, name string, dst any) error                              // 获取session
+	GetUp(w http.ResponseWriter, r *http.Request, name string, dst any) error                            // 获取并刷新
+	Flashes(w http.ResponseWriter, r *http.Request, name string, dst any) error                          // 获取session然后销毁
 	Set(w http.ResponseWriter, r *http.Request, name string, value any, duration ...time.Duration) error // 设置session
 	Del(w http.ResponseWriter, r *http.Request, name string) error                                       // 删除session
 	Destroy(w http.ResponseWriter, r *http.Request) error                                                // 销毁session
 
 	Apply(*Options) // 设置
+	// Register 注册结构定义
+	// 在使用文件作为session引擎的时候，需要将存储session值的结构注册进来。
+	Register(value ...any)
 	io.Closer
 }
 
@@ -51,7 +54,7 @@ type Dialector interface {
 type Session struct {
 	Id         string              `json:"id" gorm:"type:varchar(64);not null;index;comment:Session ID"`    // session id
 	Name       string              `json:"name" gorm:"type:varchar(128);not null;index;comment:Session的名字"` // session 的名字
-	Values     string              `json:"values" gorm:"type:text;comment:session数据"`                       // session 数据
+	Values     any                 `json:"values" gorm:"type:text;comment:session数据"`                       // session 数据
 	CreateTime dataType.CustomTime `json:"create_time" gorm:"comment:session 创建时间"`                         // 创建时间 ，没啥用，就看
 	ExpireTime dataType.CustomTime `json:"expire_time" gorm:"not null;index;comment:session 过期时间"`          // 过期时间 ，用于自动回收的时候使用
 	Duration   time.Duration       `json:"duration" gorm:"comment:session有效期"`                              // 有效期，主要是用于更新有效期的时候使用
