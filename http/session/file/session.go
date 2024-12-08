@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/helays/utils/http/session/sessionConfig"
 )
@@ -40,6 +41,8 @@ var (
 type Instance struct {
 	option *sessionConfig.Options
 	Path   string `json:"path" yaml:"path" ini:"path"` // db路径
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // New 初始化 session 内存 实例
@@ -61,11 +64,13 @@ func New(opt ...Instance) (*Instance, error) {
 
 func (this *Instance) Apply(options *sessionConfig.Options) {
 	this.option = options
+	this.ctx, this.cancel = context.WithCancel(context.Background())
 
 }
 
 // Close 关闭 db
 func (this *Instance) Close() error {
+	this.cancel()
 	if db != nil {
 		return db.Close()
 	}

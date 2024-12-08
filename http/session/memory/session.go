@@ -42,6 +42,8 @@ import (
 // Instance session 实例
 type Instance struct {
 	option *sessionConfig.Options
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // New 初始化 session 内存 实例
@@ -51,8 +53,9 @@ func New() *Instance {
 
 func (this *Instance) Apply(options *sessionConfig.Options) {
 	this.option = options
+	this.ctx, this.cancel = context.WithCancel(context.Background())
 	// 还需要自动删除
-	tools.RunAsyncTickerFunc(context.Background(), true, this.option.CheckInterval, func() {
+	tools.RunAsyncTickerFunc(this.ctx, true, this.option.CheckInterval, func() {
 		sessionStorage.Range(func(key, value any) bool {
 			session := value.(sessionConfig.Session)
 			if time.Time(session.ExpireTime).Before(time.Now()) {
@@ -64,6 +67,7 @@ func (this *Instance) Apply(options *sessionConfig.Options) {
 }
 
 func (this *Instance) Close() error {
+	this.cancel() // 关闭定时器
 	return nil
 }
 
