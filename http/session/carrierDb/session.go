@@ -23,7 +23,7 @@ type Instance struct {
 }
 
 // New 创建一个session实例
-func New(db *gorm.DB, tableName ...string) *Instance {
+func New(db *gorm.DB) *Instance {
 	ins := &Instance{
 		db: db,
 	}

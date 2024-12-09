@@ -43,10 +43,10 @@ func (this SqlFilter) Builder(inputTx *gorm.DB) (*gorm.DB, error) {
 		return nil, err
 	}
 	this.SetWhere(tx)
+	this._group(tx)
 	if this.Count {
 		return tx, nil
 	}
-	this._group(tx)
 	this._order(tx)
 	this._offset(tx)
 	this._limit(tx)

@@ -43,9 +43,10 @@ func (this SqlFilter) RunSql(w http.ResponseWriter, r *http.Request, tx *gorm.DB
 		httpServer.SetReturnCode(w, r, 500, "无可执行sql")
 		return
 	}
+	var err error
 	if this.Type == "exec" {
 		exx := tx.Exec(this.Sql, this.Args...)
-		err := exx.Error
+		err = exx.Error
 		if err != nil {
 			httpServer.SetReturnError(w, r, err, 500, "执行原生sql失败")
 			return
@@ -53,7 +54,8 @@ func (this SqlFilter) RunSql(w http.ResponseWriter, r *http.Request, tx *gorm.DB
 		httpServer.SetReturnCode(w, r, 0, "执行原生sql成功", exx.RowsAffected)
 		return
 	}
-	rows, err := tx.Raw(this.Sql, this.Args...).Rows()
+	var rows *sql.Rows
+	rows, err = tx.Raw(this.Sql, this.Args...).Rows()
 	defer userDb.CloseMysqlRows(rows)
 	if err != nil {
 		httpServer.SetReturnError(w, r, err, 500, "执行原生sql失败")
