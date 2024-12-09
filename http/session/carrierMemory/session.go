@@ -135,10 +135,10 @@ func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name strin
 		return fmt.Errorf("dst must be a pointer")
 	}
 	sessionVal, _k, err := this.get(w, r, name)
+	sessionStorage.Delete(_k)
 	if err != nil {
 		return err
 	}
-	sessionStorage.Delete(_k)
 	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }

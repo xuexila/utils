@@ -128,10 +128,10 @@ func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name strin
 		return fmt.Errorf("dst must be a pointer")
 	}
 	sessionVal, sessionId, err := this.get(w, r, name)
+	this.del(sessionId, name)
 	if err != nil {
 		return err
 	}
-	this.del(sessionId, name)
 	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
