@@ -67,6 +67,7 @@ func Init(dialector Dialector, opt ...*Options) *Store {
 		c.Options.Carrier = "cookie"
 	}
 	c.Options.CookieName = tools.Ternary(c.Options.CookieName == "", CookieName, c.Options.CookieName)
+	c.Options.GcProbability = tools.Ternary(c.Options.GcProbability <= 0, 0.9, c.Options.GcProbability) // 默认GC 90%
 	c.Dialector = dialector
 	c.Dialector.Apply(c.Options)
 	return c

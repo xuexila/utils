@@ -51,7 +51,7 @@ type Dialector interface {
 type Session struct {
 	Id         string              `json:"id" gorm:"type:varchar(64);not null;index;comment:Session ID"`    // session id
 	Name       string              `json:"name" gorm:"type:varchar(128);not null;index;comment:Session的名字"` // session 的名字
-	Values     any                 `json:"values" gorm:"comment:session数据"`                                 // session 数据
+	Values     SessionValue        `json:"values" gorm:"comment:session数据"`                                 // session 数据
 	CreateTime dataType.CustomTime `json:"create_time" gorm:"comment:session 创建时间"`                         // 创建时间 ，没啥用，就看
 	ExpireTime dataType.CustomTime `json:"expire_time" gorm:"not null;index;comment:session 过期时间"`          // 过期时间 ，用于自动回收的时候使用
 	Duration   time.Duration       `json:"duration" gorm:"comment:session有效期"`                              // 有效期，主要是用于更新有效期的时候使用
@@ -60,6 +60,8 @@ type Session struct {
 // Options session 配置
 type Options struct {
 	CookieName    string        `json:"cookie_name" yaml:"cookie_name" ini:"cookie_name"`          // 从cookie或者 header中读取 session的标识
+	DisableGc     bool          `json:"disable_gc" yaml:"disable_gc" ini:"disable_gc"`             // 是否禁用session gc
+	GcProbability float64       `json:"gc_probability" yaml:"gc_probability" ini:"gc_probability"` // session gc 概率
 	CheckInterval time.Duration `json:"check_interval" yaml:"check_interval" ini:"check_interval"` // session 检测默认有效期
 	Carrier       string        `json:"carrier" yaml:"carrier" ini:"carrier"`                      // session 载体，默认cookie
 	// cookie相关配置

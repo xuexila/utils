@@ -56,14 +56,16 @@ func (this *Instance) Apply(options *session.Options) {
 	this.option = options
 	this.ctx, this.cancel = context.WithCancel(context.Background())
 	// 还需要自动删除
-	tools.RunAsyncTickerFunc(this.ctx, true, this.option.CheckInterval, func() {
-		sessionStorage.Range(func(key, value any) bool {
-			ss := value.(session.Session)
-			if time.Time(ss.ExpireTime).Before(time.Now()) {
-				sessionStorage.Delete(key)
-			}
-			return true
-		})
+	tools.RunAsyncTickerProbabilityFunc(this.ctx, !this.option.DisableGc, this.option.CheckInterval, this.option.GcProbability, this.gc)
+}
+
+func (this *Instance) gc() {
+	sessionStorage.Range(func(key, value any) bool {
+		ss := value.(session.Session)
+		if time.Time(ss.ExpireTime).Before(time.Now()) {
+			sessionStorage.Delete(key)
+		}
+		return true
 	})
 }
 
@@ -105,7 +107,7 @@ func (this *Instance) Get(w http.ResponseWriter, r *http.Request, name string, d
 	if err != nil {
 		return err
 	}
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -122,7 +124,7 @@ func (this *Instance) GetUp(w http.ResponseWriter, r *http.Request, name string,
 	// 更新session过期时间
 	sessionVal.ExpireTime = dataType.CustomTime(time.Now().Add(sessionVal.Duration))
 	sessionStorage.Store(_k, *sessionVal)
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -137,7 +139,7 @@ func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name strin
 		return err
 	}
 	sessionStorage.Delete(_k)
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -153,7 +155,7 @@ func (this *Instance) Set(w http.ResponseWriter, r *http.Request, name string, v
 	sessionVal := session.Session{
 		Id:         sessionId,
 		Name:       name,
-		Values:     value,
+		Values:     session.SessionValue{Val: value},
 		CreateTime: dataType.CustomTime{},
 		ExpireTime: dataType.CustomTime{},
 		Duration:   session.ExpireTime,

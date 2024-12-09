@@ -87,40 +87,43 @@ func (this *Instance) Register(value ...any) {
 func (this *Instance) Apply(options *session.Options) {
 	this.option = options
 	this.ctx, this.cancel = context.WithCancel(context.Background())
-	tools.RunAsyncTickerFunc(this.ctx, true, this.option.CheckInterval, func() {
-		files, err := os.ReadDir(this.Path)
-		if err != nil {
-			return
-		}
-		// 循环所有文件
-		// 如果是文件夹，就直接删除
-		// 如果文件打开失败，跳过处理
-		// 如果解析失败，就删除
-		// 判断是否过期，过期也直接删除
-		for _, file := range files {
-			// 读取所有session文件
-			sessionPath := filepath.Join(this.Path, file.Name())
-			if file.IsDir() {
-				_ = os.RemoveAll(sessionPath)
-				continue
-			}
-			sessionVal := &session.Session{}
+	tools.RunAsyncTickerProbabilityFunc(this.ctx, !this.option.DisableGc, this.option.CheckInterval, this.option.GcProbability, this.gc)
+}
 
-			f, err := os.Open(sessionPath)
-			if err != nil {
-				vclose.Close(f)
-				continue
-			}
-			if err = gob.NewDecoder(f).Decode(sessionVal); err != nil {
-				vclose.Close(f)
-				_ = os.RemoveAll(sessionPath)
-			}
-			vclose.Close(f)
-			if time.Time(sessionVal.ExpireTime).Before(time.Now()) {
-				_ = os.RemoveAll(sessionPath)
-			}
+// gc 垃圾回收
+func (this *Instance) gc() {
+	files, err := os.ReadDir(this.Path)
+	if err != nil {
+		return
+	}
+	// 循环所有文件
+	// 如果是文件夹，就直接删除
+	// 如果文件打开失败，跳过处理
+	// 如果解析失败，就删除
+	// 判断是否过期，过期也直接删除
+	for _, file := range files {
+		// 读取所有session文件
+		sessionPath := filepath.Join(this.Path, file.Name())
+		if file.IsDir() {
+			_ = os.RemoveAll(sessionPath)
+			continue
 		}
-	})
+		sessionVal := &session.Session{}
+
+		f, err := os.Open(sessionPath)
+		if err != nil {
+			vclose.Close(f)
+			continue
+		}
+		if err = gob.NewDecoder(f).Decode(sessionVal); err != nil {
+			vclose.Close(f)
+			_ = os.RemoveAll(sessionPath)
+		}
+		vclose.Close(f)
+		if time.Time(sessionVal.ExpireTime).Before(time.Now()) {
+			_ = os.RemoveAll(sessionPath)
+		}
+	}
 }
 
 // Close 关闭 db
@@ -169,7 +172,7 @@ func (this *Instance) Get(w http.ResponseWriter, r *http.Request, name string, d
 	if err != nil {
 		return err
 	}
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -188,7 +191,7 @@ func (this *Instance) GetUp(w http.ResponseWriter, r *http.Request, name string,
 	if err = this.set(w, r, *sessionVal); err != nil {
 		return err
 	}
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -203,7 +206,7 @@ func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name strin
 		return err
 	}
 	_ = os.Remove(filepath.Join(this.Path, _k))
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -230,7 +233,7 @@ func (this *Instance) Set(w http.ResponseWriter, r *http.Request, name string, v
 	sessionVal := session.Session{
 		Id:         sessionId,
 		Name:       name,
-		Values:     value,
+		Values:     session.SessionValue{Val: value},
 		CreateTime: dataType.CustomTime{},
 		ExpireTime: dataType.CustomTime{},
 		Duration:   session.ExpireTime,

@@ -37,8 +37,12 @@ import (
 // Date: 2024/12/8 17:53
 //
 
+type SessionValue struct {
+	Val any
+}
+
 // Value return blob value, implement driver.Valuer interface
-func (this Session) Value() (driver.Value, error) {
+func (this SessionValue) Value() (driver.Value, error) {
 	var buf bytes.Buffer
 	err := gob.NewEncoder(&buf).Encode(this)
 	if err != nil {
@@ -47,9 +51,9 @@ func (this Session) Value() (driver.Value, error) {
 	return buf.Bytes(), nil
 }
 
-func (this *Session) Scan(val any) error {
+func (this *SessionValue) Scan(val any) error {
 	if val == nil {
-		*this = Session{}
+		*this = SessionValue{}
 		return nil
 	}
 	var ba []byte
@@ -63,7 +67,7 @@ func (this *Session) Scan(val any) error {
 }
 
 // GormDBDataType gorm db data type
-func (Session) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+func (SessionValue) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
 	case "sqlite":
 		return "BLOB"

@@ -2,7 +2,6 @@ package tools
 
 import (
 	"bytes"
-	"context"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
@@ -783,6 +782,11 @@ func Any2Byte(src any) []byte {
 	return b
 }
 
+// Any2Reader 将任意类型转换为 io.Reader
+func Any2Reader(src any) io.Reader {
+	return bytes.NewReader(Any2Byte(src))
+}
+
 // GetIpVersion 解析ip地址，确认ip版本
 func GetIpVersion(ip string) (string, error) {
 	_ip := net.ParseIP(ip)
@@ -836,11 +840,6 @@ func Slice2MapWithHeader(rows any, header []string) map[string]any {
 	return tmp
 }
 
-// Any2Reader 将任意类型转换为 io.Reader
-func Any2Reader(src any) io.Reader {
-	return bytes.NewReader(Any2Byte(src))
-}
-
 // Ternary 是一个通用的三元运算函数。
 // 它接受一个布尔条件和两个参数 a 和 b。
 // 如果条件为 true，则返回 a；否则返回 b。
@@ -865,50 +864,6 @@ func AutoTimeDuration(input time.Duration, unit time.Duration, dValue ...time.Du
 		return input * unit
 	}
 	return input
-}
-
-// RunSyncFunc 同步运行
-func RunSyncFunc(enable bool, f func()) {
-	if enable {
-		f()
-	}
-}
-
-// RunAsyncFunc 异步运行
-func RunAsyncFunc(enable bool, f func()) {
-	if enable && f != nil {
-		go f()
-	}
-}
-
-// RunAsyncTickerFunc 异步运行，并定时执行
-// ctx 用于控制循环的退出
-// enable 是否启用
-// d 执行间隔
-// f 要执行的函数
-// runFirst 是否先执行一次
-func RunAsyncTickerFunc(ctx context.Context, enable bool, d time.Duration, f func(), runFirst ...bool) {
-	if !enable {
-		return
-	}
-	if f == nil {
-		return
-	}
-	if len(runFirst) < 1 || runFirst[0] {
-		f()
-	}
-	go func() {
-		tck := time.NewTicker(d)
-		defer tck.Stop()
-		for {
-			select {
-			case <-ctx.Done(): // 退出循环
-				return
-			case <-tck.C:
-				f()
-			}
-		}
-	}()
 }
 
 // ReverseMapUnique 反转值唯一的 map

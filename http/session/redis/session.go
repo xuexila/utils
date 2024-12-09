@@ -116,7 +116,7 @@ func (this *Instance) Get(w http.ResponseWriter, r *http.Request, name string, d
 	if err != nil {
 		return err
 	}
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -135,7 +135,7 @@ func (this *Instance) GetUp(w http.ResponseWriter, r *http.Request, name string,
 	if err = this.set(w, r, *sessionVal); err != nil {
 		return err
 	}
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -150,7 +150,7 @@ func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name strin
 		return err
 	}
 	_ = this.Del(w, r, name)
-	v.Elem().Set(reflect.ValueOf(sessionVal.Values))
+	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
 
@@ -179,7 +179,7 @@ func (this *Instance) Set(w http.ResponseWriter, r *http.Request, name string, v
 	sessionVal := session.Session{
 		Id:         sessionId,
 		Name:       name,
-		Values:     value,
+		Values:     session.SessionValue{Val: value},
 		CreateTime: dataType.CustomTime{},
 		ExpireTime: dataType.CustomTime{},
 		Duration:   session.ExpireTime,
