@@ -68,7 +68,7 @@ func (this *Instance) get(w http.ResponseWriter, r *http.Request, name string) (
 		return nil, "", err // 从cookie中获取sessionId失败
 	}
 	// 这里直接使用sessionId 和 name 去数据库查询
-	tx := this.db.Where("id=? and name =?", sessionId, name).Take(sessionVal)
+	tx := this.db.Where("id=? and name =?", sessionId, name).Take(&sessionVal)
 	if err = tx.Error; err != nil {
 		return nil, "", err
 	}
