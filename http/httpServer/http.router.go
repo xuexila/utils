@@ -110,6 +110,10 @@ func (this *Router) BeforeAction(w http.ResponseWriter, r *http.Request) bool {
 	if this.CookiePath == "" {
 		this.CookiePath = "/"
 	}
+	// 在判断登录前，应该判断当前接口是否需要鉴权，否则就不读取下方的session
+	// 登录这里不应该使用 GetUp更新session，
+	// todo
+
 	// 这里改用session 系统
 	var loginInfo LoginInfo
 	err = this.Store.GetUp(w, r, this.SessionLoginName, &loginInfo)

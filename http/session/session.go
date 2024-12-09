@@ -113,6 +113,7 @@ func GetSessionId(w http.ResponseWriter, r *http.Request, options *Options) (str
 }
 
 // SetSessionId 设置sessionId
+// todo 设置session 的时候 应该根据 session 的有效期 设置过期时间
 func SetSessionId(w http.ResponseWriter, sid string, options *Options) {
 	switch options.Carrier {
 	case "cookie", "":
