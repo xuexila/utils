@@ -1,100 +1,91 @@
-package memory
+package carrierDb
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"github.com/helays/utils/dataType"
+	"github.com/helays/utils/db/userDb"
 	"github.com/helays/utils/http/session"
 	"github.com/helays/utils/tools"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"net/http"
 	"reflect"
-	"sync"
 	"time"
 )
 
-//
-// ━━━━━━神兽出没━━━━━━
-// 　　 ┏┓     ┏┓
-// 　　┏┛┻━━━━━┛┻┓
-// 　　┃　　　　　 ┃
-// 　　┃　　━　　　┃
-// 　　┃　┳┛　┗┳  ┃
-// 　　┃　　　　　 ┃
-// 　　┃　　┻　　　┃
-// 　　┃　　　　　 ┃
-// 　　┗━┓　　　┏━┛　Code is far away from bug with the animal protecting
-// 　　　 ┃　　　┃    神兽保佑,代码无bug
-// 　　　　┃　　　┃
-// 　　　　┃　　　┗━━━┓
-// 　　　　┃　　　　　　┣┓
-// 　　　　┃　　　　　　┏┛
-// 　　　　┗┓┓┏━┳┓┏┛
-// 　　　　 ┃┫┫ ┃┫┫
-// 　　　　 ┗┻┛ ┗┻┛
-//
-// ━━━━━━感觉萌萌哒━━━━━━
-//
-//
-// User helay
-// Date: 2024/12/7 23:23
-//
-// vsclub:sessionId:key:value
-
-// Instance session 实例
 type Instance struct {
 	option *session.Options
+	db     *gorm.DB
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-// New 初始化 session 内存 实例
-func New() *Instance {
-	return &Instance{}
+// New 创建一个session实例
+func New(db *gorm.DB, tableName ...string) *Instance {
+	ins := &Instance{
+		db: db,
+	}
+	userDb.AutoCreateTableWithStruct(db, session.Session{}, "自动创建session数据存储表失败")
+	return ins
 }
 
+// Register 注册结构定义
+// 在使用文件作为session引擎的时候，需要将存储session值的结构注册进来。
+func (this *Instance) Register(value ...any) {
+	if len(value) < 1 {
+		return
+	}
+	for _, v := range value {
+		gob.Register(v)
+	}
+}
+
+// Apply 应用配置
 func (this *Instance) Apply(options *session.Options) {
 	this.option = options
 	this.ctx, this.cancel = context.WithCancel(context.Background())
-	// 还需要自动删除
 	tools.RunAsyncTickerProbabilityFunc(this.ctx, !this.option.DisableGc, this.option.CheckInterval, this.option.GcProbability, this.gc)
 }
 
-func (this *Instance) gc() {
-	sessionStorage.Range(func(key, value any) bool {
-		ss := value.(session.Session)
-		if time.Time(ss.ExpireTime).Before(time.Now()) {
-			sessionStorage.Delete(key)
-		}
-		return true
-	})
-}
-
+// Close 关闭 db
 func (this *Instance) Close() error {
-	this.cancel() // 关闭定时器
+	this.cancel()
 	return nil
 }
 
-var (
-	sessionStorage sync.Map // 存储session
-)
+// 自动gc
+func (this *Instance) gc() {
+	// 清理所有 过期时间不大于当前时间的数据
+	this.db.Where("expire_time <= ?", time.Now()).Delete(&session.Session{})
+}
 
-func (this *Instance) get(w http.ResponseWriter, r *http.Request, name string) (*session.Session, string, error) {
-	sessionId, err := session.GetSessionId(w, r, this.option) // 这一步一般不会失败
+// 从数据库中查询session 数据
+func (this *Instance) get(w http.ResponseWriter, r *http.Request, name string) (sessionVal *session.Session, sessionId string, err error) {
+	sessionId, err = session.GetSessionId(w, r, this.option) // 这一步一般不会失败
 	if err != nil {
 		return nil, "", err // 从cookie中获取sessionId失败
 	}
-	_k := session.GetSessionName(sessionId, name)
-	val, ok := sessionStorage.Load(_k)
-	if !ok {
-		return nil, "", session.ErrNotFound
+	// 这里直接使用sessionId 和 name 去数据库查询
+	tx := this.db.Where("id=? and name =?", sessionId, name).Take(sessionVal)
+	if err = tx.Error; err != nil {
+		return nil, "", err
 	}
-	sessionVal := val.(session.Session)
-	if time.Time(sessionVal.ExpireTime).Before(time.Now()) {
-		sessionStorage.Delete(_k)
-		// session已过期
-		return nil, "", session.ErrNotFound
-	}
-	return &sessionVal, _k, nil
+	return sessionVal, sessionId, nil
+}
+
+// 存储session数据
+func (this *Instance) set(w http.ResponseWriter, r *http.Request, dst *session.Session) error {
+	return this.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}, {Name: "name"}},
+		UpdateAll: true,
+	}).Create(dst).Error
+}
+
+// 删除session数据
+func (this *Instance) del(sessionId, name string) {
+	this.db.Where("id=? and name=?", sessionId, name).Delete(&session.Session{})
 }
 
 // Get 获取session
@@ -117,13 +108,15 @@ func (this *Instance) GetUp(w http.ResponseWriter, r *http.Request, name string,
 	if v.Kind() != reflect.Ptr || v.IsNil() {
 		return fmt.Errorf("dst must be a pointer")
 	}
-	sessionVal, _k, err := this.get(w, r, name)
+	sessionVal, _, err := this.get(w, r, name)
 	if err != nil {
 		return err
 	}
 	// 更新session过期时间
 	sessionVal.ExpireTime = dataType.CustomTime(time.Now().Add(sessionVal.Duration))
-	sessionStorage.Store(_k, *sessionVal)
+	if err = this.set(w, r, sessionVal); err != nil {
+		return err
+	}
 	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
@@ -134,11 +127,11 @@ func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name strin
 	if v.Kind() != reflect.Ptr || v.IsNil() {
 		return fmt.Errorf("dst must be a pointer")
 	}
-	sessionVal, _k, err := this.get(w, r, name)
+	sessionVal, sessionId, err := this.get(w, r, name)
 	if err != nil {
 		return err
 	}
-	sessionStorage.Delete(_k)
+	this.del(sessionId, name)
 	v.Elem().Set(reflect.ValueOf(sessionVal.Values.Val))
 	return nil
 }
@@ -151,31 +144,26 @@ func (this *Instance) Flashes(w http.ResponseWriter, r *http.Request, name strin
 // duration session 过期时间，默认为24小时
 func (this *Instance) Set(w http.ResponseWriter, r *http.Request, name string, value any, duration ...time.Duration) error {
 	sessionId, _ := session.GetSessionId(w, r, this.option)
-	_k := session.GetSessionName(sessionId, name)
+	now := time.Now()
 	sessionVal := session.Session{
 		Id:         sessionId,
 		Name:       name,
 		Values:     session.SessionValue{Val: value},
-		CreateTime: dataType.CustomTime{},
-		ExpireTime: dataType.CustomTime{},
+		CreateTime: dataType.CustomTime(now),
 		Duration:   session.ExpireTime,
 	}
 	if len(duration) > 0 {
 		sessionVal.Duration = duration[0]
 	}
-	now := time.Now()
-	sessionVal.Id = sessionId                                                 // 设置sessionId
-	sessionVal.CreateTime = dataType.CustomTime(now)                          // 设置创建时间
 	sessionVal.ExpireTime = dataType.CustomTime(now.Add(sessionVal.Duration)) // 设置过期时间
-	sessionStorage.Store(_k, sessionVal)
-	return nil
+	return this.set(w, r, &sessionVal)
 }
 
 // Del 删除session
 func (this *Instance) Del(w http.ResponseWriter, r *http.Request, name string) error {
 	sessionId, _ := session.GetSessionId(w, r, this.option)
 	_k := session.GetSessionName(sessionId, name)
-	sessionStorage.Delete(_k)
+	this.del(sessionId, _k)
 	return nil
 }
 
@@ -188,12 +176,5 @@ func (this *Instance) Destroy(w http.ResponseWriter, r *http.Request) error {
 	// 需要删除 cookie 或者 header
 	session.DeleteSessionId(w, this.option)
 	// 删除所有以 sessionId 为前缀的 key
-	sessionStorage.Range(func(key, value any) bool {
-		sessVal := value.(session.Session)
-		if sessVal.Id == sessionId {
-			sessionStorage.Delete(key)
-		}
-		return true
-	})
-	return nil
+	return this.db.Where("id=?", sessionId).Delete(&session.Session{}).Error
 }
