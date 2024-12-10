@@ -74,7 +74,7 @@ func (this whereStruct) sql(quota string) (string, []any) {
 		return fmt.Sprintf(`%s %s ?`, this.Field, this.Operator), []any{_v}
 	case "null":
 		return fmt.Sprintf(`%s IS NULL`, this.Field), nil
-	case "notnull":
+	case "notnull", "not null":
 		return fmt.Sprintf(`%s IS NOT NULL`, this.Field), nil
 	}
 	return "", nil
