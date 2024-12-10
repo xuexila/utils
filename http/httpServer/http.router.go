@@ -112,17 +112,18 @@ func (this *Router) BeforeAction(w http.ResponseWriter, r *http.Request) bool {
 	}
 	// 在判断登录前，应该判断当前接口是否需要鉴权，否则就不读取下方的session
 	// 登录这里不应该使用 GetUp更新session，
-	// todo
+	// 不用登录的接口，这里就直接返回继续访问
+	if !this.validMustLogin(r.URL.Path) {
+		return true
+	}
 
 	// 这里改用session 系统
 	var loginInfo LoginInfo
-	err = this.Store.GetUp(w, r, this.SessionLoginName, &loginInfo)
+	// 如果session 存在，那么当session 剩余24小时的时候，更新session。
+	err = this.Store.GetUpByTimeLeft(w, r, this.SessionLoginName, &loginInfo, time.Hour*24)
 	if err != nil || !loginInfo.IsLogin {
-		// 这里还未登录 ，判断 当前路径是否在必须登录列表中
-		if this.validMustLogin(r.URL.Path) {
-			return this.unAuthorizedResp(w, r)
-		}
-		return true
+		// 未登录的，终止请求，响应401 或者302
+		return this.unAuthorizedResp(w, r)
 	}
 
 	// 登录禁止访问的页面

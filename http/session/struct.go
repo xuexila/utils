@@ -36,12 +36,14 @@ import (
 
 // Dialector session 接口
 type Dialector interface {
-	Get(w http.ResponseWriter, r *http.Request, name string, dst any) error                              // 获取session
-	GetUp(w http.ResponseWriter, r *http.Request, name string, dst any) error                            // 获取并刷新
-	Flashes(w http.ResponseWriter, r *http.Request, name string, dst any) error                          // 获取session然后销毁
-	Set(w http.ResponseWriter, r *http.Request, name string, value any, duration ...time.Duration) error // 设置session
-	Del(w http.ResponseWriter, r *http.Request, name string) error                                       // 删除session
-	Destroy(w http.ResponseWriter, r *http.Request) error                                                // 销毁session
+	Get(w http.ResponseWriter, r *http.Request, name string, dst any) error                                     // 获取session
+	GetUp(w http.ResponseWriter, r *http.Request, name string, dst any) error                                   // 获取并刷新
+	GetUpByTimeLeft(w http.ResponseWriter, r *http.Request, name string, dst any, duration time.Duration) error // 比如：设置了15天有效期，duration设置一天，那么当检测到session的有效期 不大于一天的时候就更新session
+	GetUpByDuration(w http.ResponseWriter, r *http.Request, name string, dst any, duration time.Duration) error // 比如：设置了15天的有效期，duration设置成1天，当有效期剩余不到 15-1 的时候延长duration
+	Flashes(w http.ResponseWriter, r *http.Request, name string, dst any) error                                 // 获取session然后销毁
+	Set(w http.ResponseWriter, r *http.Request, name string, value any, duration ...time.Duration) error        // 设置session
+	Del(w http.ResponseWriter, r *http.Request, name string) error                                              // 删除session
+	Destroy(w http.ResponseWriter, r *http.Request) error                                                       // 销毁session
 
 	Apply(*Options) // 设置
 	io.Closer
