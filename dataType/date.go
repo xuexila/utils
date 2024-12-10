@@ -3,6 +3,7 @@ package dataType
 import (
 	"database/sql"
 	"database/sql/driver"
+	"github.com/helays/utils/config"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"strings"
@@ -69,9 +70,9 @@ func (this *CustomTime) UnmarshalJSON(b []byte) (err error) {
 		*this = CustomTime{}
 		return nil
 	}
-	_t, err := time.ParseInLocation(time.DateTime, s, time.FixedZone("CST", 8*3600))
+	_t, err := time.ParseInLocation(time.DateTime, s, config.CstSh)
 	if err != nil {
-		_t, err = time.ParseInLocation(time.RFC3339Nano, s, time.FixedZone("CST", 8*3600))
+		_t, err = time.ParseInLocation(time.RFC3339Nano, s, config.CstSh)
 	}
 	*this = CustomTime(_t)
 	return err
