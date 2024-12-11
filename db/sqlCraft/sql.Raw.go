@@ -85,6 +85,7 @@ func (this SqlFilter) Response(w http.ResponseWriter, uTx *gorm.DB, rows *sql.Ro
 			ulogs.Error(err, "原生sql查询 scan失败", this.Sql)
 			continue
 		}
+		//fmt.Println(result["create_time"], "时区", result["create_time"].(time.Time).Location().String())
 		ulogs.Checkerr(json.NewEncoder(w).Encode(result), "原生sql查询 响应失败")
 	}
 	_, _ = w.Write([]byte(`]}`))

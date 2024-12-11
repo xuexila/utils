@@ -47,7 +47,7 @@ func InitDb(c Dbbase) (*gorm.DB, error) {
 	)
 	switch c.DbType {
 	case "pg":
-		//postgres://user:password@host1:port1,host2:port2/database?target_session_attrs=read-write&TimeZone=Asia/Shanghai
+		//postgres://user:password@host1:port1/database?target_session_attrs=read-write&TimeZone=Asia/Shanghai
 		//dsn = "postgres://" + c.User + ":" + c.Pwd + "@" + strings.Join(c.Host, ",") + "/" + c.Dbname + "?TimeZone=Asia/Shanghai"
 		dialector = postgres.New(postgres.Config{
 			DSN:                  dsn,
