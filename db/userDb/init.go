@@ -24,7 +24,8 @@ func (this Dbbase) Dsn() string {
 	switch this.DbType {
 	case "pg":
 		dsn.Scheme = "postgres"
-		query.Set("TimeZone", "Asia/Shanghai")
+		// 如果下面这里 设置成TimeZone ，有几率会出现时间异常
+		query.Set("timezone", "Asia/Shanghai")
 		if this.Schema != "" {
 			query.Set("search_path", this.Schema)
 		}

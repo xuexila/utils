@@ -2,7 +2,7 @@ package test
 
 import (
 	"github.com/helays/utils/http/session"
-	"github.com/helays/utils/http/session/file"
+	"github.com/helays/utils/http/session/carrierFile"
 	"time"
 )
 
