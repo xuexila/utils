@@ -1,8 +1,10 @@
-package fieldTypeMysql
+package fieldMysql
 
-import "github.com/helays/utils/db/dbFiledType"
+import (
+	"github.com/helays/utils/db/dbField"
+)
 
-var FieldTypeEnums = map[string]dbFiledType.FieldType{
+var FieldEnums = map[string]dbField.Field{
 	"tinyint": {
 		Name:        "tinyint",
 		FullName:    "tinyint",
