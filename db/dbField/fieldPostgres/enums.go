@@ -545,4 +545,17 @@ var FieldEnums = map[string]dbField.Field{
 		DecimalCols:  0,
 		Attribute:    "string",
 	},
+
+	// 这是向量数据库，需要插件的
+	"vector": {
+		Name:         "vector",
+		FullName:     "vector",
+		Extra:        "向量",
+		DstDb:        "postgres",
+		LenReadOnly:  false,
+		DefaultLen:   0,
+		ColsReadOnly: true,
+		DecimalCols:  0,
+		Attribute:    "string",
+	},
 }
