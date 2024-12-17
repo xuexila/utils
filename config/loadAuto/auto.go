@@ -20,22 +20,19 @@ var (
 // Load 载入配置文件
 func Load[T any](i T) {
 	ext := filepath.Ext(config.Cpath)
+	var err error
 	loadFirst, ok := loadFunc[ext]
 	if ok {
 		delete(loadFunc, ext)
-	}
-	err := loadFirst(i)
-	if err == nil {
-		return
+		if err = loadFirst(i); err == nil {
+			return
+		}
 	}
 	for _, v := range loadFunc {
 		err = v(i)
 		if err == nil {
 			return
 		}
-	}
-	if err == nil {
-		return
 	}
 	ulogs.DieCheckerr(err, "载入配置文件失败")
 }
