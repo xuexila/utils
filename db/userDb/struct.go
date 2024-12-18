@@ -24,8 +24,8 @@ var (
 )
 
 type Dbbase struct {
-	Remark string `ini:"remark" yaml:"remark" json:"remark" gorm:"type:varchar(256);not null;uniqueIndex;comment:备注信息，只能唯一"`
-	DbType string `ini:"db_type" yaml:"db_type" json:"db_type" gorm:"type:varchar(32);not null;index;comment:数据库类型，mysql|pg|kafka等"` // 数据库类型 mysql/pg
+	DbIdentifier string `ini:"db_identifier" yaml:"db_identifier" json:"db_identifier" gorm:"type:varchar(256);not null;uniqueIndex;comment:备注信息，只能唯一"`
+	DbType       string `ini:"db_type" yaml:"db_type" json:"db_type" gorm:"type:varchar(32);not null;index;comment:数据库类型，mysql|pg|kafka等"` // 数据库类型 mysql/pg
 
 	// 这部分是公用的
 	Host    dataType.StringArray `ini:"host" yaml:"host" json:"host" gorm:"not null;comment:连接信息"`

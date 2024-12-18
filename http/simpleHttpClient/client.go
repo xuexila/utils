@@ -31,8 +31,8 @@ func InitHttpClient(timeout time.Duration, args ...string) (*http.Client, error)
 		MaxIdleConnsPerHost: 5,    // 限制每个主机的最大空闲连接数
 		MaxConnsPerHost:     0,    // 限制每个主机的最大连接数（包括活跃和空闲）
 		IdleConnTimeout:     0,    // 设置空闲连接在被关闭前等待新请求的时间
-
 	}
+	
 	if len(args) >= 2 {
 		proxyAddr := args[1]
 		switch args[0] {
