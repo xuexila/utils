@@ -50,6 +50,7 @@ type SqlFilter struct {
 	Export       bool                            `json:"export"`        // 是否导出
 	ExportHeader map[string]string               `json:"export_header"` // 导出自定义表头
 	FileType     string                          `json:"file_type"`     // 导出文件格式，可选excel,csv。默认excel
+	DbIdentifier string                          `json:"db_identifier"` // 数据库配置标识
 	Schema       string                          `json:"schema"`        // 数据库模式
 	Debug        bool                            `json:"-"`             // 是否调试模式
 	Remark       string                          `json:"remark"`        // 数据库唯一标识
