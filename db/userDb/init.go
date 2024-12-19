@@ -2,46 +2,19 @@ package userDb
 
 import (
 	"errors"
-	"fmt"
+	"github.com/helays/utils/db"
 	"github.com/helays/utils/tools"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"net/url"
 	"strings"
 	"time"
 )
 
-func (this Dbbase) Dsn() string {
-	dsn := url.URL{
-		User: url.UserPassword(this.User, this.Pwd),
-		Host: strings.Join(this.Host, ","),
-		Path: this.Dbname,
-	}
-	query := dsn.Query()
-	switch this.DbType {
-	case "pg":
-		dsn.Scheme = "postgres"
-		// 如果下面这里 设置成TimeZone ，有几率会出现时间异常
-		query.Set("timezone", "Asia/Shanghai")
-		if this.Schema != "" {
-			query.Set("search_path", this.Schema)
-		}
-	case "mysql":
-		//dsn.Scheme = "mysql" // mysql 不需要这个
-		dsn.Host = fmt.Sprintf("tcp(%s)", dsn.Host)
-		query.Set("charset", "utf8mb4")
-		query.Set("parseTime", "True")
-		query.Set("loc", "Local")
-	}
-	dsn.RawQuery = query.Encode()
-	return dsn.String()
-}
-
 // InitDb 连接数据库
-func InitDb(c Dbbase) (*gorm.DB, error) {
+func InitDb(c db.Dbbase) (*gorm.DB, error) {
 	var (
 		dsn       = c.Dsn()
 		dialector gorm.Dialector
