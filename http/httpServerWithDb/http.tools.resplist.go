@@ -3,6 +3,7 @@ package httpServerWithDb
 import (
 	"github.com/helays/utils/db/userDb"
 	"github.com/helays/utils/http/httpServer"
+	"github.com/helays/utils/tools"
 	"github.com/helays/utils/ulogs"
 	"gorm.io/gorm"
 	"net/http"
@@ -43,10 +44,10 @@ func RespListsPkRowId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB
 	)
 	if len(pager) > 0 {
 		_pager := pager[0]
-		pageField = _pager.PageField
-		pageSizeField = _pager.PageSizeField
-		pageSize = _pager.PageSize
-		order = _pager.Order
+		pageField = tools.Ternary(_pager.PageField == "", pageField, _pager.PageField)
+		pageSizeField = tools.Ternary(_pager.PageSizeField == "", pageSizeField, _pager.PageSizeField)
+		pageSize = tools.Ternary(_pager.PageSize < 1, pageSize, _pager.PageSize)
+		order = tools.Ternary(_pager.Order == "", order, _pager.Order)
 	}
 	respLists(w, r, tx, respData, Pager{
 		PageSize:      pageSize,
@@ -65,10 +66,10 @@ func RespListsPkId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, r
 	)
 	if len(pager) > 0 {
 		_pager := pager[0]
-		pageField = _pager.PageField
-		pageSizeField = _pager.PageSizeField
-		pageSize = _pager.PageSize
-		order = _pager.Order
+		pageField = tools.Ternary(_pager.PageField == "", pageField, _pager.PageField)
+		pageSizeField = tools.Ternary(_pager.PageSizeField == "", pageSizeField, _pager.PageSizeField)
+		pageSize = tools.Ternary(_pager.PageSize < 1, pageSize, _pager.PageSize)
+		order = tools.Ternary(_pager.Order == "", order, _pager.Order)
 	}
 	respLists(w, r, tx, respData, Pager{
 		PageSize:      pageSize,
