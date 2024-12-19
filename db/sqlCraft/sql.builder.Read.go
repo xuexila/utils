@@ -54,7 +54,7 @@ func (this SqlFilter) Builder(inputTx *gorm.DB) (*gorm.DB, error) {
 }
 
 var (
-	fieldQueryRegexp = regexp.MustCompile(`^[\w)( +-/*,:.=<>']+$`)
+	fieldQueryRegexp = regexp.MustCompile(`^[\[\]\w)( +-/*,:.=<>#~%']+$`)
 	seriesNoRegexp   = regexp.MustCompile(`^[a-z0-9_]{24}$`)
 )
 
