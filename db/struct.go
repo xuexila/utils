@@ -56,7 +56,7 @@ type Dbbase struct {
 	Epsv int `ini:"epsv" yaml:"epsv" json:"epsv,omitempty" gorm:"type:int;not null;default:0;comment:是否启用加密"` // ftp 连接模式，0 被动模式 1 主动模式 2 自动
 	// 这部分是sftp的，
 	Authentication string `ini:"authentication" yaml:"authentication" json:"authentication,omitempty" gorm:"type:varchar(32);not null;default:'';comment:认证方式"` // 密码或者 私钥认证
-	Comment        string `json:"comment,omitempty" yaml:"comment" ini:"comment" gorm:"type:varchar(256);not null;uniqueIndex;comment:备注信息"`
+	Comment        string `json:"comment,omitempty" yaml:"comment" ini:"comment" gorm:"type:varchar(256);not null;default:'';comment:备注信息"`
 }
 
 func (this Dbbase) Dsn() string {
