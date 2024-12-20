@@ -190,7 +190,7 @@ func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 // SetReturnCode 设置返回函数
 // code值异常，会记录日志
 func SetReturnCode(w http.ResponseWriter, r *http.Request, code int, msg any, data ...any) {
-	if code != 0 && code != 200 {
+	if code != 0 && code != 200 && code != 404 {
 		ReqError(r, code, msg)
 	}
 	if _, ok := msg.(error); ok {
@@ -248,7 +248,9 @@ func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
 
 // SetReturnError 错误信息会记录下来，同时也会反馈给前端
 func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
-	ReqError(r, append([]any{err}, msg...)...)
+	if code != 404 {
+		ReqError(r, append([]any{err}, msg...)...)
+	}
 	if len(msg) < 1 {
 		msg = []any{err.Error()}
 	} else {
@@ -268,7 +270,25 @@ func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int,
 
 // SetReturnWithoutError ，错误信息会记录下来，但是只会反馈msg
 func SetReturnWithoutError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
-	ReqError(r, append([]any{err}, msg...)...)
+	if code != 404 {
+		ReqError(r, append([]any{err}, msg...)...)
+	}
+	if len(msg) < 1 {
+		msg = []any{"数据处理失败"}
+	}
+	RespJson(w)
+	if code == 0 || code == 200 {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(code)
+	}
+	ulogs.Checkerr(json.NewEncoder(w).Encode(map[string]interface{}{
+		"code": code,
+		"msg":  tools.AnySlice2Str(msg),
+	}), "SetReturnError")
+}
+
+func SetReturnErrorDisableLog(w http.ResponseWriter, err error, code int, msg ...any) {
 	if len(msg) < 1 {
 		msg = []any{"数据处理失败"}
 	}
@@ -352,7 +372,7 @@ func JsonDecode[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 	jd := json.NewDecoder(r.Body)
 	err := jd.Decode(&postData)
 	if err != nil && !errors.Is(err, io.EOF) {
-		SetReturnError(w, r, err, http.StatusInternalServerError, "参数解析失败", tools.MustStringReader(jd.Buffered()))
+		SetReturnErrorDisableLog(w, err, http.StatusInternalServerError, "参数解析失败", tools.MustStringReader(jd.Buffered()))
 		return postData, false
 	}
 	return postData, true
