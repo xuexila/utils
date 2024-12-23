@@ -10,7 +10,7 @@ import (
 )
 
 // Parseparams 解析启动参数
-func Parseparams(f func()) {
+func Parseparams(f ...func()) {
 	// 解析参数
 	var (
 		vers bool
@@ -19,8 +19,10 @@ func Parseparams(f func()) {
 	flag.StringVar(&config.Cpath, "c", "conf.ini", "配置文件")
 	flag.BoolVar(&config.Dbg, "debug", false, "Debug 模式")
 	flag.BoolVar(&vers, "version", false, "查看版本")
-	if f != nil {
-		f() // 自定义
+	if len(f) > 0 {
+		for _, v := range f {
+			v()
+		}
 	}
 	flag.Parse()
 	if vers {
