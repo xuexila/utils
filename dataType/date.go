@@ -16,6 +16,18 @@ func (this CustomTime) String() string {
 	return time.Time(this).Format(time.DateTime)
 }
 
+func (this CustomTime) After(u time.Time) bool {
+	return time.Time(this).After(u)
+}
+
+func (this CustomTime) Before(u time.Time) bool {
+	return time.Time(this).Before(u)
+}
+
+func (this CustomTime) Sub(u time.Time) time.Duration {
+	return time.Time(this).Sub(u)
+}
+
 func (this CustomTime) Unix() int64 {
 	return time.Time(this).Unix()
 }
