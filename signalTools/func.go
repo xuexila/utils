@@ -12,17 +12,10 @@ import (
 // @var funds 结束服务前，需要执行的操作
 func SignalHandle(funds ...func()) {
 	exitsin := make(chan os.Signal)
-	signal.Notify(exitsin, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // 注意，syscall.SIGKILL 不能被捕获
-
-	for {
-		switch <-exitsin {
-		case syscall.SIGHUP:
-			ulogs.Log("重载配置")
-		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM:
-			ulogs.Log("退出信号", <-exitsin) // 日志记录
-			exit()
-		}
-	}
+	//  syscall.SIGHUP 用作重载信号
+	signal.Notify(exitsin, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // 注意，syscall.SIGKILL 不能被捕获
+	ulogs.Log("退出信号", <-exitsin)                                         // 日志记录
+	exit()
 
 }
 
