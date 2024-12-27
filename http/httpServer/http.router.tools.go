@@ -1,6 +1,7 @@
 package httpServer
 
 import (
+	"github.com/helays/utils/config"
 	"net/http"
 	"regexp"
 )
@@ -31,6 +32,12 @@ import (
 // User helay
 // Date: 2024/11/30 15:00
 //
+
+// SwitchDebug 切换调试模式开关
+func SwitchDebug(w http.ResponseWriter, r *http.Request) {
+	config.Dbg = !config.Dbg
+	SetReturnData(w, 0, "成功")
+}
 
 // 辅助函数，用于匹配正则表达式
 func (this *Router) matchRegexp(path string, rules []*regexp.Regexp) bool {

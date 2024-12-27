@@ -13,7 +13,20 @@ import (
 func SignalHandle(funds ...func()) {
 	exitsin := make(chan os.Signal)
 	signal.Notify(exitsin, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // 注意，syscall.SIGKILL 不能被捕获
-	ulogs.Log("退出信号", <-exitsin)                                                             // 日志记录
+
+	for {
+		switch <-exitsin {
+		case syscall.SIGHUP:
+			ulogs.Log("重载配置")
+		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM:
+			ulogs.Log("退出信号", <-exitsin) // 日志记录
+			exit()
+		}
+	}
+
+}
+
+func exit(funds ...func()) {
 	ulogs.Log("执行回调", "数量", len(funds))
 	for _, f := range funds {
 		if f == nil {

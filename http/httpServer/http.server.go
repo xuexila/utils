@@ -27,6 +27,7 @@ func (h *HttpServer) HttpServerStart() {
 		h.serverNameMap[strings.ToLower(dom)] = 0
 	}
 	mux := http.NewServeMux()
+	h.Route["/debug/switch-debug"] = SwitchDebug
 	if config.Dbg {
 		h.Route["/debug/pprof/"] = pprof.Index
 		h.Route["/debug/pprof/cmdline"] = pprof.Cmdline
