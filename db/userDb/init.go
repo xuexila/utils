@@ -53,6 +53,16 @@ func InitDb(c db.Dbbase) (*gorm.DB, error) {
 	namingStrategy.SingularTable = c.SingularTable == 1
 	lger := logger.Default.LogMode(logger.Silent)
 	if c.Logger.LogLevelConfigs != nil {
+		for level, cfg := range c.Logger.LogLevelConfigs {
+			if cfg.FileName == "" {
+				cfg.FileName = fmt.Sprintf("%s_%s", strings.ReplaceAll(c.Host[0], ":", "_"), c.Dbname)
+				if c.Schema != "" {
+					cfg.FileName += "_" + c.Schema
+				}
+				fmt.Println(cfg.FileName)
+				c.Logger.LogLevelConfigs[level] = cfg
+			}
+		}
 		lger, err = zaploger.New(&c.Logger)
 		if err != nil {
 			return nil, fmt.Errorf("日志初始化失败:%s", err)
