@@ -2,7 +2,9 @@ package userDb
 
 import (
 	"errors"
+	"fmt"
 	"github.com/helays/utils/db"
+	"github.com/helays/utils/logger/zaploger"
 	"github.com/helays/utils/tools"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -18,6 +20,7 @@ func InitDb(c db.Dbbase) (*gorm.DB, error) {
 	var (
 		dsn       = c.Dsn()
 		dialector gorm.Dialector
+		err       error
 	)
 	switch c.DbType {
 	case "pg":
@@ -43,18 +46,24 @@ func InitDb(c db.Dbbase) (*gorm.DB, error) {
 	default:
 		return nil, errors.New("不支持的数据库")
 	}
-	nameingStrategy := schema.NamingStrategy{}
+	namingStrategy := schema.NamingStrategy{}
 	if c.TablePrefix != "" {
-		nameingStrategy.TablePrefix = c.TablePrefix
+		namingStrategy.TablePrefix = c.TablePrefix
 	}
-	nameingStrategy.SingularTable = c.SingularTable == 1
+	namingStrategy.SingularTable = c.SingularTable == 1
+	lger := logger.Default.LogMode(logger.Silent)
+	if c.Logger.LogLevelConfigs != nil {
+		lger, err = zaploger.New(&c.Logger)
+		if err != nil {
+			return nil, fmt.Errorf("日志初始化失败:%s", err)
+		}
+	}
 	cfg := gorm.Config{
 		SkipDefaultTransaction:                   true,
-		Logger:                                   logger.Default.LogMode(logger.Silent),
+		Logger:                                   lger,
 		DisableForeignKeyConstraintWhenMigrating: true,
-		NamingStrategy:                           nameingStrategy,
+		NamingStrategy:                           namingStrategy,
 	}
-
 	_db, err := gorm.Open(dialector, &cfg)
 	if err != nil {
 		return nil, err

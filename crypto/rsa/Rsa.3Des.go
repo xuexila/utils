@@ -9,7 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"github.com/helays/utils/crypto/sm4"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"io/ioutil"
 )
 

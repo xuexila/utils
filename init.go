@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/helays/utils/config"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"os"
 	"path/filepath"
 )

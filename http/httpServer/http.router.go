@@ -6,7 +6,7 @@ import (
 	"github.com/dchest/captcha"
 	"github.com/helays/utils/close/httpClose"
 	"github.com/helays/utils/http/mime"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"io"
 	"net/http"
 	"path/filepath"

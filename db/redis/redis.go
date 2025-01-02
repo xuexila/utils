@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"github.com/redis/go-redis/v9"
 )
 

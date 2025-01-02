@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/helays/utils/excelTools"
 	"github.com/helays/utils/http/httpTools"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"github.com/xuri/excelize/v2"
 	"net/http"
 )

@@ -5,7 +5,7 @@ import (
 	loadIni2 "github.com/helays/utils/config/loadIni"
 	loadJson2 "github.com/helays/utils/config/loadJson"
 	"github.com/helays/utils/config/loadYaml"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"path/filepath"
 )
 

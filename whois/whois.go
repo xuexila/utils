@@ -2,7 +2,7 @@ package whois
 
 import (
 	"github.com/helays/utils/close/netClose"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"github.com/helays/utils/worker"
 	"io/ioutil"
 	"net"

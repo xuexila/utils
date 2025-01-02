@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/helays/utils"
 	"github.com/helays/utils/config"
-	"github.com/helays/utils/ulogs"
+	"github.com/helays/utils/logger/ulogs"
 	"os"
 )
 
