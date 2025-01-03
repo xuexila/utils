@@ -96,7 +96,13 @@ func New(cfg *Config) (*Logger, error) {
 			if config.ToStdout {
 				writers = append(writers, zapcore.AddSync(os.Stdout))
 			}
-			core := zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(writers...), level)
+			// 定义一个自定义的日志级别过滤器，确保每个核心只处理特定范围的日志级别
+			levelEnabler := func(minLevel, maxLevel zapcore.Level) zap.LevelEnablerFunc {
+				return func(lvl zapcore.Level) bool {
+					return lvl >= minLevel && lvl < maxLevel
+				}
+			}
+			core := zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(writers...), levelEnabler(level, level+1))
 			cores = append(cores, core)
 		}
 	}

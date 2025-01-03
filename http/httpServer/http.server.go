@@ -1,6 +1,7 @@
 package httpServer
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -9,7 +10,9 @@ import (
 	"github.com/helays/utils/config"
 	"github.com/helays/utils/crypto/md5"
 	"github.com/helays/utils/logger/ulogs"
+	"github.com/helays/utils/logger/zaploger"
 	"github.com/helays/utils/tools"
+	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 	"net/http"
 	"net/http/pprof"
@@ -35,6 +38,11 @@ func (h *HttpServer) HttpServerStart() {
 		h.Route["/debug/pprof/symbol"] = pprof.Symbol
 		h.Route["/debug/pprof/trace"] = pprof.Trace
 	}
+	if h.Logger.LogLevelConfigs != nil {
+		h.logger, err = zaploger.New(&h.Logger)
+		ulogs.DieCheckerr(err, "http server 日志模块初始化失败")
+	}
+
 	if h.Route != nil {
 		for u, funcName := range h.Route {
 			h.middleware(mux, u, funcName)
@@ -124,7 +132,12 @@ func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.Resp
 				}
 			}
 		}
-		ulogs.Debug("请求地址", r.URL.String(), "IP", Getip(r))
+		// 这里输出info 级别的请求日志
+		h.logger.Info(context.Background(),
+			Getip(r),
+			zap.String(r.Method, r.URL.String()),
+			zap.String("http_user_agent", r.Header.Get("User-Agent")),
+		)
 		// add header
 		w.Header().Set("server", "vs/1.0")
 		w.Header().Set("connection", "keep-alive")
