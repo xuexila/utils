@@ -59,7 +59,6 @@ func InitDb(c db.Dbbase) (*gorm.DB, error) {
 				if c.Schema != "" {
 					cfg.FileName += "_" + c.Schema
 				}
-				fmt.Println(cfg.FileName)
 				c.Logger.LogLevelConfigs[level] = cfg
 			}
 		}
