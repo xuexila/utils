@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/logger"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,6 +27,7 @@ type LogConfig struct {
 
 // Config holds the application configuration.
 type Config struct {
+	LogFormat       string               `json:"log_format" yaml:"log_format" ini:"log_format"` // 日志格式 默认普通控制台格式，支持json格式
 	LogLevel        string               `json:"log_level" yaml:"log_level" ini:"log_level"`
 	LogLevelConfigs map[string]LogConfig `json:"log_level_configs" yaml:"log_level_configs" ini:"log_level_configs"` // key is log level, value is its configuration
 }
@@ -51,19 +53,27 @@ func New(cfg *Config) (*Logger, error) {
 		}
 		defalutLevel = level
 	}
-	var cores []zapcore.Core
-	encoder := zapcore.NewJSONEncoder(zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     customTimeEncoder, // 使用自定义的时间编码器
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	})
+	var (
+		cores         []zapcore.Core
+		encoderConfig = zapcore.EncoderConfig{
+			TimeKey:        "time",                         // 指定时间戳字段的键名。例如，设置为 "time" 会使得每条日志包含一个名为 time 的字段来表示日志的时间戳。
+			LevelKey:       "level",                        // 指定日志级别字段的键名。例如，设置为 "level" 会使得每条日志包含一个名为 level 的字段来表示日志的级别（如 info, error 等）。
+			NameKey:        "logger",                       // 指定日志记录器名称字段的键名。如果使用命名日志记录器，此字段将显示日志记录器的名称。
+			MessageKey:     "msg",                          // 指定消息字段的键名。这是实际的日志消息文本。
+			StacktraceKey:  "stacktrace",                   // 指定堆栈跟踪字段的键名。当发生错误时，可以包含完整的堆栈跟踪信息。
+			LineEnding:     zapcore.DefaultLineEnding,      // 指定每条日志记录结束时使用的行尾字符，默认是 \n。对于某些特殊需求（如 Windows 环境），可能需要设置为 \r\n。
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,  // 定义如何将日志级别编码为字符串。Zap 提供了几种内置的编码方式，如 LowercaseLevelEncoder（小写字母）、CapitalLevelEncoder（大写字母）、CapitalColorLevelEncoder（带颜色的大写字母）等。
+			EncodeTime:     customTimeEncoder,              // 使用自定义的时间编码器
+			EncodeDuration: zapcore.SecondsDurationEncoder, // 定义如何格式化持续时间。默认情况下，Zap 使用秒作为单位进行编码，但也可以选择毫秒、微秒或纳秒。
+			EncodeCaller:   zapcore.ShortCallerEncoder,     // 定义如何格式化调用者信息。可以选择完整路径（FullCallerEncoder）、短路径（ShortCallerEncoder）或其他自定义格式。
+		}
+		encoder zapcore.Encoder
+	)
+	if strings.ToUpper(cfg.LogFormat) == "json" {
+		encoder = zapcore.NewJSONEncoder(encoderConfig)
+	} else {
+		encoder = zapcore.NewConsoleEncoder(encoderConfig)
+	}
 	for levelStrs, config := range cfg.LogLevelConfigs {
 		for _, levelStr := range strings.Split(levelStrs, ",") {
 			level, err := zapcore.ParseLevel(levelStr)
@@ -121,31 +131,50 @@ func convertLogLevel(level logger.LogLevel) zapcore.LevelEnabler {
 
 func (l *Logger) Info(ctx context.Context, msg string, data ...interface{}) {
 	if l.level.Enabled(zapcore.InfoLevel) {
-		l.logger.Info(msg, zap.Any("data", data))
+		l.logger.Info(msg, input2Field(data...)...)
 	}
 }
 
 func (l *Logger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	if l.level.Enabled(zapcore.WarnLevel) {
-		l.logger.Warn(msg, zap.Any("data", data))
+		l.logger.Warn(msg, input2Field(data...)...)
 	}
 }
 
 func (l *Logger) Error(ctx context.Context, msg string, data ...interface{}) {
 	if l.level.Enabled(zapcore.ErrorLevel) {
-		l.logger.Error(msg, zap.Any("data", data))
+		l.logger.Error(msg, input2Field(data...)...)
+	}
+}
+
+func (l *Logger) Debug(ctx context.Context, msg string, data ...interface{}) {
+	if l.level.Enabled(zapcore.DebugLevel) {
+		l.logger.Debug(msg, input2Field(data...)...)
 	}
 }
 
 func (l *Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	if l.level.Enabled(zapcore.DebugLevel) {
 		sql, rows := fc()
-		l.logger.Debug(
-			"SQL Trace",
+		l.Debug(
+			ctx,
+			"跟踪",
 			zap.String("sql", sql),
 			zap.Int64("rows", rows),
 			zap.Duration("took", time.Since(begin)),
 			zap.Error(err),
 		)
 	}
+}
+
+func input2Field(data ...any) (fields []zap.Field) {
+	for i, d := range data {
+		switch t := d.(type) {
+		case zapcore.Field:
+			fields = append(fields, t)
+		default:
+			fields = append(fields, zap.Any(strconv.Itoa(i), d))
+		}
+	}
+	return
 }
