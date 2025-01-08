@@ -27,9 +27,10 @@ type LogConfig struct {
 
 // Config holds the application configuration.
 type Config struct {
-	LogFormat       string               `json:"log_format" yaml:"log_format" ini:"log_format"` // 日志格式 默认普通控制台格式，支持json格式
-	LogLevel        string               `json:"log_level" yaml:"log_level" ini:"log_level"`
-	LogLevelConfigs map[string]LogConfig `json:"log_level_configs" yaml:"log_level_configs" ini:"log_level_configs"` // key is log level, value is its configuration
+	ConsoleSeparator string               `json:"console_separator" yaml:"console_separator" ini:"console_separator"` // 控制台分隔符
+	LogFormat        string               `json:"log_format" yaml:"log_format" ini:"log_format"`                      // 日志格式 默认普通控制台格式，支持json格式
+	LogLevel         string               `json:"log_level" yaml:"log_level" ini:"log_level"`
+	LogLevelConfigs  map[string]LogConfig `json:"log_level_configs" yaml:"log_level_configs" ini:"log_level_configs"` // key is log level, value is its configuration
 }
 
 // Logger implements the gorm.Logger interface.
@@ -72,6 +73,7 @@ func New(cfg *Config) (*Logger, error) {
 	if strings.ToUpper(cfg.LogFormat) == "json" {
 		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	} else {
+		encoderConfig.ConsoleSeparator = tools.Ternary(cfg.ConsoleSeparator == "", " ", cfg.ConsoleSeparator)
 		encoder = zapcore.NewConsoleEncoder(encoderConfig)
 	}
 	for levelStrs, config := range cfg.LogLevelConfigs {
