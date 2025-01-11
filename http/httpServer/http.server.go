@@ -132,12 +132,17 @@ func (h *HttpServer) middleware(mux *http.ServeMux, u string, f func(w http.Resp
 				}
 			}
 		}
-		// 这里输出info 级别的请求日志
-		h.logger.Info(context.Background(),
-			Getip(r),
-			zap.String(r.Method, r.URL.String()),
-			zap.String("http_user_agent", r.Header.Get("User-Agent")),
-		)
+		if h.logger != nil {
+			// 这里输出info 级别的请求日志
+			h.logger.Info(context.Background(),
+				Getip(r),
+				zap.String(r.Method, r.URL.String()),
+				zap.String("http_user_agent", r.Header.Get("User-Agent")),
+			)
+		} else {
+			ulogs.Debug("请求地址", r.URL.String(), "IP", Getip(r))
+		}
+
 		// add header
 		w.Header().Set("server", "vs/1.0")
 		w.Header().Set("connection", "keep-alive")
