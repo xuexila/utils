@@ -21,7 +21,10 @@ func Parseparams(f ...func()) {
 	flag.BoolVar(&vers, "version", false, "查看版本")
 	if len(f) > 0 {
 		for _, v := range f {
-			v()
+			if v != nil {
+				v()
+			}
+
 		}
 	}
 	flag.Parse()
