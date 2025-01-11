@@ -94,7 +94,14 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 		}
 		tableName := alias
 		if tableName == "" {
-			tableName = tools.SnakeString(t.Name())
+			v := reflect.ValueOf(s)
+			tbName := v.MethodByName("TableName")
+			if tbName.IsValid() {
+				tableName = tbName.Call([]reflect.Value{})[0].String()
+			} else {
+				tableName = tools.SnakeString(t.Name())
+			}
+
 			alias = tableName
 		}
 
@@ -122,7 +129,6 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 					continue
 				}
 			}
-
 			// 这里还需要解析出字段本身的名字，去数据库进行查询，通过将结构体转成蛇形方式。
 			fieldName := tableName + "." + tools.SnakeString(t.Field(i).Name)
 			if t.Field(i).Type.String() == "int" {
