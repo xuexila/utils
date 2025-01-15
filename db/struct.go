@@ -86,3 +86,25 @@ func (this Dbbase) Dsn() string {
 	dsn.RawQuery = query.Encode()
 	return dsn.String()
 }
+
+// TableDefaultField 用于快速定义默认的表结构字段，包含id 创建时间 更新时间
+type TableDefaultField struct {
+	Id         int                 `json:"id,omitempty" gorm:"primaryKey;not null;autoIncrement;comment:行ID"`
+	CreateTime dataType.CustomTime `json:"create_time,omitempty" gorm:"autoCreateTime:true;index;not null;default:current_timestamp;comment:记录创建时间"`
+	UpdateTime dataType.CustomTime `json:"update_time,omitempty" gorm:"autoUpdateTime:true;index;comment:记录更新时间"`
+}
+
+// TableDefaultTimeField 用于快速定义默认的表结构时间字段，这里不需要定义字段类型，因为会自动根据字段类型进行转换
+type TableDefaultTimeField struct {
+	CreateTime dataType.CustomTime `json:"create_time,omitempty" gorm:"autoCreateTime:true;index;not null;default:current_timestamp;comment:记录创建时间"`
+	UpdateTime dataType.CustomTime `json:"update_time,omitempty" gorm:"autoUpdateTime:true;index;comment:记录更新时间"`
+}
+
+// TableDefaultUserField 用于快速定义默认的表结构用户字段，包含id 用户信息字段 创建时间 更新时间
+type TableDefaultUserField struct {
+	Id             int                 `json:"id,omitempty" gorm:"primaryKey;not null;autoIncrement;comment:行ID"`
+	CreateUserId   int                 `json:"create_user_id,omitempty" gorm:"not null;default:0;index;comment:创建人ID"`
+	CreateUserName string              `json:"create_user_name,omitempty" gorm:"not null;type:varchar(128);default:'';comment:创建人名称"`
+	CreateTime     dataType.CustomTime `json:"create_time,omitempty" gorm:"autoCreateTime:true;not null;index;default:current_timestamp;comment:记录创建时间"`
+	UpdateTime     dataType.CustomTime `json:"update_time,omitempty" gorm:"autoUpdateTime:true;index;comment:记录更新时间"`
+}

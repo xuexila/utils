@@ -5,22 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/helays/utils/dataType"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
 
-func GormDbDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case "sqlite":
-		return "JSON"
-	case "mysql":
-		return "longtext"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
-	}
-	return ""
+// GormDbDataTypeJSON 弃用函数，推荐使用 dataType.JsonDbDataType(db, field)
+// deprecated
+func GormDbDataTypeJSON(db *gorm.DB, field *schema.Field) string {
+	return dataType.JsonDbDataType(db, field)
 }
 
 func GormDbDataValue(d any) (driver.Value, error) {
