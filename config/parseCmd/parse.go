@@ -13,18 +13,19 @@ import (
 func Parseparams(f ...func()) {
 	// 解析参数
 	var (
-		vers bool
+		vers     bool
+		logLevel string
 	)
 	flag.BoolVar(&config.Help, "h", false, "参数说明")
 	flag.StringVar(&config.Cpath, "c", "conf.ini", "配置文件")
 	flag.BoolVar(&config.Dbg, "debug", false, "Debug 模式")
+	flag.StringVar(&logLevel, "log-level", "info", "日志级别:\ndebug info warn error fatal")
 	flag.BoolVar(&vers, "version", false, "查看版本")
 	if len(f) > 0 {
 		for _, v := range f {
 			if v != nil {
 				v()
 			}
-
 		}
 	}
 	flag.Parse()
@@ -36,7 +37,25 @@ func Parseparams(f ...func()) {
 		flag.Usage()
 		os.Exit(0)
 	}
+	// 控制日志等级
+	switch logLevel {
+	case "debug":
+		ulogs.Level = ulogs.LogLevelDebug
+	case "info":
+		ulogs.Level = ulogs.LogLevelInfo
+	case "warn":
+		ulogs.Level = ulogs.LogLevelWarn
+	case "error":
+		ulogs.Level = ulogs.LogLevelError
+	case "fatal":
+		ulogs.Level = ulogs.LogLevelFatal
+	}
+	if config.Dbg {
+		ulogs.Level = ulogs.LogLevelDebug
+	}
+
 	if config.EnableParseParamsLog {
+		fmt.Println("日志级别", logLevel, ulogs.Level)
 		ulogs.Log("运行参数解析完成...")
 	}
 }
