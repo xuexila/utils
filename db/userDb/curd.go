@@ -3,6 +3,7 @@ package userDb
 import (
 	"errors"
 	"fmt"
+	"github.com/helays/utils/config"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,9 @@ func Create[T Model](tx *gorm.DB, src T) error {
 	if err := src.Valid(); err != nil {
 		return fmt.Errorf("验证失败：%s", err.Error())
 	}
-
+	if config.Dbg {
+		tx = tx.Debug()
+	}
 	// 使用 GORM 的 Create 方法插入数据
 	if err := tx.Create(src).Error; err != nil {
 		return fmt.Errorf("插入数据失败：%s", err.Error())
@@ -41,7 +44,9 @@ func Update[T Model](tx *gorm.DB, src T, c QueryConfig) error {
 	if err != nil {
 		return fmt.Errorf("验证失败：%s", err.Error())
 	}
-
+	if config.Dbg {
+		tx = tx.Debug()
+	}
 	// 搜索数据是否存在
 	var old T
 	if err = tx.Where(c.Query, c.Args...).Take(&old).Error; err != nil {

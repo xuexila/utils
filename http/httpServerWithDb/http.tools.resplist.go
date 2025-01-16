@@ -1,6 +1,7 @@
 package httpServerWithDb
 
 import (
+	"github.com/helays/utils/config"
 	"github.com/helays/utils/db/userDb"
 	"github.com/helays/utils/http/httpServer"
 	"github.com/helays/utils/logger/ulogs"
@@ -88,7 +89,10 @@ func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c
 		list []T
 		mod  T
 	)
-	_tx := tx.Debug().Model(list)
+	if config.Dbg {
+		tx = tx.Debug()
+	}
+	_tx := tx.Model(list)
 	_tx.Scopes(userDb.FilterWhereStruct(mod, "", false, r))
 	if c.SelectQuery != nil {
 		_tx.Select(c.SelectQuery, c.SelectArgs...)
