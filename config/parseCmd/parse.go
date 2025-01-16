@@ -37,6 +37,9 @@ func Parseparams(f ...func()) {
 		flag.Usage()
 		os.Exit(0)
 	}
+	if config.Dbg {
+		logLevel = "debug"
+	}
 	// 控制日志等级
 	switch logLevel {
 	case "debug":
@@ -49,9 +52,6 @@ func Parseparams(f ...func()) {
 		ulogs.Level = ulogs.LogLevelError
 	case "fatal":
 		ulogs.Level = ulogs.LogLevelFatal
-	}
-	if config.Dbg {
-		ulogs.Level = ulogs.LogLevelDebug
 	}
 
 	if config.EnableParseParamsLog {

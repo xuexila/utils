@@ -7,6 +7,7 @@ import (
 	"github.com/helays/utils/tools"
 	"gorm.io/gorm"
 	"net/http"
+	"strings"
 )
 
 type Pager struct {
@@ -38,9 +39,10 @@ func respLists[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respD
 // RespListsPkRowId 通用查询列表 主键 row_id
 func RespListsPkRowId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respData T, pager ...Pager) {
 	var (
-		pageField, pageSizeField string
-		pageSize                 int
-		order                    = "row_id desc"
+		pageField     = "p"  // 页面默认字段
+		pageSizeField = "pn" // 页面呈现数量默认字段
+		pageSize      = 30   // 每页默认数量
+		order         = "row_id desc"
 	)
 	if len(pager) > 0 {
 		_pager := pager[0]
@@ -60,9 +62,10 @@ func RespListsPkRowId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB
 // RespListsPkId 通用查询列表 主键 id
 func RespListsPkId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respData T, pager ...Pager) {
 	var (
-		pageField, pageSizeField string
-		pageSize                 int
-		order                    = "id desc"
+		pageField     = "p"
+		pageSizeField = "pn"
+		pageSize      = 30
+		order         = "id desc"
 	)
 	if len(pager) > 0 {
 		_pager := pager[0]
@@ -77,4 +80,29 @@ func RespListsPkId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, r
 		PageField:     pageField,
 		Order:         order,
 	})
+}
+
+// ListMethodGet 通用查询函数（使用泛型），请求方式是Get
+func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c userDb.QueryConfig, p Pager) {
+	var (
+		list []T
+		mod  T
+	)
+	_tx := tx.Debug().Model(list)
+	_tx.Scopes(userDb.FilterWhereStruct(mod, "", false, r))
+	if c.SelectQuery != nil {
+		_tx.Select(c.SelectQuery, c.SelectArgs...)
+	}
+	if c.Query != nil {
+		_tx.Where(c.Query, c.Args...)
+	}
+	switch strings.ToLower(c.Pk) {
+	case "id":
+		RespListsPkId(w, r, _tx, list, p)
+	case "row_id":
+		RespListsPkRowId(w, r, _tx, list, p)
+	default:
+		return
+	}
+
 }
