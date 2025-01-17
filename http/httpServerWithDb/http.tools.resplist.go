@@ -1,14 +1,18 @@
 package httpServerWithDb
 
 import (
-	"github.com/helays/utils/config"
 	"github.com/helays/utils/db/userDb"
 	"github.com/helays/utils/http/httpServer"
 	"github.com/helays/utils/logger/ulogs"
 	"github.com/helays/utils/tools"
 	"gorm.io/gorm"
 	"net/http"
-	"strings"
+)
+
+const (
+	PageField     = "p"
+	PageSizeField = "pn"
+	PageSize      = 30
 )
 
 type Pager struct {
@@ -40,9 +44,9 @@ func respLists[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respD
 // RespListsPkRowId 通用查询列表 主键 row_id
 func RespListsPkRowId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respData T, pager ...Pager) {
 	var (
-		pageField     = "p"  // 页面默认字段
-		pageSizeField = "pn" // 页面呈现数量默认字段
-		pageSize      = 30   // 每页默认数量
+		pageField     = PageField     // 页面默认字段
+		pageSizeField = PageSizeField // 页面呈现数量默认字段
+		pageSize      = PageSize      // 每页默认数量
 		order         = "row_id desc"
 	)
 	if len(pager) > 0 {
@@ -60,12 +64,20 @@ func RespListsPkRowId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB
 	})
 }
 
-// RespListsPkId 通用查询列表 主键 id
+// RespListsPkId 根据查询参数分页获取数据列表，并按指定字段排序。
+// 该函数是一个泛型函数，可以处理任何类型的响应数据。
+// 参数:
+//
+//	w: http.ResponseWriter，用于写入HTTP响应。
+//	r: *http.Request，当前的HTTP请求。
+//	tx: *gorm.DB，数据库事务对象，用于执行数据库查询。
+//	respData: T，响应数据的结构体，用于存储查询结果。
+//	pager: ...Pager，可变参数，用于自定义分页和排序行为。
 func RespListsPkId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respData T, pager ...Pager) {
 	var (
-		pageField     = "p"
-		pageSizeField = "pn"
-		pageSize      = 30
+		pageField     = PageField     // 页面默认字段
+		pageSizeField = PageSizeField // 页面呈现数量默认字段
+		pageSize      = PageSize      // 每页默认数量
 		order         = "id desc"
 	)
 	if len(pager) > 0 {
@@ -81,32 +93,4 @@ func RespListsPkId[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, r
 		PageField:     pageField,
 		Order:         order,
 	})
-}
-
-// ListMethodGet 通用查询函数（使用泛型），请求方式是Get
-func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c userDb.QueryConfig, p Pager) {
-	var (
-		list []T
-		mod  T
-	)
-	if config.Dbg {
-		tx = tx.Debug()
-	}
-	_tx := tx.Model(list)
-	_tx.Scopes(userDb.FilterWhereStruct(mod, "", false, r))
-	if c.SelectQuery != nil {
-		_tx.Select(c.SelectQuery, c.SelectArgs...)
-	}
-	if c.Query != nil {
-		_tx.Where(c.Query, c.Args...)
-	}
-	switch strings.ToLower(c.Pk) {
-	case "id":
-		RespListsPkId(w, r, _tx, list, p)
-	case "row_id":
-		RespListsPkRowId(w, r, _tx, list, p)
-	default:
-		return
-	}
-
 }
