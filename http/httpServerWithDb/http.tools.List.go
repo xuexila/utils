@@ -18,21 +18,18 @@ import (
 //	c userDb.QueryConfig: 查询配置，包含了查询所需的配置信息，如选择查询、条件查询等。
 //	p Pager: 分页配置，用于指定查询的分页信息。
 func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c userDb.QueryConfig, p Pager) {
-	var (
-		list []T
-		mod  T
-	)
 	if config.Dbg {
 		tx = tx.Debug()
 	}
-	_tx := tx.Model(list)
-	_tx.Scopes(userDb.FilterWhereStruct(mod, "", false, r))
+	_tx := tx.Model(new(T))
+	_tx.Scopes(userDb.FilterWhereStruct(new(T), "", false, r))
 	if c.SelectQuery != nil {
 		_tx.Select(c.SelectQuery, c.SelectArgs...)
 	}
 	if c.Query != nil {
 		_tx.Where(c.Query, c.Args...)
 	}
+	var list []T
 	switch strings.ToLower(c.Pk) {
 	case "id":
 		RespListsPkId(w, r, _tx, list, p)

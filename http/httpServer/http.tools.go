@@ -1,18 +1,23 @@
 package httpServer
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-playground/form/v4"
 	"github.com/helays/utils/close/osClose"
+	"github.com/helays/utils/close/vclose"
 	"github.com/helays/utils/http/httpTools"
 	"github.com/helays/utils/http/mime"
 	"github.com/helays/utils/logger/ulogs"
 	"github.com/helays/utils/tools"
 	"io"
 	"log"
+	"mime/multipart"
 	"net"
 	"net/http"
+	"net/textproto"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -376,4 +381,100 @@ func JsonDecode[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 		return postData, false
 	}
 	return postData, true
+}
+
+type Files []File
+
+type File struct {
+	Filename string
+	Size     int64
+	Header   textproto.MIMEHeader
+	Body     *bytes.Buffer
+}
+
+// FormDataDecode 解析表单数据并将其解码为指定类型T的实例。
+// 该函数控制上传内容的大小，并处理表单数据的解析。
+// 参数:
+//
+//	w: http.ResponseWriter，用于写入HTTP响应。
+//	r: *http.Request，包含HTTP请求的详细信息。
+//	size: int64，允许的最大上传大小，单位为MB。
+//
+// 返回值:
+//
+//	T: 解析后的表单数据实例。
+//	bool: 表单数据是否成功解析。
+func FormDataDecode[T any](w http.ResponseWriter, r *http.Request, size int64) (T, bool) {
+	var formData T
+	err = r.ParseMultipartForm(size << 20) // 控制上传内容大小
+	if err != nil {
+		SetReturnErrorDisableLog(w, err, http.StatusInternalServerError, "设置载荷大小失败")
+		return formData, false
+	}
+
+	decoder := form.NewDecoder()
+	err = decoder.Decode(&formData, r.PostForm)
+	if err != nil {
+		SetReturnErrorDisableLog(w, err, http.StatusInternalServerError, "参数解析失败")
+		return formData, false
+	}
+	// 获取 T结构里面的 []字段
+	t := reflect.TypeOf(formData)
+	if t.Kind() != reflect.Struct {
+		return formData, true
+	}
+	valsOf := reflect.ValueOf(&formData).Elem()
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		formTag := field.Tag.Get("form")
+		if formTag == "" {
+			continue
+		}
+		formTag = strings.Split(formTag, ";")[0]
+		// 判断当前字段类型是否是 Files 结构体
+		if field.Type != reflect.TypeOf(Files{}) {
+			continue
+		}
+		rfs := r.MultipartForm.File[formTag]
+		if len(rfs) < 1 {
+			continue
+		}
+		var fs Files
+		for _, fileHeader := range rfs {
+			f, err := multipartUploader(fileHeader)
+			if err != nil {
+				SetReturnErrorDisableLog(w, err, http.StatusInternalServerError, "参数解析失败")
+				return formData, false
+			}
+			f.Header = fileHeader.Header
+			f.Size = fileHeader.Size
+			f.Filename = fileHeader.Filename
+			fs = append(fs, f)
+		}
+		// 这里批量上传文件
+		if len(fs) > 0 {
+			valsOf.FieldByName(field.Name).Set(reflect.ValueOf(fs))
+		}
+	}
+	return formData, true
+}
+
+// multipartUploader 用于上传multipart表单中的文件。
+// 参数 fileHeader 是一个指向 multipart.FileHeader 的指针，包含了上传文件的信息。
+// 返回值是一个 File 类型的结构体和一个错误值。
+// 如果在文件上传过程中没有错误，错误值将为 nil。
+func multipartUploader(fileHeader *multipart.FileHeader) (File, error) {
+	var dst File
+	f, err := fileHeader.Open()
+	defer vclose.Close(f)
+	if err != nil {
+		return dst, fmt.Errorf("打开文件%s失败:%s", fileHeader.Filename, err.Error())
+	}
+	dst.Body = new(bytes.Buffer)
+	_, err = io.Copy(dst.Body, f)
+	if err != nil {
+		return dst, fmt.Errorf("复制文件%s失败:%s", fileHeader.Filename, err.Error())
+	}
+	return dst, nil
 }

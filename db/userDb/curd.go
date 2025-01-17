@@ -24,6 +24,7 @@ func Create[T Model](tx *gorm.DB, src T) error {
 	if err := tx.Create(src).Error; err != nil {
 		return fmt.Errorf("插入数据失败：%s", err.Error())
 	}
+
 	return nil
 }
 
@@ -67,4 +68,11 @@ func Update[T Model](tx *gorm.DB, src T, c QueryConfig) error {
 		return fmt.Errorf("更新数据失败：%s", err.Error())
 	}
 	return nil
+}
+
+func FindOne[T any](tx *gorm.DB, query any, args ...any) (T, error) {
+	_tx := tx.Where(query, args...)
+	var data T
+	err := _tx.Take(&data).Error
+	return data, err
 }
