@@ -404,7 +404,8 @@ type File struct {
 //
 //	T: 解析后的表单数据实例。
 //	bool: 表单数据是否成功解析。
-func FormDataDecode[T any](w http.ResponseWriter, r *http.Request, size int64) (T, bool) {
+func FormDataDecode[T any](w http.ResponseWriter, r *http.Request, sizes ...int64) (T, bool) {
+	size := tools.Ternary(len(sizes) > 0 && sizes[0] > 0, sizes[0], 10) // 默认10M
 	var formData T
 	err = r.ParseMultipartForm(size << 20) // 控制上传内容大小
 	if err != nil {
