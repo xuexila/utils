@@ -535,6 +535,14 @@ func Fileabs(cpath string) string {
 	return filepath.Join(config.Appath, cpath)
 }
 
+// FileAbsWithCurrent 生成文件的绝对路径,根目录手动指定
+func FileAbsWithCurrent(current, cpath string) string {
+	if filepath.IsAbs(cpath) {
+		return cpath
+	}
+	return filepath.Join(current, cpath)
+}
+
 var defaultLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 // RandomString 伪随机字符串

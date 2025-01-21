@@ -42,9 +42,11 @@ import (
 // 支持 redis 存储
 // 支持数据库存储
 
-const Interval = time.Hour // 默认检测频率
-const CookieName = "vsclubId"
-const ExpireTime = 1 * time.Hour // session默认24小时过期
+const (
+	Interval   = time.Hour // 默认检测频率
+	CookieName = "vsclubId"
+	ExpireTime = 1 * time.Hour // session默认24小时过期
+)
 
 var (
 	ErrUnSupport = errors.New("不支持的session载体")
