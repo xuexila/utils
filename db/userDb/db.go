@@ -89,12 +89,15 @@ func FilterWhereString(r *http.Request, query string, field string, like bool) f
 func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request, likes ...map[string]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		t := reflect.TypeOf(s)
+		if t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
 		if t.Kind() != reflect.Struct {
 			return db
 		}
 		tableName := alias
+		v := reflect.ValueOf(s)
 		if tableName == "" {
-			v := reflect.ValueOf(s)
 			tbName := v.MethodByName("TableName")
 			if tbName.IsValid() {
 				tableName = tbName.Call([]reflect.Value{})[0].String()
@@ -104,17 +107,20 @@ func FilterWhereStruct(s any, alias string, enableDefault bool, r *http.Request,
 
 			alias = tableName
 		}
-
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
 		query := r.URL.Query()
 		for i := 0; i < t.NumField(); i++ {
 			if t.Field(i).Type.Kind() == reflect.Struct && t.Field(i).Tag.Get("gorm") == "" && t.Field(i).Tag.Get("json") == "" {
-				db.Scopes(FilterWhereStruct(reflect.ValueOf(s).Field(i).Interface(), alias, enableDefault, r, likes...))
+				db.Scopes(FilterWhereStruct(v.Field(i).Interface(), alias, enableDefault, r, likes...))
 				continue
 			}
 			if t.Field(i).Type.String() != "int" && t.Field(i).Type.String() != "string" {
 				continue
 			}
 			tagName := t.Field(i).Tag.Get("json")
+
 			if tagName == "" {
 				continue
 			}

@@ -1,8 +1,10 @@
 package httpServerWithDb
 
 import (
+	"fmt"
 	"github.com/helays/utils/config"
 	"github.com/helays/utils/db/userDb"
+	"github.com/helays/utils/http/httpServer"
 	"gorm.io/gorm"
 	"net/http"
 	"strings"
@@ -21,6 +23,16 @@ func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c
 	if config.Dbg {
 		tx = tx.Debug()
 	}
+	query := r.URL.Query()
+	if c.MustField != nil {
+		for k, rule := range c.MustField {
+			v := query.Get(k)
+			if !rule.MatchString(v) {
+				httpServer.SetReturnErrorDisableLog(w, fmt.Errorf("参数%s值格式错误", k), http.StatusBadRequest, "参数错误")
+				return
+			}
+		}
+	}
 	_tx := tx.Model(new(T))
 	_tx.Scopes(userDb.FilterWhereStruct(new(T), "", false, r))
 	if c.SelectQuery != nil {
@@ -28,6 +40,9 @@ func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c
 	}
 	if c.Query != nil {
 		_tx.Where(c.Query, c.Args...)
+	}
+	if c.Omit != nil && len(c.Omit) > 0 {
+		_tx.Omit(c.Omit...)
 	}
 	var list []T
 	switch strings.ToLower(c.Pk) {

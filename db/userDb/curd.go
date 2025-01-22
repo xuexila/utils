@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/helays/utils/config"
 	"gorm.io/gorm"
+	"regexp"
 )
 
 type Model interface {
@@ -35,7 +36,8 @@ type QueryConfig struct {
 	Omit        []string
 	Query       any
 	Args        []any
-	Pk          string // 主键字段 id row_Id
+	Pk          string                    // 主键字段 id row_Id
+	MustField   map[string]*regexp.Regexp // 必填字段，正则校验
 }
 
 // Update 通用更新函数，使用泛型
