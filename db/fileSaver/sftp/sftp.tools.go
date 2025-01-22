@@ -3,8 +3,8 @@ package sftp
 import (
 	"fmt"
 	"github.com/pkg/sftp"
+	"os"
 	"path"
-	"strings"
 )
 
 // SetPath 设置当前 文件全路径
@@ -26,15 +26,12 @@ func SetPath(sftpClient *sftp.Client, sPath string) (string, error) {
 // 如果存在返回true，
 // 当返回false的时候，需要判断error是否未nil，ni来的时候标识文件夹不存在
 func Exist(sftpClient *sftp.Client, sPath string) (bool, error) {
-	_, err := sftpClient.Stat(sPath)
-	if err == nil {
+	if _, err := sftpClient.Stat(sPath); err == nil {
 		return true, nil
+	} else if !os.IsNotExist(err) {
+		return false, err
 	}
-	errStr := err.Error()
-	if strings.Contains(errStr, "file does not exist") || strings.Contains(errStr, "no such file") {
-		return false, nil
-	}
-	return false, err
+	return false, nil
 }
 
 // Mkdir 创建文件夹
