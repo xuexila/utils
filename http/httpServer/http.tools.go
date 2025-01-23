@@ -293,6 +293,7 @@ func SetReturnWithoutError(w http.ResponseWriter, r *http.Request, err error, co
 	}), "SetReturnError")
 }
 
+// SetReturnErrorDisableLog 不记录日志,err 变量忽略不处理
 func SetReturnErrorDisableLog(w http.ResponseWriter, err error, code int, msg ...any) {
 	if len(msg) < 1 {
 		msg = []any{"数据处理失败"}
