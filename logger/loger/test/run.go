@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/helays/utils/config/loadIni"
 	"github.com/helays/utils/config/parseCmd"
-	"github.com/helays/utils/loger"
+	"github.com/helays/utils/logger/loger"
 	"strings"
 	"time"
 )
@@ -19,10 +18,6 @@ func main() {
 	loadIni.LoadIni(log)
 
 	loger.Init(log.Log)
-	if err := log.Log.Init(); err != nil {
-		fmt.Println(err)
-		return
-	}
 	go func() {
 		for {
 			log.Log.Error(time.Now().Unix())
