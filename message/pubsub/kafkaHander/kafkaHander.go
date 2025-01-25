@@ -7,6 +7,7 @@ import (
 	"github.com/helays/utils/logger/ulogs"
 	"github.com/helays/utils/message/pubsub"
 	"github.com/helays/utils/tools"
+	"sync"
 )
 
 type Instance struct {
@@ -15,6 +16,8 @@ type Instance struct {
 	isGroup       bool                 // 是否消费组模式
 	consumer      sarama.Consumer      // kafka consumer 消费者
 	consumerGroup sarama.ConsumerGroup // kafka consumer 消费者组
+	message       chan *sarama.ConsumerMessage
+	users         sync.Map
 }
 
 // New 创建kafkaHander实例
@@ -43,6 +46,7 @@ func New(opts *pubsub.Options, k ...any) (*Instance, error) {
 	if ins.consumer == nil && ins.consumerGroup == nil {
 		return nil, fmt.Errorf("kafkaHander 参数错误：缺失消费客户端")
 	}
+	ins.message = make(chan *sarama.ConsumerMessage, 100) // 创建消息队列
 	return &ins, nil
 }
 
@@ -61,11 +65,7 @@ func (this *Instance) Publish(param pubsub.Params, msg any) error {
 	if err != nil {
 		return fmt.Errorf("kafkaHander 发布消息失败: %v", err)
 	}
-	if this.opts.Loger == nil {
-		ulogs.Debug("kafkaHander 发布消息成功", "主题", param.Topic, param.Key, "分区", partition, "偏移", offset)
-	} else {
-		this.opts.Loger.Debug(context.Background(), "kafkaHander 发布消息成功", "主题", param.Topic, param.Key, "分区", partition, "偏移", offset)
-	}
+	this.debug("kafkaHander 发布消息成功", "主题", param.Topic, param.Key, "分区", partition, "偏移", offset)
 	return nil
 }
 
@@ -73,4 +73,56 @@ func (this *Instance) Publish(param pubsub.Params, msg any) error {
 // 关于kafka订阅，如果topic一样，需要进行合并，通过key来判断是否是同一个消息
 // 如果topic不一样，就分开消费
 func (this *Instance) Subscribe(param pubsub.Params, cbs *pubsub.Cbfunc) {
+	_, ok := this.users.Load(param.Topic)
+	if !ok {
+		// 如果topic已经存在，就在当前里面注册新的key回调函数
+		// todo 还差注册
+		return
+	}
+	this.users.Store(param.Topic, true) // 初始化当前 topic
+
+	go this.msgHander()
+	if this.isGroup {
+		this.group(param)
+	} else {
+		this.single(param)
+	}
+}
+
+func (this *Instance) msgHander() {
+	for {
+		select {
+		case <-this.opts.Ctx.Done():
+			return
+		case msg := <-this.message:
+			topic := msg.Topic
+			key := msg.Key
+			fmt.Println(topic, key)
+			// todo 这里准备处理 kafka类型的
+		}
+	}
+}
+
+func (this *Instance) log(title string, args ...any) {
+	if this.opts.Loger == nil {
+		ulogs.Log(append([]any{title}, args...)...)
+	} else {
+		this.opts.Loger.Info(context.Background(), title, args...)
+	}
+}
+
+func (this *Instance) error(title string, args ...any) {
+	if this.opts.Loger == nil {
+		ulogs.Error(append([]any{title}, args...)...)
+	} else {
+		this.opts.Loger.Error(context.Background(), title, args...)
+	}
+}
+
+func (this *Instance) debug(title string, args ...any) {
+	if this.opts.Loger == nil {
+		ulogs.Debug(append([]any{title}, args...)...)
+	} else {
+		this.opts.Loger.Debug(context.Background(), title, args...)
+	}
 }
