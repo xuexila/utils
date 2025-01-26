@@ -15,6 +15,10 @@ const (
 	CarrierZookeeper = "zookeeper" // zookeeper 载体
 )
 
+const (
+	ErrExit = "exit" // 系统退出
+)
+
 type PubSub struct {
 	Handler Handler
 }

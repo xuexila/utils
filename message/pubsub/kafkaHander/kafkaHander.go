@@ -17,7 +17,8 @@ type Instance struct {
 	consumer      sarama.Consumer      // kafka consumer 消费者
 	consumerGroup sarama.ConsumerGroup // kafka consumer 消费者组
 	message       chan *sarama.ConsumerMessage
-	users         sync.Map
+	topics        sync.Map // 用于注册 topics监听的安全集合
+	pubHandler    sync.Map // 用于注册 topic_key 的消息处理函数
 }
 
 // New 创建kafkaHander实例
@@ -73,13 +74,13 @@ func (this *Instance) Publish(param pubsub.Params, msg any) error {
 // 关于kafka订阅，如果topic一样，需要进行合并，通过key来判断是否是同一个消息
 // 如果topic不一样，就分开消费
 func (this *Instance) Subscribe(param pubsub.Params, cbs *pubsub.Cbfunc) {
-	_, ok := this.users.Load(param.Topic)
+	this.pubHandler.Store(fmt.Sprintf("%s_%s", param.Topic, param.Key), cbs) // 注册消息处理函数
+	_, ok := this.topics.Load(param.Topic)
 	if !ok {
-		// 如果topic已经存在，就在当前里面注册新的key回调函数
-		// todo 还差注册
+		// 如果topic已经监听，就不继续了
 		return
 	}
-	this.users.Store(param.Topic, true) // 初始化当前 topic
+	this.topics.Store(param.Topic, true) // 初始化当前 topic
 
 	go this.msgHander()
 	if this.isGroup {
@@ -96,9 +97,20 @@ func (this *Instance) msgHander() {
 			return
 		case msg := <-this.message:
 			topic := msg.Topic
-			key := msg.Key
-			fmt.Println(topic, key)
-			// todo 这里准备处理 kafka类型的
+			key := sarama.StringEncoder(msg.Key)
+			this.log("订阅发布组件", "kafka载体", "topic", topic, "key", key, "offset", msg.Offset, msg.Timestamp)
+			_t, ok := this.pubHandler.Load(fmt.Sprintf("%s_%s", topic, key))
+			if !ok {
+				continue
+			}
+			cbs := _t.(*pubsub.Cbfunc)
+			if cbs.CbString != nil {
+				cbs.CbString(string(msg.Value))
+			} else if cbs.CbByte != nil {
+				cbs.CbByte(msg.Value)
+			} else if cbs.CbAny != nil {
+				cbs.CbAny(msg.Value)
+			}
 		}
 	}
 }
