@@ -1,8 +1,8 @@
 package kafkaHander
 
 import (
+	"fmt"
 	"github.com/IBM/sarama"
-	"github.com/helays/utils/logger/ulogs"
 )
 
 type consumerGroupHander struct {
@@ -23,11 +23,9 @@ func (h *consumerGroupHander) ConsumeClaim(session sarama.ConsumerGroupSession, 
 		select {
 		case message, ok := <-claim.Messages():
 			if !ok {
-				ulogs.Log("kafka", "消费者关闭", claim.Topic(), claim.Partition())
-				return nil
+				return fmt.Errorf("kafka状态失败:topic:%s,partition:%d", claim.Topic(), claim.Partition())
 			}
 			h.msg <- message
-
 			session.MarkMessage(message, "")
 		case <-session.Context().Done():
 			return nil

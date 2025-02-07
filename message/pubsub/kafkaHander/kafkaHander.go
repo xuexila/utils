@@ -19,6 +19,8 @@ type Instance struct {
 	message       chan *sarama.ConsumerMessage
 	topics        sync.Map // 用于注册 topics监听的安全集合
 	pubHandler    sync.Map // 用于注册 topic_key 的消息处理函数
+	ctx           context.Context
+	cancel        context.CancelFunc
 }
 
 // New 创建kafkaHander实例
@@ -29,6 +31,7 @@ func New(opts *pubsub.Options, k ...any) (*Instance, error) {
 	ins := Instance{
 		opts: opts,
 	}
+	ins.ctx, ins.cancel = context.WithCancel(context.Background())
 	for _, v := range k {
 		switch t := v.(type) {
 		case sarama.SyncProducer:
@@ -76,7 +79,7 @@ func (this *Instance) Publish(param pubsub.Params, msg any) error {
 func (this *Instance) Subscribe(param pubsub.Params, cbs *pubsub.Cbfunc) {
 	this.pubHandler.Store(fmt.Sprintf("%s_%s", param.Topic, param.Key), cbs) // 注册消息处理函数
 	_, ok := this.topics.Load(param.Topic)
-	if !ok {
+	if ok {
 		// 如果topic已经监听，就不继续了
 		return
 	}
