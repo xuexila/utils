@@ -3,16 +3,16 @@ package pubsub
 import (
 	"context"
 	"github.com/helays/utils/logger/zaploger"
+	"path"
+	"strings"
 )
 
 const (
-	CarrierRedis     = "redis"     // redis 载体
-	CarrierKafka     = "kafka"     // kafka 载体
-	CarrierRabbitMQ  = "rabbitmq"  // rabbitmq 载体
-	CarrierRocketMQ  = "rocketmq"  // rocketmq 载体
-	CarrierEtcd      = "etcd"      // etcd 载体
-	CarrierNacos     = "nacos"     // nacos 载体
-	CarrierZookeeper = "zookeeper" // zookeeper 载体
+	CarrierRedis    = "redis"    // redis 载体
+	CarrierKafka    = "kafka"    // kafka 载体
+	CarrierRabbitMQ = "rabbitmq" // rabbitmq 载体
+	CarrierRocketMQ = "rocketmq" // rocketmq 载体
+	CarrierEtcd     = "etcd"     // etcd 载体
 )
 
 const (
@@ -39,6 +39,21 @@ type Options struct {
 type Params struct {
 	Topic string // 订阅主题
 	Key   string // 订阅的key 主要在kafka的时候可以用这个
+}
+
+// String 返回字符串
+func (this Params) String(isPath bool) string {
+	if isPath {
+		topic := this.Topic
+		if this.Key != "" {
+			return path.Join(topic, this.Key)
+		}
+	}
+	list := []string{this.Topic}
+	if this.Key != "" {
+		list = append(list, this.Key)
+	}
+	return strings.Join(list, "_")
 }
 
 // Cbfunc 回调函数

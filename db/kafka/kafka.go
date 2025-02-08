@@ -30,6 +30,7 @@ func (this *KafkaConfig) setConfig() (kafkaCfg *sarama.Config, err error) {
 			}
 		}
 	}
+
 	return
 }
 

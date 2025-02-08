@@ -40,8 +40,9 @@ func New(opts *pubsub.Options, k ...any) (*Instance, error) {
 			ins.consumer = t
 			ins.isGroup = false
 		case sarama.ConsumerGroup:
-			ins.consumerGroup = t
-			ins.isGroup = true
+			//ins.consumerGroup = t
+			//ins.isGroup = true
+			return nil, fmt.Errorf("kafkaHander 参数错误：发布订阅不支持kafka消费组")
 		}
 	}
 	if ins.producer == nil {

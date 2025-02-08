@@ -24,7 +24,8 @@ func New(rdb *redis.UniversalClient, opts *pubsub.Options) *Instance {
 
 // Subscribe 订阅消息
 func (this *Instance) Subscribe(param pubsub.Params, cbs *pubsub.Cbfunc) {
-	subIde := this.rdb.Subscribe(this.opts.Ctx, param.Topic)
+	topic := param.String(false)
+	subIde := this.rdb.Subscribe(this.opts.Ctx, topic)
 	for {
 		select {
 		case <-this.opts.Ctx.Done():
@@ -33,9 +34,9 @@ func (this *Instance) Subscribe(param pubsub.Params, cbs *pubsub.Cbfunc) {
 			msg, err := subIde.ReceiveMessage(this.opts.Ctx)
 			if err != nil {
 				if this.opts.Loger != nil {
-					this.opts.Loger.Error(context.Background(), "redis订阅消息失败", fmt.Errorf("%s：%s", param.Topic, err.Error()))
+					this.opts.Loger.Error(context.Background(), "redis订阅消息失败", fmt.Errorf("%s：%s", topic, err.Error()))
 				} else {
-					ulogs.Error("redis订阅消息失败", param.Topic, err)
+					ulogs.Error("redis订阅消息失败", topic, err)
 				}
 				continue
 			}
@@ -52,5 +53,7 @@ func (this *Instance) Subscribe(param pubsub.Params, cbs *pubsub.Cbfunc) {
 
 // Publish 发布消息
 func (this *Instance) Publish(param pubsub.Params, msg any) error {
-	return this.rdb.Publish(this.opts.Ctx, param.Topic, msg).Err()
+	topic := param.String(false)
+
+	return this.rdb.Publish(this.opts.Ctx, topic, msg).Err()
 }
