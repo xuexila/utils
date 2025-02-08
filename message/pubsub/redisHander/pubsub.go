@@ -2,10 +2,10 @@ package redisHander
 
 import (
 	"context"
-	"fmt"
 	"github.com/helays/utils/logger/ulogs"
 	"github.com/helays/utils/message/pubsub"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 // Instance redis实例
@@ -34,7 +34,7 @@ func (this *Instance) Subscribe(param pubsub.Params, cbs *pubsub.Cbfunc) {
 			msg, err := subIde.ReceiveMessage(this.opts.Ctx)
 			if err != nil {
 				if this.opts.Loger != nil {
-					this.opts.Loger.Error(context.Background(), "redis订阅消息失败", fmt.Errorf("%s：%s", topic, err.Error()))
+					this.opts.Loger.Error(context.Background(), "redis订阅消息失败", zap.String("topic", topic), zap.String("错误信息", err.Error()))
 				} else {
 					ulogs.Error("redis订阅消息失败", topic, err)
 				}

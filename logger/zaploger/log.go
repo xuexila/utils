@@ -137,25 +137,25 @@ func convertLogLevel(level logger.LogLevel) zapcore.LevelEnabler {
 	}
 }
 
-func (l *Logger) Info(ctx context.Context, msg string, data ...interface{}) {
+func (l *Logger) Info(ctx context.Context, msg string, data ...any) {
 	if l.level.Enabled(zapcore.InfoLevel) {
 		l.logger.Info(msg, input2Field(data...)...)
 	}
 }
 
-func (l *Logger) Warn(ctx context.Context, msg string, data ...interface{}) {
+func (l *Logger) Warn(ctx context.Context, msg string, data ...any) {
 	if l.level.Enabled(zapcore.WarnLevel) {
 		l.logger.Warn(msg, input2Field(data...)...)
 	}
 }
 
-func (l *Logger) Error(ctx context.Context, msg string, data ...interface{}) {
+func (l *Logger) Error(ctx context.Context, msg string, data ...any) {
 	if l.level.Enabled(zapcore.ErrorLevel) {
 		l.logger.Error(msg, input2Field(data...)...)
 	}
 }
 
-func (l *Logger) Debug(ctx context.Context, msg string, data ...interface{}) {
+func (l *Logger) Debug(ctx context.Context, msg string, data ...any) {
 	if l.level.Enabled(zapcore.DebugLevel) {
 		l.logger.Debug(msg, input2Field(data...)...)
 	}
@@ -178,6 +178,8 @@ func (l *Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, 
 func input2Field(data ...any) (fields []zap.Field) {
 	for i, d := range data {
 		switch t := d.(type) {
+		case []zapcore.Field:
+			fields = append(fields, t...)
 		case zapcore.Field:
 			fields = append(fields, t)
 		default:
@@ -185,4 +187,19 @@ func input2Field(data ...any) (fields []zap.Field) {
 		}
 	}
 	return
+}
+
+// Auto2Field 自动将数据转换为zap.Field
+func Auto2Field(data ...any) []zap.Field {
+	n := len(data)
+	if n == 0 {
+		return nil
+	}
+	count := n / 2
+	fields := make([]zap.Field, 0, count)
+	for i := 0; i < n-1; i += 2 {
+		fields = append(fields, zap.Any(tools.Any2string(data[i]), data[i+1]))
+	}
+
+	return fields
 }

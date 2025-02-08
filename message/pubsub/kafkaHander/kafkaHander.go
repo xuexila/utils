@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/IBM/sarama"
 	"github.com/helays/utils/logger/ulogs"
+	"github.com/helays/utils/logger/zaploger"
 	"github.com/helays/utils/message/pubsub"
 	"github.com/helays/utils/tools"
 	"sync"
@@ -70,7 +71,7 @@ func (this *Instance) Publish(param pubsub.Params, msg any) error {
 	if err != nil {
 		return fmt.Errorf("kafkaHander 发布消息失败: %v", err)
 	}
-	this.debug("kafkaHander 发布消息成功", "主题", param.Topic, param.Key, "分区", partition, "偏移", offset)
+	this.debug("kafkaHander 发布消息成功", "主题", param.Topic, "key", param.Key, "分区", partition, "偏移", offset)
 	return nil
 }
 
@@ -123,7 +124,7 @@ func (this *Instance) log(title string, args ...any) {
 	if this.opts.Loger == nil {
 		ulogs.Log(append([]any{title}, args...)...)
 	} else {
-		this.opts.Loger.Info(context.Background(), title, args...)
+		this.opts.Loger.Info(context.Background(), title, zaploger.Auto2Field(args...))
 	}
 }
 
@@ -131,7 +132,7 @@ func (this *Instance) error(title string, args ...any) {
 	if this.opts.Loger == nil {
 		ulogs.Error(append([]any{title}, args...)...)
 	} else {
-		this.opts.Loger.Error(context.Background(), title, args...)
+		this.opts.Loger.Error(context.Background(), title, zaploger.Auto2Field(args...))
 	}
 }
 
@@ -139,6 +140,6 @@ func (this *Instance) debug(title string, args ...any) {
 	if this.opts.Loger == nil {
 		ulogs.Debug(append([]any{title}, args...)...)
 	} else {
-		this.opts.Loger.Debug(context.Background(), title, args...)
+		this.opts.Loger.Debug(context.Background(), title, zaploger.Auto2Field(args...))
 	}
 }
