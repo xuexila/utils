@@ -882,3 +882,14 @@ func ReverseMapUnique[K comparable, V comparable](m map[K]V) map[V]K {
 	}
 	return reversed
 }
+
+// GetLevel2MapValue 获取二级map的值
+func GetLevel2MapValue[K any](inp map[string]map[string]K, key1, key2 string) (K, bool) {
+	if v, ok := inp[key1]; ok {
+		if vv, ok := v[key2]; ok {
+			return vv, true
+		}
+	}
+	var zeroValue K
+	return zeroValue, false
+}
