@@ -746,6 +746,9 @@ func Any2float64(v any) (float64, error) {
 	case float64:
 		return v, nil
 	case string:
+		if v == "" {
+			return 0, nil
+		}
 		return strconv.ParseFloat(v, 64)
 	default:
 		return 0.0, fmt.Errorf("无法将类型 %T 转换为 float64", v)
