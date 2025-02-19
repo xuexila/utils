@@ -1,6 +1,7 @@
 package dataType
 
 import (
+	"bytes"
 	"context"
 	"database/sql/driver"
 	"encoding/json"
@@ -56,10 +57,10 @@ func (m JSONMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON to deserialize []byte
 func (m *JSONMap) UnmarshalJSON(b []byte) error {
-	t := map[string]any{}
-	err := json.Unmarshal(b, &t)
-	*m = JSONMap(t)
-	return err
+	rd := bytes.NewReader(b)
+	decoder := json.NewDecoder(rd)
+	decoder.UseNumber()
+	return decoder.Decode(m)
 }
 
 // GormDataType gorm common data type
