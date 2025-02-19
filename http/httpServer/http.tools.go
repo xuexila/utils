@@ -176,6 +176,25 @@ func SetReturnCheckErr(w http.ResponseWriter, r *http.Request, err error, msg an
 	SetReturnError(w, r, err, 500, msg)
 }
 
+// SetReturnCheckErrDisableLog 设置响应数据，根据err判断响应内容， 并不记录日志
+func SetReturnCheckErrDisableLog(w http.ResponseWriter, r *http.Request, err error, code int, msg any, data ...any) {
+	if err == nil {
+		SetReturnData(w, 0, "成功", data...)
+		return
+	}
+	code = tools.Ternary(code == 0, code, http.StatusInternalServerError)
+	SetReturnErrorDisableLog(w, err, code, msg)
+}
+
+// SetReturnCheckErrWithoutError 设置响应数据，根据err判断响应内容， 不响应err信息
+func SetReturnCheckErrWithoutError(w http.ResponseWriter, r *http.Request, err error, code int, msg any, data ...any) {
+	if err == nil {
+		SetReturnData(w, 0, "成功", data...)
+		return
+	}
+	SetReturnWithoutError(w, r, err, code, msg)
+}
+
 // SetReturn 设置 返回函数Play
 func SetReturn(w http.ResponseWriter, code int, msg ...any) {
 	RespJson(w)
