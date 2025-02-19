@@ -1,11 +1,9 @@
 package dataType
 
 import (
-	"bytes"
 	"context"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -19,35 +17,32 @@ type JSONMap map[string]any
 
 // Value return json value, implement driver.Valuer interface
 func (m JSONMap) Value() (driver.Value, error) {
-	if m == nil {
-		return nil, nil
-	}
-	ba, err := m.MarshalJSON()
-	return string(ba), err
+	return DriverValueWithJson(m)
 }
 
 // Scan scan value into Jsonb, implements sql.Scanner interface
 func (m *JSONMap) Scan(val any) error {
-	if val == nil {
-		*m = make(JSONMap)
-		return nil
-	}
-	var ba []byte
-	switch v := val.(type) {
-	case []byte:
-		ba = v
-	case string:
-		ba = []byte(v)
-	default:
-		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", val))
-	}
-	t := map[string]any{}
-	rd := bytes.NewReader(ba)
-	decoder := json.NewDecoder(rd)
-	decoder.UseNumber()
-	err := decoder.Decode(&t)
-	*m = t
-	return err
+	return DriverScanWithJson(val, m) // 这里暂时先用这个版本
+	//if val == nil {
+	//	*m = make(JSONMap)
+	//	return nil
+	//}
+	//var ba []byte
+	//switch v := val.(type) {
+	//case []byte:
+	//	ba = v
+	//case string:
+	//	ba = []byte(v)
+	//default:
+	//	return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", val))
+	//}
+	//t := map[string]any{}
+	//rd := bytes.NewReader(ba)
+	//decoder := json.NewDecoder(rd)
+	//decoder.UseNumber()
+	//err := decoder.Decode(&t)
+	//*m = t
+	//return err
 }
 
 // MarshalJSON to output non base64 encoded []byte

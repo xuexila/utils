@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 type Binary []byte
@@ -33,7 +34,7 @@ func (Binary) GormDataType() string {
 }
 
 // GormDBDataType 返回数据库特定的数据类型名称
-func (Binary) GormDBDataType(db *gorm.DB) string {
+func (Binary) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
 	case "mysql":
 		return "longblob"

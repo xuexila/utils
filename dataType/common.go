@@ -40,6 +40,7 @@ func DriverValueWithJson(val any) (driver.Value, error) {
 	return string(b), err
 }
 
+// DriverScanWithJson 解析json
 func DriverScanWithJson(val any, dst any) error {
 	if val == nil {
 		return nil
@@ -56,8 +57,10 @@ func DriverScanWithJson(val any, dst any) error {
 	if len(ba) < 1 {
 		return nil
 	}
-	err := json.Unmarshal(ba, dst)
-	return err
+	rd := bytes.NewReader(ba)
+	decoder := json.NewDecoder(rd)
+	decoder.UseNumber()
+	return decoder.Decode(dst)
 }
 
 // CheckVersionSupportsJSON 检查版本是否支持JSON
