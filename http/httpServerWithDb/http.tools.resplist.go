@@ -22,9 +22,30 @@ type Pager struct {
 	Order         string
 }
 
+// RespFilter 是一个接口，定义了 FiltterDatas 方法
+type RespFilter interface {
+	RespFilter()
+}
+
 type RespDataStruct[T any] struct {
 	Lists T     `json:"lists"`
 	Total int64 `json:"total"`
+}
+
+// RespListsWithFilter 是一个通用的查询列表函数，有默认的数据过滤函数
+func RespListsWithFilter[T RespFilter](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respData T, pager Pager) {
+	var totals int64
+	tx.Scopes(userDb.QueryDateTimeRange(r))
+	tx.Count(&totals)
+	tx.Order(pager.Order)
+	if err := tx.Scopes(userDb.Paginate(r, pager.PageField, pager.PageSizeField, pager.PageSize)).Find(&respData).Error; err != nil {
+		httpServer.SetReturn(w, 1, "数据查询失败")
+		ulogs.Error(err, r.URL.Path, r.URL.RawQuery, "respLists", "tx.Find")
+		return
+	}
+	// 调用 FiltterDatas 方法
+	respData.RespFilter()
+	httpServer.SetReturnData(w, 0, "成功", RespDataStruct[T]{Lists: respData, Total: totals})
 }
 
 // respLists 通用查询列表
@@ -38,6 +59,7 @@ func respLists[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, respD
 		ulogs.Error(err, r.URL.Path, r.URL.RawQuery, "respLists", "tx.Find")
 		return
 	}
+
 	httpServer.SetReturnData(w, 0, "成功", RespDataStruct[T]{Lists: respData, Total: totals})
 }
 

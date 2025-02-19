@@ -32,6 +32,34 @@ func JsonDbDataType(db *gorm.DB, field *schema.Field) string {
 	return ""
 }
 
+func DriverValueWithJson(val any) (driver.Value, error) {
+	if val == nil {
+		return nil, nil
+	}
+	b, err := json.Marshal(val)
+	return string(b), err
+}
+
+func DriverScanWithJson(val any, dst any) error {
+	if val == nil {
+		return nil
+	}
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	case string:
+		ba = []byte(v)
+	default:
+		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", val))
+	}
+	if len(ba) < 1 {
+		return nil
+	}
+	err := json.Unmarshal(ba, dst)
+	return err
+}
+
 // CheckVersionSupportsJSON 检查版本是否支持JSON
 // mysql版本高于 5.7.8 ，才支持json
 func CheckVersionSupportsJSON(versionStr string) bool {

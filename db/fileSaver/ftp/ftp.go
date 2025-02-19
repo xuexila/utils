@@ -1,9 +1,13 @@
 package ftp
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"github.com/helays/utils/close/ftpClose"
+	"github.com/helays/utils/dataType"
 	"github.com/jlaffaye/ftp"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"io"
 	"path"
 )
@@ -14,7 +18,23 @@ type Config struct {
 	User string `json:"user" yaml:"user" ini:"user"`
 	Pwd  string `json:"pwd" yaml:"pwd" ini:"pwd"` // 密码
 	// 这部分是ftp的
-	Epsv int `ini:"epsv" yaml:"epsv" json:"epsv,omitempty" gorm:"type:int;not null;default:0;comment:是否启用加密"` // ftp 连接模式，0 被动模式 1 主动模式
+	Epsv int `ini:"epsv" yaml:"epsv" json:"epsv,omitempty" gorm:"type:int;not null;default:0;comment:连接模式"` // ftp 连接模式，0 被动模式 1 主动模式
+}
+
+func (this Config) Value() (driver.Value, error) {
+	return dataType.DriverValueWithJson(this)
+}
+
+func (this *Config) Scan(val interface{}) error {
+	return dataType.DriverScanWithJson(val, this)
+}
+
+func (this Config) GormDataType() string {
+	return "json"
+}
+
+func (Config) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	return dataType.JsonDbDataType(db, field)
 }
 
 // Write 写入文件

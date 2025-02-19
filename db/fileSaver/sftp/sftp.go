@@ -1,10 +1,14 @@
 package sftp
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"github.com/helays/utils/close/vclose"
+	"github.com/helays/utils/dataType"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"io"
 	"path"
 )
@@ -15,6 +19,22 @@ type Config struct {
 	User           string `json:"user" yaml:"user" ini:"user"`
 	Pwd            string `json:"pwd" yaml:"pwd" ini:"pwd"`                                  // 密码|密钥
 	Authentication string `json:"authentication" yaml:"authentication" ini:"authentication"` // 认证方式 ，默认passwd,可选public_key
+}
+
+func (this Config) Value() (driver.Value, error) {
+	return dataType.DriverValueWithJson(this)
+}
+
+func (this *Config) Scan(val interface{}) error {
+	return dataType.DriverScanWithJson(val, this)
+}
+
+func (this Config) GormDataType() string {
+	return "json"
+}
+
+func (Config) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	return dataType.JsonDbDataType(db, field)
 }
 
 // Write 写入文件
