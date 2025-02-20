@@ -17,9 +17,9 @@ import (
 //	w http.ResponseWriter: 用于写入HTTP响应。
 //	r *http.Request: 包含当前HTTP请求的详细信息。
 //	tx *gorm.DB: GORM数据库连接对象，用于执行数据库操作。
-//	c userDb.QueryConfig: 查询配置，包含了查询所需的配置信息，如选择查询、条件查询等。
+//	c userDb.Curd: 查询配置，包含了查询所需的配置信息，如选择查询、条件查询等。
 //	p Pager: 分页配置，用于指定查询的分页信息。
-func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c userDb.QueryConfig, p Pager) {
+func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c userDb.Curd, p Pager) {
 	if config.Dbg {
 		tx = tx.Debug()
 	}
@@ -38,8 +38,8 @@ func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c
 	if c.SelectQuery != nil {
 		_tx.Select(c.SelectQuery, c.SelectArgs...)
 	}
-	if c.Query != nil {
-		_tx.Where(c.Query, c.Args...)
+	if c.Where.Query != "" {
+		_tx.Where(c.Where.Query, c.Where.Args...)
 	}
 	if c.Omit != nil && len(c.Omit) > 0 {
 		_tx.Omit(c.Omit...)
