@@ -23,9 +23,9 @@ func (bf *Binary) Scan(value interface{}) error {
 	return nil
 }
 
-// Value 实现了 driver.Valuer 接口，用于将 BinaryFile 类型的数据写入数据库
+// // Value 实现了 driver.Valuer 接口，用于将 BinaryFile 类型的数据写入数据库
 func (bf Binary) Value() (driver.Value, error) {
-	return bf, nil
+	return []byte(bf), nil
 }
 
 // GormDataType 返回GORM的数据类型名称
