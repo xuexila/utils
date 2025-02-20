@@ -28,13 +28,13 @@ func ModelDelete[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c u
 	httpServer.SetReturnData(w, 0, "成功")
 }
 
-// ModelDeleteByUpdate 执行模型删除操作。是通过更新状态字段的方式实现的
-func ModelDeleteByUpdate[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c userDb.Curd) {
+// PostModelUpdate 执行模型删除操作。是通过更新状态字段的方式实现的
+func PostModelUpdate[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c userDb.Curd, errMsg string) {
 	if !httpServer.CheckReqPost(w, r) {
 		return
 	}
-	if err := userDb.DeleteByUpdate[T](tx, c); err != nil {
-		httpServer.SetReturnError(w, r, err, 500, "删除数据失败")
+	if err := userDb.UpdateWithoutValid[T](tx, c); err != nil {
+		httpServer.SetReturnError(w, r, err, 500, errMsg)
 		return
 	}
 	httpServer.SetReturnCode(w, r, 0, "成功")

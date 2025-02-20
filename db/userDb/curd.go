@@ -86,19 +86,8 @@ func Update[T Model](tx *gorm.DB, src T, c Curd) error {
 	return nil
 }
 
-// FindOne 查询某个对象
-func FindOne[T any](tx *gorm.DB, opts Curd) (T, error) {
-	_tx := tx.Where(opts.Where.Query, opts.Where.Args)
-	for _, item := range opts.Preload {
-		_tx.Preload(item.Query, item.Args...)
-	}
-	var data T
-	err := _tx.Take(&data).Error
-	return data, err
-}
-
-// DeleteByUpdate 通过更新状态字段，实现通用软删除
-func DeleteByUpdate[T any](tx *gorm.DB, opt Curd) (err error) {
+// UpdateWithoutValid 通过更新状态字段，实现通用软删除
+func UpdateWithoutValid[T any](tx *gorm.DB, opt Curd) (err error) {
 	_tx := tx.Model(new(T)).Where(opt.Where.Query, opt.Where.Args...)
 	if len(opt.Omit) > 0 {
 		_tx.Omit(opt.Omit...)
@@ -112,4 +101,15 @@ func DeleteByUpdate[T any](tx *gorm.DB, opt Curd) (err error) {
 		err = _tx.Updates(opt.Updates).Error
 	}
 	return
+}
+
+// FindOne 查询某个对象
+func FindOne[T any](tx *gorm.DB, opts Curd) (T, error) {
+	_tx := tx.Where(opts.Where.Query, opts.Where.Args)
+	for _, item := range opts.Preload {
+		_tx.Preload(item.Query, item.Args...)
+	}
+	var data T
+	err := _tx.Take(&data).Error
+	return data, err
 }
