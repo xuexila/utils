@@ -168,11 +168,12 @@ func RespJson(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 }
 
-func SetReturnCheckErr(w http.ResponseWriter, r *http.Request, err error, msg any, data ...any) {
+func SetReturnCheckErr(w http.ResponseWriter, r *http.Request, err error, code int, msg any, data ...any) {
 	if err == nil {
 		SetReturnData(w, 0, "成功", data...)
 		return
 	}
+	code = tools.Ternary(code != 0, code, http.StatusInternalServerError)
 	SetReturnError(w, r, err, 500, msg)
 }
 
@@ -182,7 +183,7 @@ func SetReturnCheckErrDisableLog(w http.ResponseWriter, r *http.Request, err err
 		SetReturnData(w, 0, "成功", data...)
 		return
 	}
-	code = tools.Ternary(code == 0, code, http.StatusInternalServerError)
+	code = tools.Ternary(code != 0, code, http.StatusInternalServerError)
 	SetReturnErrorDisableLog(w, err, code, msg)
 }
 
@@ -192,6 +193,7 @@ func SetReturnCheckErrWithoutError(w http.ResponseWriter, r *http.Request, err e
 		SetReturnData(w, 0, "成功", data...)
 		return
 	}
+	code = tools.Ternary(code != 0, code, http.StatusInternalServerError)
 	SetReturnWithoutError(w, r, err, code, msg)
 }
 

@@ -34,7 +34,7 @@ var (
 
 type Dbbase struct {
 	DbIdentifier string `ini:"db_identifier" yaml:"db_identifier,omitempty" json:"db_identifier" gorm:"type:varchar(256);not null;uniqueIndex;comment:配置唯一标识"`
-	DbType       string `ini:"db_type" yaml:"db_type" json:"db_type,omitempty" gorm:"type:varchar(32);not null;index;comment:数据库类型，mysql|pg|kafka等"` // 数据库类型 mysql/pg
+	DbType       string `ini:"db_type" yaml:"db_type" json:"db_type,omitempty" gorm:"type:varchar(32);not null;index;comment:数据库类型，mysql|pg"` // 数据库类型 mysql/pg
 
 	// 这部分是公用的
 	Host dataType.StringArray `ini:"host" yaml:"host" json:"host,omitempty" gorm:"not null;comment:连接信息"`

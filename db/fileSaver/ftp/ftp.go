@@ -12,7 +12,7 @@ import (
 	"path"
 )
 
-// Config sftp 配置
+// Config ftp 配置
 type Config struct {
 	Host string `json:"host" yaml:"host" ini:"host"` // ftp地址:端口
 	User string `json:"user" yaml:"user" ini:"user"`
