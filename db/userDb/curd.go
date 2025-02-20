@@ -52,13 +52,15 @@ func Update[T Model](tx *gorm.DB, src T, c QueryConfig) error {
 	}
 	// 搜索数据是否存在
 	var old T
+
 	if err = tx.Where(c.Query, c.Args...).Take(&old).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("数据不存在")
 		}
 		return err
 	}
-	_tx := tx.Debug().Where(c.Query, c.Args...)
+
+	_tx := tx.Where(c.Query, c.Args...)
 	if c.Omit != nil && len(c.Omit) > 0 {
 		_tx.Omit(c.Omit...)
 	}

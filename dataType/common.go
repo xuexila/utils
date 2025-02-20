@@ -36,6 +36,7 @@ func DriverValueWithJson(val any) (driver.Value, error) {
 	if val == nil {
 		return nil, nil
 	}
+
 	b, err := json.Marshal(val)
 	return string(b), err
 }
@@ -51,16 +52,20 @@ func DriverScanWithJson(val any, dst any) error {
 		ba = v
 	case string:
 		ba = []byte(v)
+	case json.RawMessage:
+		ba = v
 	default:
-		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", val))
+		return errors.New(fmt.Sprint("Failed to unmarshal JSON value:", val))
 	}
 	if len(ba) < 1 {
 		return nil
 	}
-	rd := bytes.NewReader(ba)
-	decoder := json.NewDecoder(rd)
-	decoder.UseNumber()
-	return decoder.Decode(dst)
+
+	// 如果需要用 UseNumber，就在dst 的实体类型上 实现 json.UnmarshalJSON
+	if err := json.Unmarshal(ba, dst); err != nil {
+		return fmt.Errorf("failed to unmarshal JSON value: %w", err)
+	}
+	return nil
 }
 
 // CheckVersionSupportsJSON 检查版本是否支持JSON
