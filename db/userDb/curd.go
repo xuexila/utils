@@ -38,6 +38,9 @@ type QueryConfig struct {
 	Args        []any
 	Pk          string                    // 主键字段 id row_Id
 	MustField   map[string]*regexp.Regexp // 必填字段，正则校验
+	ValidExist  bool                      // 存在校验,true 需要校验目标是否存在，false 忽略校验
+	Update      []any                     // 更新
+	Updates     any                       // 更新
 }
 
 // Update 通用更新函数，使用泛型
@@ -50,14 +53,14 @@ func Update[T Model](tx *gorm.DB, src T, c QueryConfig) error {
 	if config.Dbg {
 		tx = tx.Debug()
 	}
-	// 搜索数据是否存在
-	var old T
-
-	if err = tx.Where(c.Query, c.Args...).Take(&old).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("数据不存在")
+	if c.ValidExist {
+		// 搜索数据是否存在
+		if _, err = FindOne[T](tx, c.Query, c.Args...); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("数据不存在")
+			}
+			return err
 		}
-		return err
 	}
 
 	_tx := tx.Where(c.Query, c.Args...)
@@ -74,9 +77,27 @@ func Update[T Model](tx *gorm.DB, src T, c QueryConfig) error {
 	return nil
 }
 
+// FindOne 查询某个对象
 func FindOne[T any](tx *gorm.DB, query any, args ...any) (T, error) {
 	_tx := tx.Where(query, args...)
 	var data T
 	err := _tx.Take(&data).Error
 	return data, err
+}
+
+// DeleteByUpdate 通过更新状态字段，实现通用软删除
+func DeleteByUpdate[T any](tx *gorm.DB, opt QueryConfig) (err error) {
+	_tx := tx.Model(new(T)).Where(opt.Query, opt.Args...)
+	if len(opt.Omit) > 0 {
+		_tx.Omit(opt.Omit...)
+	}
+	if opt.SelectQuery != nil {
+		_tx.Select(opt.SelectQuery, opt.SelectArgs...)
+	}
+	if len(opt.Update) == 2 {
+		err = _tx.Update(opt.Update[0].(string), opt.Update[1]).Error
+	} else {
+		err = _tx.Updates(opt.Updates).Error
+	}
+	return
 }
