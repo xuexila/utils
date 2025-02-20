@@ -272,6 +272,25 @@ func SetReturnFile(w http.ResponseWriter, r *http.Request, file string) {
 	_, _ = io.Copy(w, f)
 }
 
+// SetDownloadBytes 下载来源是字节数组
+func SetDownloadBytes(w http.ResponseWriter, r *http.Request, b *[]byte, fileName string) {
+	var rd io.Reader
+	if len(*b) >= 512 {
+		rd = bytes.NewReader((*b)[:512])
+	} else {
+		rd = bytes.NewReader(*b)
+	}
+	_m, err := mime.GetFileMimeType(rd)
+	if err != nil {
+		SetReturnError(w, r, err, http.StatusInternalServerError, "下载失败")
+		return
+	}
+
+	w.Header().Set("Content-Type", _m)
+	httpTools.SetDisposition(w, fileName)
+	_, _ = w.Write(*b)
+}
+
 // SetReturnError 错误信息会记录下来，同时也会反馈给前端
 func SetReturnError(w http.ResponseWriter, r *http.Request, err error, code int, msg ...any) {
 	if code != 404 {
