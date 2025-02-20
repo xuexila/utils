@@ -42,8 +42,9 @@ func DriverValueWithJson(val any) (driver.Value, error) {
 }
 
 // DriverScanWithJson 解析json
-func DriverScanWithJson(val any, dst any) error {
+func DriverScanWithJson[T any](val any, dst *T) error {
 	if val == nil {
+		*dst = *new(T)
 		return nil
 	}
 	var ba []byte
@@ -58,6 +59,7 @@ func DriverScanWithJson(val any, dst any) error {
 		return errors.New(fmt.Sprint("Failed to unmarshal JSON value:", val))
 	}
 	if len(ba) < 1 {
+		*dst = *new(T)
 		return nil
 	}
 

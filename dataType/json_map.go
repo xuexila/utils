@@ -24,6 +24,26 @@ func (m JSONMap) Value() (driver.Value, error) {
 // Scan scan value into Jsonb, implements sql.Scanner interface
 func (m *JSONMap) Scan(val any) error {
 	return DriverScanWithJson(val, m) // 这里暂时先用这个版本
+	//if val == nil {
+	//	*m = make(JSONMap)
+	//	return nil
+	//}
+	//var ba []byte
+	//switch v := val.(type) {
+	//case []byte:
+	//	ba = v
+	//case string:
+	//	ba = []byte(v)
+	//default:
+	//	return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", val))
+	//}
+	//t := map[string]any{}
+	//rd := bytes.NewReader(ba)
+	//decoder := json.NewDecoder(rd)
+	//decoder.UseNumber()
+	//err := decoder.Decode(&t)
+	//*m = t
+	//return err
 }
 
 // MarshalJSON to output non base64 encoded []byte
