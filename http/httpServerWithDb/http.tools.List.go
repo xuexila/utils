@@ -44,6 +44,9 @@ func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c
 	if c.Omit != nil && len(c.Omit) > 0 {
 		_tx.Omit(c.Omit...)
 	}
+	for _,item:=range c.Preload{
+		_tx.Preload(item.Query, item.Args...)
+	}
 	var list []T
 	switch strings.ToLower(c.Pk) {
 	case "id":

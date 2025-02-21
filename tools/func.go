@@ -693,22 +693,60 @@ func Map2Struct(dst any, src map[string]any, customConvert map[string]func(dst a
 	return nil
 }
 
+// Any2string 将任意类型转换为字符串
 func Any2string(v any) string {
-	switch v.(type) {
-	case string:
-		return v.(string)
-	case int:
-		return strconv.Itoa(v.(int))
-	case int64:
-		return strconv.FormatInt(v.(int64), 10)
-	case int32:
-		return strconv.FormatInt(int64(v.(int32)), 10)
-	case float32:
-		return Float32tostring(v.(float32))
-	case float64:
-		return Float64tostring(v.(float64))
+	if v == nil {
+		return ""
 	}
-	return fmt.Sprintf("%v", v)
+	switch _v := v.(type) {
+	case string:
+		return _v
+	case int:
+		return strconv.Itoa(_v)
+	case int64:
+		return strconv.FormatInt(_v, 10)
+	case int32:
+		return strconv.FormatInt(int64(_v), 10)
+	case float32:
+		return Float32tostring(_v)
+	case float64:
+		return Float64tostring(_v)
+	case bool:
+		return strconv.FormatBool(_v)
+	case uint:
+		return strconv.FormatUint(uint64(_v), 10)
+	case uint64:
+		return strconv.FormatUint(_v, 10)
+	case uint32:
+		return strconv.FormatUint(uint64(_v), 10)
+	case []byte:
+		return string(_v)
+	case time.Time:
+		return _v.Format(time.DateTime)
+	case time.Duration:
+		return _v.String()
+	case fmt.Stringer:
+		return _v.String()
+	case error:
+		return _v.Error()
+	default:
+		// 使用反射处理更多类型
+		rv := reflect.ValueOf(v)
+		// 处理指针类型
+		if rv.Kind() == reflect.Ptr {
+			if rv.IsNil() {
+				return ""
+			}
+			rv = rv.Elem()
+		}
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array, reflect.Map, reflect.Struct:
+			_byt, _ := json.Marshal(v)
+			return string(_byt)
+		default:
+			return fmt.Sprintf("%v", v)
+		}
+	}
 }
 
 // Any2int 尝试将任意类型转换为 int
