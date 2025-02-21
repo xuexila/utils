@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -448,15 +449,14 @@ type File struct {
 func FormDataDecode[T any](w http.ResponseWriter, r *http.Request, sizes ...int64) (T, bool) {
 	size := tools.Ternary(len(sizes) > 0 && sizes[0] > 0, sizes[0], 10) // 默认10M
 	var formData T
-	err = r.ParseMultipartForm(size << 20) // 控制上传内容大小
-	if err != nil {
+	// 控制上传内容大小
+	if err := r.ParseMultipartForm(size << 20); err != nil {
 		SetReturnErrorDisableLog(w, err, http.StatusInternalServerError, "设置载荷大小失败")
 		return formData, false
 	}
 
 	decoder := form.NewDecoder()
-	err = decoder.Decode(&formData, r.PostForm)
-	if err != nil {
+	if err := decoder.Decode(&formData, r.PostForm); err != nil {
 		SetReturnErrorDisableLog(w, err, http.StatusInternalServerError, "参数解析失败")
 		return formData, false
 	}
@@ -519,4 +519,22 @@ func multipartUploader(fileHeader *multipart.FileHeader) (File, error) {
 		return dst, fmt.Errorf("复制文件%s失败:%s", fileHeader.Filename, err.Error())
 	}
 	return dst, nil
+}
+
+// PostQueryFieldWithValidRegexp 检查POST请求中的查询参数是否符合指定的正则表达式规则，并返回匹配结果。
+func PostQueryFieldWithValidRegexp(w http.ResponseWriter, r *http.Request, field string, rule *regexp.Regexp) (string, bool) {
+	if !CheckReqPost(w, r) {
+		return "", false
+	}
+	return QueryFieldWithValidRegexp(w, r, field, rule)
+}
+
+// QueryFieldWithValidRegexp 检查查询参数是否符合指定的正则表达式规则，并返回匹配结果。
+func QueryFieldWithValidRegexp(w http.ResponseWriter, r *http.Request, field string, rule *regexp.Regexp) (string, bool) {
+	id, err := httpTools.QueryValid(r.URL.Query(), field, rule)
+	if err != nil {
+		SetReturnErrorDisableLog(w, err, http.StatusBadRequest, err.Error())
+		return "", false
+	}
+	return id, true
 }

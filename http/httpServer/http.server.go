@@ -39,6 +39,7 @@ func (h *HttpServer) HttpServerStart() {
 		h.Route["/debug/pprof/trace"] = pprof.Trace
 	}
 	if h.Logger.LogLevelConfigs != nil {
+		var err error
 		h.logger, err = zaploger.New(&h.Logger)
 		ulogs.DieCheckerr(err, "http server 日志模块初始化失败")
 	}
@@ -99,7 +100,7 @@ func (h *HttpServer) HttpServerStart() {
 			server.TLSConfig.ClientCAs = pool
 			server.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
 		}
-		if err = server.ListenAndServeTLS(tools.Fileabs(h.Crt), tools.Fileabs(h.Key)); err != nil {
+		if err := server.ListenAndServeTLS(tools.Fileabs(h.Crt), tools.Fileabs(h.Key)); err != nil {
 			ulogs.Error("HTTPS Service 服务启动失败", server.Addr, err)
 			os.Exit(1)
 		}

@@ -120,7 +120,7 @@ func (this *Router) BeforeAction(w http.ResponseWriter, r *http.Request) bool {
 	// 这里改用session 系统
 	var loginInfo LoginInfo
 	// 如果session 存在，那么当session 剩余24小时的时候，更新session。
-	err = this.Store.GetUpByTimeLeft(w, r, this.SessionLoginName, &loginInfo, time.Hour*24)
+	err := this.Store.GetUpByTimeLeft(w, r, this.SessionLoginName, &loginInfo, time.Hour*24)
 	if err != nil || !loginInfo.IsLogin {
 		// 未登录的，终止请求，响应401 或者302
 		return this.unAuthorizedResp(w, r)
@@ -147,8 +147,7 @@ func (this Router) Captcha(w http.ResponseWriter, r *http.Request) {
 
 	// 验证码存储在session中
 	captchaId := captcha.NewLen(4)
-	err = this.Store.Set(w, r, "captcha", captchaId, 4*time.Minute)
-	if err != nil {
+	if err := this.Store.Set(w, r, "captcha", captchaId, 4*time.Minute); err != nil {
 		InternalServerError(w)
 		return
 	}

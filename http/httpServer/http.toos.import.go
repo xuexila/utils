@@ -30,7 +30,7 @@ func (this Import) Import(r *http.Request) ([]any, error) {
 
 // ImportExcel 获取excel内容
 func (this Import) ImportExcel(r *http.Request) ([]any, error) {
-	if err = this.valid(); err != nil {
+	if err := this.valid(); err != nil {
 		return nil, err
 	}
 	excel, err := excelize.OpenReader(r.Body)
@@ -61,7 +61,7 @@ func (this Import) ImportExcel(r *http.Request) ([]any, error) {
 }
 
 func (this Import) ImportCsv(r *http.Request) ([]any, error) {
-	if err = this.valid(); err != nil {
+	if err := this.valid(); err != nil {
 		return nil, err
 	}
 	var (
