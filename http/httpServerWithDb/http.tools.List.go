@@ -35,8 +35,8 @@ func ListMethodGet[T any](w http.ResponseWriter, r *http.Request, tx *gorm.DB, c
 	}
 	_tx := tx.Model(new(T))
 	_tx.Scopes(userDb.FilterWhereStruct(new(T), "", false, r))
-	if c.SelectQuery != nil {
-		_tx.Select(c.SelectQuery, c.SelectArgs...)
+	if c.Select.Query != "" {
+		_tx.Select(c.Select.Query, c.Select.Args...)
 	}
 	if c.Where.Query != "" {
 		_tx.Where(c.Where.Query, c.Where.Args...)
