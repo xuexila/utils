@@ -36,13 +36,10 @@ type QueryOpt struct {
 
 // Curd 通用curd函数，配置结构
 type Curd struct {
-	Select      []QueryOpt
-	Where       QueryOpt
-	Preload     []QueryOpt
-	SelectQuery any
-	SelectArgs  []any
-	Omit        []string
-
+	Select     QueryOpt
+	Where      QueryOpt
+	Preload    []QueryOpt
+	Omit       []string
 	Pk         string                    // 主键字段 id row_Id
 	MustField  map[string]*regexp.Regexp // 必填字段，正则校验
 	ValidExist bool                      // 存在校验,true 需要校验目标是否存在，false 忽略校验
@@ -76,8 +73,8 @@ func Update[T Model](tx *gorm.DB, src T, c Curd) error {
 	if c.Omit != nil && len(c.Omit) > 0 {
 		_tx.Omit(c.Omit...)
 	}
-	if c.SelectQuery != nil {
-		_tx.Select(c.SelectQuery, c.SelectArgs...)
+	if c.Select.Query != "" {
+		_tx.Select(c.Select.Query, c.Select.Args...)
 	}
 	// 使用 GORM 的 Update 方法更新数据
 	if err = _tx.Save(src).Error; err != nil {
@@ -92,8 +89,8 @@ func UpdateWithoutValid[T any](tx *gorm.DB, opt Curd) (err error) {
 	if len(opt.Omit) > 0 {
 		_tx.Omit(opt.Omit...)
 	}
-	if opt.SelectQuery != nil {
-		_tx.Select(opt.SelectQuery, opt.SelectArgs...)
+	if opt.Select.Query != "" {
+		_tx.Select(opt.Select.Query, opt.Select.Args...)
 	}
 	if len(opt.Update) == 2 {
 		err = _tx.Update(opt.Update[0].(string), opt.Update[1]).Error
@@ -106,6 +103,9 @@ func UpdateWithoutValid[T any](tx *gorm.DB, opt Curd) (err error) {
 // FindOne 查询某个对象
 func FindOne[T any](tx *gorm.DB, opts Curd) (T, error) {
 	_tx := tx.Where(opts.Where.Query, opts.Where.Args)
+	if opts.Select.Query != "" {
+		_tx.Select(opts.Select.Query, opts.Select.Args...)
+	}
 	for _, item := range opts.Preload {
 		_tx.Preload(item.Query, item.Args...)
 	}
