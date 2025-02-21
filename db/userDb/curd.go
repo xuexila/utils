@@ -106,8 +106,11 @@ func FindOne[T any](tx *gorm.DB, opts Curd) (T, error) {
 	if opts.Select.Query != "" {
 		_tx.Select(opts.Select.Query, opts.Select.Args...)
 	}
+	if len(opts.Omit) > 0 {
+		_tx.Omit(opts.Omit...)
+	}
 	for _, item := range opts.Preload {
-		_tx.Preload(item.Query, item.Args...)
+		_tx.Preload(item.Query)
 	}
 	var data T
 	err := _tx.Take(&data).Error
