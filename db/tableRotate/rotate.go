@@ -2,8 +2,11 @@ package tableRotate
 
 import (
 	"context"
+	"fmt"
+	"github.com/go-sql-driver/mysql"
 	"github.com/helays/utils/config"
 	"github.com/helays/utils/logger/ulogs"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -31,9 +34,10 @@ func (this TableRotate) AddTask(ctx context.Context, tx *gorm.DB, tableName stri
 	if !this.Enable {
 		return
 	}
-	if this.Duration < 0 || this.Crontab == "" {
+	if this.Duration < 0 && this.Crontab == "" {
 		return
 	}
+	ulogs.Log("数据库", tx.Dialector.Name(), tableName, "配置自动轮转")
 	this.tx = tx
 	this.tableName = tableName
 	if this.Crontab != "" {
@@ -45,16 +49,19 @@ func (this TableRotate) AddTask(ctx context.Context, tx *gorm.DB, tableName stri
 		c.Start()
 		return
 	}
-	tck := time.NewTicker(this.Duration)
-	defer tck.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-tck.C:
-			this.run()
+	go func() {
+		ulogs.Log("数据库", tx.Dialector.Name(), tableName, "配置自动轮转", "间隔", this.Duration)
+		tck := time.NewTicker(this.Duration)
+		defer tck.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-tck.C:
+				this.run()
+			}
 		}
-	}
+	}()
 }
 
 func (this *TableRotate) run() {
@@ -95,5 +102,21 @@ func (this *TableRotate) runRotateTableData() {
 			WithoutParentheses: false,
 		}
 	}
-	this.tx.Table(this.tableName).Where(this.FilterField+" < ?", queryVal)
+	err := this.tx.Table(this.tableName).Where(this.FilterField+" < ?", queryVal).Delete(nil).Error
+	if err != nil {
+		switch _err := err.(type) {
+		case *pgconn.PgError:
+			if _err.Code == "42P01" {
+				return
+			}
+		case *mysql.MySQLError:
+
+		default:
+			fmt.Println("fadsf", _err)
+		}
+		ulogs.Error("自动轮转表，回收表数据失败", this.tableName, "过滤字段", this.FilterField, "条件", retentionPeriod, unit, err)
+	} else {
+		ulogs.Log("自动轮转表", this.tableName, "回收表数据成功", "过滤字段", this.FilterField, "条件", retentionPeriod, unit)
+	}
+
 }
