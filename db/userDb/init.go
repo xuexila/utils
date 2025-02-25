@@ -3,6 +3,7 @@ package userDb
 import (
 	"errors"
 	"fmt"
+	"github.com/helays/utils/config"
 	"github.com/helays/utils/db"
 	"github.com/helays/utils/logger/zaploger"
 	"github.com/helays/utils/tools"
@@ -22,17 +23,16 @@ func InitDb(c db.Dbbase) (*gorm.DB, error) {
 		dialector gorm.Dialector
 		err       error
 	)
+
 	switch c.DbType {
-	case "pg":
+	case config.DbTypePostgres, config.DbTypePg:
 		//postgres://user:password@host1:port1/database?target_session_attrs=read-write&TimeZone=Asia/Shanghai
 		//dsn = "postgres://" + c.User + ":" + c.Pwd + "@" + strings.Join(c.Host, ",") + "/" + c.Dbname + "?TimeZone=Asia/Shanghai"
 		dialector = postgres.New(postgres.Config{
 			DSN:                  dsn,
 			PreferSimpleProtocol: true,
 		})
-	case "mysql":
-		dsn = strings.TrimLeft(dsn, "//")
-		//fmt.Println(dsn)
+	case config.DbTypeMysql:
 		//dsn = c.User + ":" + c.Pwd + "@tcp(" + strings.Join(c.Host, ",") + ")/" + c.Dbname + "?charset=utf8mb4&parseTime=True&loc=Local"
 		//fmt.Println(dsn)
 		dialector = mysql.New(mysql.Config{

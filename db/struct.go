@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql/driver"
 	"fmt"
+	"github.com/helays/utils/config"
 	"github.com/helays/utils/dataType"
 	"github.com/helays/utils/logger/zaploger"
 	"gorm.io/gorm"
@@ -75,22 +76,24 @@ func (this Dbbase) Dsn() string {
 	}
 	query := dsn.Query()
 	switch this.DbType {
-	case "pg":
+	case config.DbTypePostgres, config.DbTypePg:
 		dsn.Scheme = "postgres"
 		// 如果下面这里 设置成TimeZone ，有几率会出现时间异常
 		query.Set("timezone", "Asia/Shanghai")
 		if this.Schema != "" {
 			query.Set("search_path", this.Schema)
 		}
-	case "mysql":
+		dsn.RawQuery = query.Encode()
+		return dsn.String()
+	case config.DbTypeMysql:
 		//dsn.Scheme = "mysql" // mysql 不需要这个
-		dsn.Host = fmt.Sprintf("tcp(%s)", dsn.Host)
+		// mysql 密码里面的特殊字符 不用序列化
 		query.Set("charset", "utf8mb4")
 		query.Set("parseTime", "True")
 		query.Set("loc", "Local")
+		return fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", this.User, this.Pwd, dsn.Host, this.Dbname, query.Encode())
 	}
-	dsn.RawQuery = query.Encode()
-	return dsn.String()
+	return ""
 }
 
 // TableDefaultField 用于快速定义默认的表结构字段，包含id 创建时间 更新时间
