@@ -771,8 +771,22 @@ func Any2int(v any) (int64, error) {
 		return int64(v), nil
 	case float64:
 		return int64(v), nil
+	case bool:
+		if v {
+			return 1, nil
+		}
+		return 0, nil
 	default:
-		return 0, fmt.Errorf("无法将类型 %T 转换为 int", v)
+		// 使用反射尝试获取基础整数值
+		val := reflect.ValueOf(v)
+		switch val.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return val.Int(), nil
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return int64(val.Uint()), nil
+		default:
+			return 0, fmt.Errorf("无法将类型 %T 转换为 int", v)
+		}
 	}
 }
 
