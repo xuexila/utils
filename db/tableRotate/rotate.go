@@ -38,31 +38,49 @@ func (this TableRotate) AddTask(ctx context.Context, tx *gorm.DB, tableName stri
 	if this.Duration < 0 && this.Crontab == "" {
 		return
 	}
-	ulogs.Log("数据库", tx.Dialector.Name(), tx.Migrator().CurrentDatabase(), tableName, "配置自动轮转")
+	ulogs.Log("【表自动轮转配置】", "数据库", tx.Dialector.Name(), tx.Migrator().CurrentDatabase(), tableName)
+	ulogs.Log("【表自动轮转配置】", "周期策略", this.Crontab, this.Duration)
+	if this.SplitTable {
+		ulogs.Log("【表自动轮转配置】", "回收策略：", "分表", "最大保留数量", this.MaxTableRetention)
+	} else {
+		ulogs.Log("【表自动轮转配置】", "回收策略：", "数据", "数据保留时长", this.DataRetentionPeriod, this.DataRetentionPeriodUnit)
+	}
 	this.tx = tx
 	this.tableName = tableName
 	if this.Crontab != "" {
-		c := cron.New()
-		if _, err := c.AddFunc(this.Crontab, this.run); err != nil {
-			ulogs.Error("添加自动轮转任务失败", "表", tableName, "定时", this.Crontab)
-			return
-		}
-		c.Start()
+		go this.toCrontab(ctx)
+	}
+	go this.toTicker(ctx)
+}
+
+// 通过 crontab方式运行
+func (this *TableRotate) toCrontab(ctx context.Context) {
+	c := cron.New()
+	eid, err := c.AddFunc(this.Crontab, this.run)
+	if err != nil {
+		ulogs.Error("添加自动轮转任务失败", "表", this.tableName, "定时", this.Crontab)
 		return
 	}
+	c.Start()
 	go func() {
-		ulogs.Log("数据库", tx.Dialector.Name(), tableName, "配置自动轮转", "间隔", this.Duration)
-		tck := time.NewTicker(this.Duration)
-		defer tck.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-tck.C:
-				this.run()
-			}
-		}
+		<-ctx.Done()  // 等待上下文取消
+		c.Remove(eid) // 移除任务
+		c.Stop()      // 停止 cron 调度器
 	}()
+}
+
+// 通过 定时器方式运行
+func (this *TableRotate) toTicker(ctx context.Context) {
+	tck := time.NewTicker(this.Duration)
+	defer tck.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tck.C:
+			this.run()
+		}
+	}
 }
 
 func (this *TableRotate) run() {
