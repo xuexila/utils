@@ -729,6 +729,8 @@ func Any2string(v any) string {
 		return _v.String()
 	case error:
 		return _v.Error()
+	case nil:
+		return ""
 	default:
 		// 使用反射处理更多类型
 		rv := reflect.ValueOf(v)
@@ -752,6 +754,8 @@ func Any2string(v any) string {
 // Any2int 尝试将任意类型转换为 int
 func Any2int(v any) (int64, error) {
 	switch v := v.(type) {
+	case nil:
+		return 0, nil
 	case int:
 		return int64(v), nil
 	case int8:
@@ -802,6 +806,8 @@ func Any2float64(v any) (float64, error) {
 			return 0, nil
 		}
 		return strconv.ParseFloat(v, 64)
+	case nil:
+		return 0, nil
 	default:
 		return 0.0, fmt.Errorf("无法将类型 %T 转换为 float64", v)
 	}
