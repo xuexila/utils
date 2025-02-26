@@ -49,6 +49,7 @@ func (this TableRotate) AddTask(ctx context.Context, tx *gorm.DB, tableName stri
 	this.tableName = tableName
 	if this.Crontab != "" {
 		go this.toCrontab(ctx)
+		return
 	}
 	go this.toTicker(ctx)
 }
@@ -63,9 +64,10 @@ func (this *TableRotate) toCrontab(ctx context.Context) {
 	}
 	c.Start()
 	go func() {
-		<-ctx.Done()  // 等待上下文取消
-		c.Remove(eid) // 移除任务
-		c.Stop()      // 停止 cron 调度器
+		<-ctx.Done()      // 等待上下文取消
+		c.Remove(eid)     // 移除任务
+		<-c.Stop().Done() // 停止 cron 调度器
+		ulogs.Log("【表自动轮转配置终止】", "crontab", "数据库", this.tx.Dialector.Name(), this.tx.Migrator().CurrentDatabase(), this.tableName)
 	}()
 }
 
@@ -76,6 +78,7 @@ func (this *TableRotate) toTicker(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			ulogs.Log("【表自动轮转配置终止】", "定时器", "数据库", this.tx.Dialector.Name(), this.tx.Migrator().CurrentDatabase(), this.tableName)
 			return
 		case <-tck.C:
 			this.run()
