@@ -81,3 +81,9 @@ const (
 	DbTypePostgres = "postgres"
 	DbTypePg       = "pg"
 )
+
+const (
+	ClusterEtcd      = "etcd"
+	ClusterNacos     = "nacos"
+	ClusterZookeeper = "zookeeper"
+)
