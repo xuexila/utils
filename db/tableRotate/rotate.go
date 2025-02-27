@@ -36,7 +36,7 @@ func (this TableRotate) AddTask(ctx context.Context, tx *gorm.DB, tableName stri
 	if !this.Enable {
 		return
 	}
-	if this.Duration < 0 && this.Crontab == "" {
+	if this.Duration <= 0 && this.Crontab == "" {
 		return
 	}
 	ulogs.Log("【表自动轮转配置】", "数据库", tx.Dialector.Name(), tx.Migrator().CurrentDatabase(), tableName)
