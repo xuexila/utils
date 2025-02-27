@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	EnableCluster, isLeader bool
-	lock                    sync.Mutex
+	EnableCluster bool // 是否开启多节点模式
+	isLeader      bool // 当前节点类型，true为master，false为slave
+	lock          sync.Mutex
 )
 
 // RunWithLeader 运行函数，当有master和slave的时候，只有master才能运行函数
