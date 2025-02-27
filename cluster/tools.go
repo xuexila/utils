@@ -26,22 +26,24 @@ func RunWithLeader(ch chan bool, ctx context.Context, call func(ctx context.Cont
 		case leader := <-ch:
 			if !leader {
 				cancel()
-				setLeader(false) // 更新当前节点类型，
+				SetLeader(false) // 更新当前节点类型，
 				_ctx, cancel = context.WithCancel(context.Background())
 				continue
 			}
-			setLeader(true) // 更新当前节点类型，
+			SetLeader(true) // 更新当前节点类型，
 			call(_ctx)
 		}
 	}
 }
 
-func setLeader(leader bool) {
+// SetLeader 设置当前节点类型，true为master，false为slave
+func SetLeader(leader bool) {
 	lock.Lock()
 	defer lock.Unlock()
 	isLeader = leader
 }
 
+// IsLeader 判断当前节点类型，true为master，false为slave
 func IsLeader() bool {
 	lock.Lock()
 	defer lock.Unlock()
