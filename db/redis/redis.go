@@ -21,6 +21,7 @@ type Rediscfg struct {
 	// 如果同时提供了 `SentinelUsername` ，则启用ACL认证
 	SentinelPassword string `json:"sentinel_password" yaml:"sentinel_password" ini:"sentinel_password"`
 	Db               int    `json:"db" yaml:"db" ini:"db"` // 默认数据库
+	PoolSize         int    `json:"pool_size" yaml:"pool_size" ini:"pool_size"`
 	// 具体来说，当 DisableIndentity 设置为 true 时，它会阻止客户端在建立连接时自动发送命令来设置自己的标识信息。
 	// 这通常涉及到通过 CLIENT SETINFO LIBRARY 或类似的命令向 Redis 服务器报告客户端库的名称和版本等信息。
 	// 在某些情况下，这可能会导致一些问题，例如，当客户端库不支持这些命令时，或者当应用程序需要控制客户端标识信息的设置方式时。
@@ -46,6 +47,7 @@ func (this Rediscfg) NewUniversalClient() (redis.UniversalClient, error) {
 		MasterName:       this.MasterName,
 		DisableIndentity: this.DisableIndentity,
 		IdentitySuffix:   this.IdentitySuffix,
+		PoolSize:         this.PoolSize,
 		OnConnect: func(ctx context.Context, cn *redis.Conn) error {
 			var err error
 			if this.EnableAuthOnConnect || this.OnConnect {
@@ -63,6 +65,7 @@ func (this Rediscfg) NewUniversalClient() (redis.UniversalClient, error) {
 			return nil
 		},
 	}
+
 	if this.EnableSetDbBeforeConnect {
 		c.DB = this.Db
 	}
