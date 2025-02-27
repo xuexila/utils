@@ -23,6 +23,7 @@ type TableRotate struct {
 	Crontab                 string        `json:"crontab" yaml:"crontab" ini:"crontab"`                                                          // crontab 表达式 ,定时器和crontab二选一
 	SplitTable              bool          `json:"split_table" yaml:"split_table" ini:"split_table"`                                              // 是否开启按天切分日志 ，开启后，自动回收数据 只会看表的保留数量，不开启，就看数据保留时长
 	MaxTableRetention       int           `json:"max_table_retention" yaml:"max_table_retention" ini:"max_table_retention"`                      // 最大保留天数 -1 不限制
+	SeqFields               []string      `json:"seq_fields" yaml:"seq_fields" ini:"seq_fields"`                                                 // 序列字段
 	DataRetentionPeriod     int           `json:"data_retention_period" yaml:"data_retention_period" ini:"data_retention_period"`                // 数据保留时长 -1 不限制
 	DataRetentionPeriodUnit string        `json:"data_retention_period_unit" yaml:"data_retention_period_unit" ini:"data_retention_period_unit"` // 数据保留时间单位 支持 second minute hour day month year
 	FilterField             string        `json:"filter_field" yaml:"filter_field" ini:"filter_field"`                                           // 过滤字段 默认create_time
@@ -101,9 +102,7 @@ func (this *TableRotate) runSplitTable() {
 	if this.MaxTableRetention <= 0 {
 		return
 	}
-
 	// 然后进行分表切割
-
 	newTableName := this.tableName + "_" + time.Now().Format(dateFormat)
 	err := this.tx.Transaction(func(tx *gorm.DB) error {
 		err := tx.Migrator().RenameTable(this.tableName, newTableName)
@@ -114,12 +113,23 @@ func (this *TableRotate) runSplitTable() {
 		case config.DbTypePostgres:
 			// 创建新表
 			err = tx.Debug().Exec("CREATE TABLE ? (LIKE ? INCLUDING ALL)", clause.Table{Name: this.tableName}, clause.Table{Name: newTableName}).Error
+			if err != nil {
+				return fmt.Errorf("创建表失败 %s :%s", this.tableName, err.Error())
+			}
+			for _, seqField := range this.SeqFields {
+				err = tx.Debug().Exec("ALTER TABLE ? ALTER COLUMN ? DROP DEFAULT", clause.Table{Name: newTableName}, clause.Column{Name: seqField}).Error
+				if err != nil {
+					return fmt.Errorf("清除表%s自增序列字段%s失败:%s", this.tableName, seqField, err.Error())
+				}
+			}
+			// 创建表后，需要将改表后的序列清除掉
 		case config.DbTypeMysql:
 			err = tx.Debug().Exec("CREATE TABLE ? LIKE ?", clause.Table{Name: this.tableName}, clause.Table{Name: newTableName}).Error
+			if err != nil {
+				return fmt.Errorf("创建表失败 %s :%s", this.tableName, err.Error())
+			}
 		}
-		if err != nil {
-			return fmt.Errorf("创建表失败 %s :%s", this.tableName, err.Error())
-		}
+
 		return nil
 	})
 	if err != nil {

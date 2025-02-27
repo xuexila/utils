@@ -76,12 +76,48 @@ func init() {
 	}
 }
 
+// 关系数据库
 const (
-	DbTypeMysql    = "mysql"
-	DbTypePostgres = "postgres"
-	DbTypePg       = "pg"
+	DbTypeMysql      = "mysql"
+	DbTypePostgres   = "postgres"
+	DbTypePostgresql = "postgresql"
+	DbTypePg         = "pg"
+	DbTypeSqlite     = "sqlite"
+	DbTypeMssql      = "mssql"
+	DbTypeOracle     = "oracle"
+	DbTypeSqlserver  = "sqlserver"
 )
 
+// kv数据库
+const (
+	DbTypeMongo = "mongo"
+	DbTypeRedis = "redis"
+)
+
+// 搜索数据库
+const (
+	DbTypeEs = "es" // es存储
+)
+
+// 消息队列
+const (
+	QueueTypeKafka    = "kafka" // kafka消息队列
+	QueueTypeRabbit   = "rabbit"
+	QueueTypeRocketmq = "rocketmq"
+	QueueTypeRabbitmq = "rabbitmq"
+)
+
+// 文件存储
+const (
+	FileTypeFtp   = "ftp"
+	FileTypeSftp  = "sftp"
+	FileTypeLocal = "local"
+	FileTypeOss   = "oss"
+	FileTypeMinio = "minio"
+	FileType      = "hdfs"
+)
+
+// 集群类型
 const (
 	ClusterEtcd      = "etcd"
 	ClusterNacos     = "nacos"
