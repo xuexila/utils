@@ -752,8 +752,8 @@ func Any2string(v any) string {
 }
 
 // Any2int 尝试将任意类型转换为 int
-func Any2int(v any) (int64, error) {
-	switch v := v.(type) {
+func Any2int(_v any) (int64, error) {
+	switch v := _v.(type) {
 	case nil:
 		return 0, nil
 	case int:
@@ -770,7 +770,21 @@ func Any2int(v any) (int64, error) {
 		if v == "" {
 			return 0, nil
 		}
+		// 包含小数点
+		if strings.Contains(v, ".") {
+			return strconv.ParseInt(strings.Split(v, ".")[0], 10, 64)
+		}
 		return strconv.ParseInt(v, 10, 64)
+	case json.Number:
+		if v == "" {
+			return 0, nil
+		}
+		cache := string(v)
+		// 包含小数点
+		if strings.Contains(cache, ".") {
+			return strconv.ParseInt(strings.Split(cache, ".")[0], 10, 64)
+		}
+		return strconv.ParseInt(cache, 10, 64)
 	case float32:
 		return int64(v), nil
 	case float64:
@@ -789,7 +803,7 @@ func Any2int(v any) (int64, error) {
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			return int64(val.Uint()), nil
 		default:
-			return 0, fmt.Errorf("无法将类型 %T 转换为 int", v)
+			return 0, fmt.Errorf("无法将类型 %T 转换为 int", _v)
 		}
 	}
 }
@@ -808,6 +822,8 @@ func Any2float64(v any) (float64, error) {
 		return strconv.ParseFloat(v, 64)
 	case nil:
 		return 0, nil
+	case json.Number:
+		return v.Float64()
 	default:
 		return 0.0, fmt.Errorf("无法将类型 %T 转换为 float64", v)
 	}
