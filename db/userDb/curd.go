@@ -36,6 +36,7 @@ type QueryOpt struct {
 
 // Curd 通用curd函数，配置结构
 type Curd struct {
+	Table      string
 	Select     QueryOpt
 	Where      QueryOpt
 	Preload    []QueryOpt
@@ -102,7 +103,10 @@ func UpdateWithoutValid[T any](tx *gorm.DB, opt Curd) (err error) {
 
 // FindOne 查询某个对象
 func FindOne[T any](tx *gorm.DB, opts Curd) (T, error) {
-	_tx := tx.Where(opts.Where.Query, opts.Where.Args)
+	_tx := tx.Where(opts.Where.Query, opts.Where.Args...)
+	if opts.Table != "" {
+		_tx.Table(opts.Table)
+	}
 	if opts.Select.Query != "" {
 		_tx.Select(opts.Select.Query, opts.Select.Args...)
 	}
